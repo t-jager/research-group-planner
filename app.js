@@ -959,7 +959,7 @@
       } else {
         el.addEventListener('blur', () => endFieldEdit(el));
       }
-      el.addEventListener('input', () => { recordFieldEdit(el); updateModelFromElement(el, false); });
+      el.addEventListener('input', () => { recordFieldEdit(el); updateModelFromElement(el, el.type === 'date'); });
       el.addEventListener('change', () => { recordFieldEdit(el); updateModelFromElement(el, true); });
     });
   }

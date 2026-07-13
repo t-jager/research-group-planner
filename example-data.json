@@ -7,7 +7,7 @@
       "lastName": "Keller",
       "role": "Professor",
       "contractStart": "2024-01-01",
-      "contractEnd": "2028-12-31",
+      "contractEnd": "2050-12-31",
       "salaryIntervals": [
         {
           "id": "s1",
@@ -26,7 +26,7 @@
       "lastName": "Weber",
       "role": "Postdoc",
       "contractStart": "2024-01-01",
-      "contractEnd": "2028-12-31",
+      "contractEnd": "2026-12-31",
       "salaryIntervals": [
         {
           "id": "s2",
@@ -45,7 +45,7 @@
       "lastName": "Scholz",
       "role": "Postdoc",
       "contractStart": "2025-01-01",
-      "contractEnd": "2028-12-31",
+      "contractEnd": "2028-12-17",
       "salaryIntervals": [
         {
           "id": "s3",
@@ -102,7 +102,7 @@
       "lastName": "Hoffmann",
       "role": "Research assistant",
       "contractStart": "2026-01-01",
-      "contractEnd": "2028-12-31",
+      "contractEnd": "2028-07-31",
       "salaryIntervals": [
         {
           "id": "s6",
