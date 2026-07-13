@@ -294,13 +294,10 @@ td textarea {
 
 .person-palette {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
-  margin: 8px 0 14px;
-  padding: 10px;
-  background: #f7f8fa;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  align-content: flex-start;
+  padding: 8px 10px;
 }
 
 .person-chip {
@@ -409,7 +406,7 @@ td textarea {
 }
 
 .timeline-label-spacer {
-  height: 84px;
+  min-height: 84px;
   border-bottom: 1px solid var(--line);
   background: #fafbfc;
 }
