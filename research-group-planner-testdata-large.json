@@ -1,0 +1,1012 @@
+{
+  "version": 2,
+  "persons": [
+    {
+      "id": "person_prof_keller",
+      "firstName": "Eva",
+      "lastName": "Keller",
+      "role": "Professor",
+      "contractStart": "2022-01-01",
+      "contractEnd": "2031-12-31",
+      "salaryIntervals": [
+        { "id": "sal_prof_1", "start": "2022-01-01", "end": "2025-12-31", "monthlyCost": 12000 },
+        { "id": "sal_prof_2", "start": "2026-01-01", "end": "2031-12-31", "monthlyCost": 13500 }
+      ],
+      "notes": "Group leader. Funded by institutional funds (2022-2024), DFG CRC (2024-2025), ERC grant (2025-2029), then institutional again.",
+      "hidden": false
+    },
+    {
+      "id": "person_postdoc_weber",
+      "firstName": "Jonas",
+      "lastName": "Weber",
+      "role": "Postdoc",
+      "contractStart": "2024-04-01",
+      "contractEnd": "2028-03-31",
+      "salaryIntervals": [
+        { "id": "sal_weber_1", "start": "2024-04-01", "end": "2025-12-31", "monthlyCost": 7200 },
+        { "id": "sal_weber_2", "start": "2026-01-01", "end": "2028-03-31", "monthlyCost": 7800 }
+      ],
+      "notes": "Joined mid-year; initial months covered by faculty funds.",
+      "hidden": false
+    },
+    {
+      "id": "person_postdoc_schmidt",
+      "firstName": "Mira",
+      "lastName": "Schmidt",
+      "role": "Postdoc",
+      "contractStart": "2025-01-01",
+      "contractEnd": "2029-06-30",
+      "salaryIntervals": [
+        { "id": "sal_schmidt_1", "start": "2025-01-01", "end": "2026-12-31", "monthlyCost": 7100 },
+        { "id": "sal_schmidt_2", "start": "2027-01-01", "end": "2029-06-30", "monthlyCost": 7600 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_postdoc_braun",
+      "firstName": "Lukas",
+      "lastName": "Braun",
+      "role": "Postdoc",
+      "contractStart": "2026-01-01",
+      "contractEnd": "2030-12-31",
+      "salaryIntervals": [
+        { "id": "sal_braun_1", "start": "2026-01-01", "end": "2028-06-30", "monthlyCost": 7300 },
+        { "id": "sal_braun_2", "start": "2028-07-01", "end": "2030-12-31", "monthlyCost": 7900 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_postdoc_wolf",
+      "firstName": "Lena",
+      "lastName": "Wolf",
+      "role": "Postdoc",
+      "contractStart": "2024-10-01",
+      "contractEnd": "2028-09-30",
+      "salaryIntervals": [
+        { "id": "sal_wolf_1", "start": "2024-10-01", "end": "2026-09-30", "monthlyCost": 6900 },
+        { "id": "sal_wolf_2", "start": "2026-10-01", "end": "2028-09-30", "monthlyCost": 7500 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_fischer",
+      "firstName": "David",
+      "lastName": "Fischer",
+      "role": "PhD student",
+      "contractStart": "2023-10-01",
+      "contractEnd": "2027-09-30",
+      "salaryIntervals": [
+        { "id": "sal_fischer_1", "start": "2023-10-01", "end": "2025-09-30", "monthlyCost": 5100 },
+        { "id": "sal_fischer_2", "start": "2025-10-01", "end": "2027-09-30", "monthlyCost": 5500 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_hoffmann",
+      "firstName": "Lea",
+      "lastName": "Hoffmann",
+      "role": "PhD student",
+      "contractStart": "2025-04-01",
+      "contractEnd": "2029-03-31",
+      "salaryIntervals": [
+        { "id": "sal_hoffmann_1", "start": "2025-04-01", "end": "2027-03-31", "monthlyCost": 5000 },
+        { "id": "sal_hoffmann_2", "start": "2027-04-01", "end": "2029-03-31", "monthlyCost": 5400 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_haddad",
+      "firstName": "Omar",
+      "lastName": "Haddad",
+      "role": "PhD student",
+      "contractStart": "2026-01-15",
+      "contractEnd": "2030-01-14",
+      "salaryIntervals": [
+        { "id": "sal_haddad_1", "start": "2026-01-15", "end": "2027-12-31", "monthlyCost": 5150 },
+        { "id": "sal_haddad_2", "start": "2028-01-01", "end": "2030-01-14", "monthlyCost": 5600 }
+      ],
+      "notes": "Mid-month start date.",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_brandt",
+      "firstName": "Sophie",
+      "lastName": "Brandt",
+      "role": "PhD student",
+      "contractStart": "2024-01-01",
+      "contractEnd": "2027-12-31",
+      "salaryIntervals": [
+        { "id": "sal_brandt_1", "start": "2024-01-01", "end": "2025-12-31", "monthlyCost": 4900 },
+        { "id": "sal_brandt_2", "start": "2026-01-01", "end": "2027-12-31", "monthlyCost": 5300 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_bauer",
+      "firstName": "Felix",
+      "lastName": "Bauer",
+      "role": "PhD student",
+      "contractStart": "2024-07-01",
+      "contractEnd": "2028-06-30",
+      "salaryIntervals": [
+        { "id": "sal_bauer_1", "start": "2024-07-01", "end": "2026-06-30", "monthlyCost": 5050 },
+        { "id": "sal_bauer_2", "start": "2026-07-01", "end": "2028-06-30", "monthlyCost": 5500 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_koch",
+      "firstName": "Anna",
+      "lastName": "Koch",
+      "role": "PhD student",
+      "contractStart": "2024-04-01",
+      "contractEnd": "2028-03-31",
+      "salaryIntervals": [
+        { "id": "sal_koch_1", "start": "2024-04-01", "end": "2026-03-31", "monthlyCost": 4800 },
+        { "id": "sal_koch_2", "start": "2026-04-01", "end": "2028-03-31", "monthlyCost": 5200 }
+      ],
+      "notes": "Started before industry project; faculty-funded initially.",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_richter",
+      "firstName": "Max",
+      "lastName": "Richter",
+      "role": "PhD student",
+      "contractStart": "2025-04-01",
+      "contractEnd": "2029-03-31",
+      "salaryIntervals": [
+        { "id": "sal_richter_1", "start": "2025-04-01", "end": "2027-03-31", "monthlyCost": 5100 },
+        { "id": "sal_richter_2", "start": "2027-04-01", "end": "2029-03-31", "monthlyCost": 5500 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_schneider",
+      "firstName": "Laura",
+      "lastName": "Schneider",
+      "role": "PhD student",
+      "contractStart": "2025-10-01",
+      "contractEnd": "2029-09-30",
+      "salaryIntervals": [
+        { "id": "sal_schneider_1", "start": "2025-10-01", "end": "2027-09-30", "monthlyCost": 4950 },
+        { "id": "sal_schneider_2", "start": "2027-10-01", "end": "2029-09-30", "monthlyCost": 5350 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_neumann",
+      "firstName": "Tim",
+      "lastName": "Neumann",
+      "role": "PhD student",
+      "contractStart": "2026-04-01",
+      "contractEnd": "2030-03-31",
+      "salaryIntervals": [
+        { "id": "sal_neumann_1", "start": "2026-04-01", "end": "2028-03-31", "monthlyCost": 5200 },
+        { "id": "sal_neumann_2", "start": "2028-04-01", "end": "2030-03-31", "monthlyCost": 5600 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_meier",
+      "firstName": "Julia",
+      "lastName": "Meier",
+      "role": "PhD student",
+      "contractStart": "2023-07-01",
+      "contractEnd": "2027-06-30",
+      "salaryIntervals": [
+        { "id": "sal_meier_1", "start": "2023-07-01", "end": "2025-06-30", "monthlyCost": 4850 },
+        { "id": "sal_meier_2", "start": "2025-07-01", "end": "2027-06-30", "monthlyCost": 5250 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_schulz",
+      "firstName": "Marc",
+      "lastName": "Schulz",
+      "role": "PhD student",
+      "contractStart": "2024-10-01",
+      "contractEnd": "2028-09-30",
+      "salaryIntervals": [
+        { "id": "sal_schulz_1", "start": "2024-10-01", "end": "2026-09-30", "monthlyCost": 5050 },
+        { "id": "sal_schulz_2", "start": "2026-10-01", "end": "2028-09-30", "monthlyCost": 5450 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_phd_vogt",
+      "firstName": "Clara",
+      "lastName": "Vogt",
+      "role": "PhD student",
+      "contractStart": "2025-01-01",
+      "contractEnd": "2028-12-31",
+      "salaryIntervals": [
+        { "id": "sal_vogt_1", "start": "2025-01-01", "end": "2026-12-31", "monthlyCost": 5000 },
+        { "id": "sal_vogt_2", "start": "2027-01-01", "end": "2028-12-31", "monthlyCost": 5400 }
+      ],
+      "notes": "Switched from DFG project to industry collaboration mid-contract.",
+      "hidden": false
+    },
+    {
+      "id": "person_eng_keller",
+      "firstName": "Sophie",
+      "lastName": "Keller",
+      "role": "Research software engineer",
+      "contractStart": "2024-01-01",
+      "contractEnd": "2028-12-31",
+      "salaryIntervals": [
+        { "id": "sal_eng_keller_1", "start": "2024-01-01", "end": "2026-06-30", "monthlyCost": 6800 },
+        { "id": "sal_eng_keller_2", "start": "2026-07-01", "end": "2028-12-31", "monthlyCost": 7350 }
+      ],
+      "notes": "Three-phase funding: university fund, BMBF project, faculty fund.",
+      "hidden": false
+    },
+    {
+      "id": "person_eng_lange",
+      "firstName": "Martin",
+      "lastName": "Lange",
+      "role": "Research data engineer",
+      "contractStart": "2025-01-01",
+      "contractEnd": "2029-12-31",
+      "salaryIntervals": [
+        { "id": "sal_eng_lange_1", "start": "2025-01-01", "end": "2027-06-30", "monthlyCost": 6500 },
+        { "id": "sal_eng_lange_2", "start": "2027-07-01", "end": "2029-12-31", "monthlyCost": 7000 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_eng_konig",
+      "firstName": "Sarah",
+      "lastName": "Konig",
+      "role": "Research engineer",
+      "contractStart": "2026-01-01",
+      "contractEnd": "2030-12-31",
+      "salaryIntervals": [
+        { "id": "sal_eng_konig_1", "start": "2026-01-01", "end": "2028-06-30", "monthlyCost": 6200 },
+        { "id": "sal_eng_konig_2", "start": "2028-07-01", "end": "2030-12-31", "monthlyCost": 6800 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_sa_schulz",
+      "firstName": "Kevin",
+      "lastName": "Schulz",
+      "role": "Student assistant",
+      "contractStart": "2024-10-01",
+      "contractEnd": "2026-09-30",
+      "salaryIntervals": [
+        { "id": "sal_sa_schulz_1", "start": "2024-10-01", "end": "2025-09-30", "monthlyCost": 1600 },
+        { "id": "sal_sa_schulz_2", "start": "2025-10-01", "end": "2026-09-30", "monthlyCost": 1800 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_sa_braun",
+      "firstName": "Lisa",
+      "lastName": "Braun",
+      "role": "Student assistant",
+      "contractStart": "2025-04-01",
+      "contractEnd": "2027-03-31",
+      "salaryIntervals": [
+        { "id": "sal_sa_braun_1", "start": "2025-04-01", "end": "2026-03-31", "monthlyCost": 1500 },
+        { "id": "sal_sa_braun_2", "start": "2026-04-01", "end": "2027-03-31", "monthlyCost": 1700 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_sa_hartmann",
+      "firstName": "Nico",
+      "lastName": "Hartmann",
+      "role": "Student assistant",
+      "contractStart": "2026-01-01",
+      "contractEnd": "2027-12-31",
+      "salaryIntervals": [
+        { "id": "sal_sa_hartmann_1", "start": "2026-01-01", "end": "2026-12-31", "monthlyCost": 1500 },
+        { "id": "sal_sa_hartmann_2", "start": "2027-01-01", "end": "2027-12-31", "monthlyCost": 1700 }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_admin_zimmermann",
+      "firstName": "Claudia",
+      "lastName": "Zimmermann",
+      "role": "Administrative staff",
+      "contractStart": "2023-01-01",
+      "contractEnd": "2027-12-31",
+      "salaryIntervals": [
+        { "id": "sal_admin_zim_1", "start": "2023-01-01", "end": "2024-12-31", "monthlyCost": 4200 },
+        { "id": "sal_admin_zim_2", "start": "2025-01-01", "end": "2027-12-31", "monthlyCost": 4600 }
+      ],
+      "notes": "Department administrator, funded from university research fund.",
+      "hidden": false
+    },
+    {
+      "id": "person_admin_kruger",
+      "firstName": "Peter",
+      "lastName": "Kruger",
+      "role": "Administrative staff",
+      "contractStart": "2024-06-01",
+      "contractEnd": "2028-05-31",
+      "salaryIntervals": [
+        { "id": "sal_admin_kruger_1", "start": "2024-06-01", "end": "2026-05-31", "monthlyCost": 4100 },
+        { "id": "sal_admin_kruger_2", "start": "2026-06-01", "end": "2028-05-31", "monthlyCost": 4500 }
+      ],
+      "notes": "Grant administrator funded across multiple faculty years.",
+      "hidden": false
+    },
+    {
+      "id": "person_hidden_bauer",
+      "firstName": "Thomas",
+      "lastName": "Bauer",
+      "role": "PhD student",
+      "contractStart": "2022-01-01",
+      "contractEnd": "2024-12-31",
+      "salaryIntervals": [
+        { "id": "sal_hidden_bauer_1", "start": "2022-01-01", "end": "2024-12-31", "monthlyCost": 4900 }
+      ],
+      "notes": "Former member, completed PhD. Hidden from active view.",
+      "hidden": true
+    },
+    {
+      "id": "person_hidden_wolf",
+      "firstName": "Maria",
+      "lastName": "Wolf",
+      "role": "Administrative staff",
+      "contractStart": "2021-01-01",
+      "contractEnd": "2023-06-30",
+      "salaryIntervals": [
+        { "id": "sal_hidden_wolf_1", "start": "2021-01-01", "end": "2023-06-30", "monthlyCost": 4000 }
+      ],
+      "notes": "Former admin, contract ended. Hidden from active view.",
+      "hidden": true
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj_erc",
+      "name": "ERC Advanced Cryptographic Foundations",
+      "type": "ERC",
+      "start": "2025-01-01",
+      "end": "2029-12-31",
+      "personnelBudget": 1200000,
+      "travelBudget": 30000,
+      "materialBudget": 150000,
+      "notes": "Starting Grant, main funding source for core group members.",
+      "hidden": false
+    },
+    {
+      "id": "proj_dfg1",
+      "name": "CRC Trustworthy Security Systems",
+      "type": "DFG",
+      "start": "2024-07-01",
+      "end": "2028-06-30",
+      "personnelBudget": 450000,
+      "travelBudget": 20000,
+      "materialBudget": 30000,
+      "notes": "Collaborative Research Centre, sub-project lead.",
+      "hidden": false
+    },
+    {
+      "id": "proj_dfg2",
+      "name": "SPP Quantum-Resistant Cryptography",
+      "type": "DFG",
+      "start": "2025-04-01",
+      "end": "2028-03-31",
+      "personnelBudget": 280000,
+      "travelBudget": 15000,
+      "materialBudget": 25000,
+      "notes": "Priority Programme.",
+      "hidden": false
+    },
+    {
+      "id": "proj_bmbf1",
+      "name": "BMBF SecureCloud Initiative",
+      "type": "BMBF",
+      "start": "2024-10-01",
+      "end": "2027-09-30",
+      "personnelBudget": 380000,
+      "travelBudget": 12000,
+      "materialBudget": 80000,
+      "notes": "Federal ministry project with two industry partners.",
+      "hidden": false
+    },
+    {
+      "id": "proj_eu1",
+      "name": "EU Horizon PQC-Defense",
+      "type": "EU",
+      "start": "2026-01-01",
+      "end": "2030-12-31",
+      "personnelBudget": 700000,
+      "travelBudget": 25000,
+      "materialBudget": 60000,
+      "notes": "Horizon Europe, multi-partner consortium.",
+      "hidden": false
+    },
+    {
+      "id": "proj_ind1",
+      "name": "Industry Partnership Alpha",
+      "type": "Industry",
+      "start": "2024-06-01",
+      "end": "2026-12-31",
+      "personnelBudget": 200000,
+      "travelBudget": 5000,
+      "materialBudget": 40000,
+      "notes": "Joint research with industrial partner.",
+      "hidden": false
+    },
+    {
+      "id": "proj_univ1",
+      "name": "University Internal Research Fund",
+      "type": "University",
+      "start": "2023-01-01",
+      "end": "2027-12-31",
+      "personnelBudget": 120000,
+      "travelBudget": 8000,
+      "materialBudget": 15000,
+      "notes": "Institutional bridge funding and seed money.",
+      "hidden": false
+    },
+    {
+      "id": "proj_ind2",
+      "name": "Industry Partner Beta Collaboration",
+      "type": "Industry",
+      "start": "2026-03-01",
+      "end": "2028-12-31",
+      "personnelBudget": 250000,
+      "travelBudget": 8000,
+      "materialBudget": 35000,
+      "notes": "Follow-up collaboration with second industry partner.",
+      "hidden": false
+    },
+    {
+      "id": "proj_hidden_legacy",
+      "name": "Legacy Industry Study",
+      "type": "Industry",
+      "start": "2021-01-01",
+      "end": "2024-12-31",
+      "personnelBudget": 150000,
+      "travelBudget": 0,
+      "materialBudget": 20000,
+      "notes": "Completed project, only relevant for former members.",
+      "hidden": true
+    }
+  ],
+  "accounts": [
+    {
+      "id": "acct_2024",
+      "name": "Faculty-2024",
+      "balance": 35000,
+      "balanceDate": "2024-01-01",
+      "notes": "Annual faculty allocation for 2024.",
+      "hidden": false
+    },
+    {
+      "id": "acct_2025",
+      "name": "Faculty-2025",
+      "balance": 42000,
+      "balanceDate": "2025-01-01",
+      "notes": "Annual faculty allocation for 2025.",
+      "hidden": false
+    },
+    {
+      "id": "acct_2026",
+      "name": "Faculty-2026",
+      "balance": 45000,
+      "balanceDate": "2026-01-01",
+      "notes": "Annual faculty allocation for 2026.",
+      "hidden": false
+    },
+    {
+      "id": "acct_2027",
+      "name": "Faculty-2027",
+      "balance": 40000,
+      "balanceDate": "2027-01-01",
+      "notes": "Annual faculty allocation for 2027.",
+      "hidden": false
+    }
+  ],
+  "assignments": [
+    {
+      "id": "a_prof_acct24",
+      "personId": "person_prof_keller",
+      "projectId": "acct_2024",
+      "start": "2022-01-01",
+      "end": "2024-06-30",
+      "ftePercent": 100,
+      "notes": "Institutional bridge funding before grants."
+    },
+    {
+      "id": "a_prof_dfg1",
+      "personId": "person_prof_keller",
+      "projectId": "proj_dfg1",
+      "start": "2024-07-01",
+      "end": "2025-06-30",
+      "ftePercent": 100,
+      "notes": "CRC project leadership."
+    },
+    {
+      "id": "a_prof_erc",
+      "personId": "person_prof_keller",
+      "projectId": "proj_erc",
+      "start": "2025-07-01",
+      "end": "2029-12-31",
+      "ftePercent": 100,
+      "notes": "ERC grant, main research effort."
+    },
+    {
+      "id": "a_prof_acct27",
+      "personId": "person_prof_keller",
+      "projectId": "acct_2027",
+      "start": "2030-01-01",
+      "end": "2031-12-31",
+      "ftePercent": 100,
+      "notes": "Post-ERC institutional funding."
+    },
+    {
+      "id": "a_weber_acct24",
+      "personId": "person_postdoc_weber",
+      "projectId": "acct_2024",
+      "start": "2024-04-01",
+      "end": "2024-06-30",
+      "ftePercent": 100,
+      "notes": "Initial faculty bridge funding."
+    },
+    {
+      "id": "a_weber_dfg1",
+      "personId": "person_postdoc_weber",
+      "projectId": "proj_dfg1",
+      "start": "2024-07-01",
+      "end": "2028-03-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_schmidt_erc",
+      "personId": "person_postdoc_schmidt",
+      "projectId": "proj_erc",
+      "start": "2025-01-01",
+      "end": "2029-06-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_braun_eu",
+      "personId": "person_postdoc_braun",
+      "projectId": "proj_eu1",
+      "start": "2026-01-01",
+      "end": "2030-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_wolf_bmbf",
+      "personId": "person_postdoc_wolf",
+      "projectId": "proj_bmbf1",
+      "start": "2024-10-01",
+      "end": "2027-09-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_wolf_acct27",
+      "personId": "person_postdoc_wolf",
+      "projectId": "acct_2027",
+      "start": "2027-10-01",
+      "end": "2028-09-30",
+      "ftePercent": 100,
+      "notes": "Post-BMBF bridge funding."
+    },
+    {
+      "id": "a_fischer_univ",
+      "personId": "person_phd_fischer",
+      "projectId": "proj_univ1",
+      "start": "2023-10-01",
+      "end": "2024-06-30",
+      "ftePercent": 100,
+      "notes": "Initial university-funded phase."
+    },
+    {
+      "id": "a_fischer_dfg1",
+      "personId": "person_phd_fischer",
+      "projectId": "proj_dfg1",
+      "start": "2024-07-01",
+      "end": "2027-09-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_hoffmann_erc",
+      "personId": "person_phd_hoffmann",
+      "projectId": "proj_erc",
+      "start": "2025-04-01",
+      "end": "2029-03-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_haddad_eu",
+      "personId": "person_phd_haddad",
+      "projectId": "proj_eu1",
+      "start": "2026-01-15",
+      "end": "2030-01-14",
+      "ftePercent": 100,
+      "notes": "Mid-month start aligned with contract."
+    },
+    {
+      "id": "a_brandt_univ",
+      "personId": "person_phd_brandt",
+      "projectId": "proj_univ1",
+      "start": "2024-01-01",
+      "end": "2025-03-31",
+      "ftePercent": 100,
+      "notes": "University-funded first year."
+    },
+    {
+      "id": "a_brandt_dfg2",
+      "personId": "person_phd_brandt",
+      "projectId": "proj_dfg2",
+      "start": "2025-04-01",
+      "end": "2027-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_bauer_dfg1",
+      "personId": "person_phd_bauer",
+      "projectId": "proj_dfg1",
+      "start": "2024-07-01",
+      "end": "2028-06-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_koch_acct24",
+      "personId": "person_phd_koch",
+      "projectId": "acct_2024",
+      "start": "2024-04-01",
+      "end": "2024-05-31",
+      "ftePercent": 100,
+      "notes": "Short bridge before industry project."
+    },
+    {
+      "id": "a_koch_ind1",
+      "personId": "person_phd_koch",
+      "projectId": "proj_ind1",
+      "start": "2024-06-01",
+      "end": "2026-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_koch_acct27",
+      "personId": "person_phd_koch",
+      "projectId": "acct_2027",
+      "start": "2027-01-01",
+      "end": "2028-03-31",
+      "ftePercent": 100,
+      "notes": "Post-industry faculty funding."
+    },
+    {
+      "id": "a_richter_dfg2",
+      "personId": "person_phd_richter",
+      "projectId": "proj_dfg2",
+      "start": "2025-04-01",
+      "end": "2028-03-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_richter_acct27",
+      "personId": "person_phd_richter",
+      "projectId": "acct_2027",
+      "start": "2028-04-01",
+      "end": "2029-03-31",
+      "ftePercent": 100,
+      "notes": "Bridge funding for final year."
+    },
+    {
+      "id": "a_schneider_erc",
+      "personId": "person_phd_schneider",
+      "projectId": "proj_erc",
+      "start": "2025-10-01",
+      "end": "2029-09-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_neumann_eu",
+      "personId": "person_phd_neumann",
+      "projectId": "proj_eu1",
+      "start": "2026-04-01",
+      "end": "2030-03-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_meier_univ",
+      "personId": "person_phd_meier",
+      "projectId": "proj_univ1",
+      "start": "2023-07-01",
+      "end": "2027-06-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_schulz_bmbf",
+      "personId": "person_phd_schulz",
+      "projectId": "proj_bmbf1",
+      "start": "2024-10-01",
+      "end": "2027-09-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_schulz_acct27",
+      "personId": "person_phd_schulz",
+      "projectId": "acct_2027",
+      "start": "2027-10-01",
+      "end": "2028-09-30",
+      "ftePercent": 100,
+      "notes": "Post-BMBF bridge."
+    },
+    {
+      "id": "a_vogt_dfg1",
+      "personId": "person_phd_vogt",
+      "projectId": "proj_dfg1",
+      "start": "2025-01-01",
+      "end": "2026-02-28",
+      "ftePercent": 100,
+      "notes": "Initially on DFG project."
+    },
+    {
+      "id": "a_vogt_ind2",
+      "personId": "person_phd_vogt",
+      "projectId": "proj_ind2",
+      "start": "2026-03-01",
+      "end": "2028-12-31",
+      "ftePercent": 100,
+      "notes": "Transferred to industry collaboration."
+    },
+    {
+      "id": "a_eng_keller_univ",
+      "personId": "person_eng_keller",
+      "projectId": "proj_univ1",
+      "start": "2024-01-01",
+      "end": "2024-09-30",
+      "ftePercent": 100,
+      "notes": "University-funded initial phase."
+    },
+    {
+      "id": "a_eng_keller_bmbf",
+      "personId": "person_eng_keller",
+      "projectId": "proj_bmbf1",
+      "start": "2024-10-01",
+      "end": "2027-09-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_eng_keller_acct27",
+      "personId": "person_eng_keller",
+      "projectId": "acct_2027",
+      "start": "2027-10-01",
+      "end": "2028-12-31",
+      "ftePercent": 100,
+      "notes": "Faculty-funded final phase."
+    },
+    {
+      "id": "a_eng_lange_erc",
+      "personId": "person_eng_lange",
+      "projectId": "proj_erc",
+      "start": "2025-01-01",
+      "end": "2029-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_eng_konig_eu",
+      "personId": "person_eng_konig",
+      "projectId": "proj_eu1",
+      "start": "2026-01-01",
+      "end": "2030-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_sa_schulz_bmbf",
+      "personId": "person_sa_schulz",
+      "projectId": "proj_bmbf1",
+      "start": "2024-10-01",
+      "end": "2026-09-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_sa_braun_dfg2",
+      "personId": "person_sa_braun",
+      "projectId": "proj_dfg2",
+      "start": "2025-04-01",
+      "end": "2027-03-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_sa_hartmann_eu",
+      "personId": "person_sa_hartmann",
+      "projectId": "proj_eu1",
+      "start": "2026-01-01",
+      "end": "2027-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_admin_zim_univ",
+      "personId": "person_admin_zimmermann",
+      "projectId": "proj_univ1",
+      "start": "2023-01-01",
+      "end": "2027-12-31",
+      "ftePercent": 100,
+      "notes": "Full contract funded from university fund."
+    },
+    {
+      "id": "a_admin_kruger_acct24",
+      "personId": "person_admin_kruger",
+      "projectId": "acct_2024",
+      "start": "2024-06-01",
+      "end": "2024-12-31",
+      "ftePercent": 100,
+      "notes": "Initial faculty allocation."
+    },
+    {
+      "id": "a_admin_kruger_acct25",
+      "personId": "person_admin_kruger",
+      "projectId": "acct_2025",
+      "start": "2025-01-01",
+      "end": "2027-12-31",
+      "ftePercent": 100,
+      "notes": "Primary funding period."
+    },
+    {
+      "id": "a_admin_kruger_acct27",
+      "personId": "person_admin_kruger",
+      "projectId": "acct_2027",
+      "start": "2028-01-01",
+      "end": "2028-05-31",
+      "ftePercent": 100,
+      "notes": "Final months on next year's allocation."
+    },
+    {
+      "id": "a_hidden_bauer_legacy",
+      "personId": "person_hidden_bauer",
+      "projectId": "proj_hidden_legacy",
+      "start": "2022-01-01",
+      "end": "2024-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "a_hidden_wolf_legacy",
+      "personId": "person_hidden_wolf",
+      "projectId": "proj_hidden_legacy",
+      "start": "2021-01-01",
+      "end": "2023-06-30",
+      "ftePercent": 100,
+      "notes": ""
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp_erc_gpu",
+      "projectId": "proj_erc",
+      "category": "material",
+      "date": "2025-09-15",
+      "amount": 85000,
+      "notes": "GPU compute cluster for cryptographic analysis"
+    },
+    {
+      "id": "exp_erc_conf",
+      "projectId": "proj_erc",
+      "category": "travel",
+      "date": "2026-03-22",
+      "amount": 3200,
+      "notes": "CRYPTO 2026 conference attendance"
+    },
+    {
+      "id": "exp_dfg1_equip",
+      "projectId": "proj_dfg1",
+      "category": "material",
+      "date": "2025-06-10",
+      "amount": 12000,
+      "notes": "Security analysis test equipment"
+    },
+    {
+      "id": "exp_dfg1_travel",
+      "projectId": "proj_dfg1",
+      "category": "travel",
+      "date": "2025-11-03",
+      "amount": 2500,
+      "notes": "SPP consortium workshop travel"
+    },
+    {
+      "id": "exp_bmbf_server",
+      "projectId": "proj_bmbf1",
+      "category": "material",
+      "date": "2025-08-08",
+      "amount": 65000,
+      "notes": "SecureCloud server infrastructure"
+    },
+    {
+      "id": "exp_bmbf_meeting",
+      "projectId": "proj_bmbf1",
+      "category": "travel",
+      "date": "2026-03-18",
+      "amount": 1800,
+      "notes": "Partner coordination meeting Berlin"
+    },
+    {
+      "id": "exp_eu_kickoff",
+      "projectId": "proj_eu1",
+      "category": "travel",
+      "date": "2026-07-10",
+      "amount": 4200,
+      "notes": "EU project kickoff meeting Brussels"
+    },
+    {
+      "id": "exp_eu_lab",
+      "projectId": "proj_eu1",
+      "category": "material",
+      "date": "2027-02-15",
+      "amount": 35000,
+      "notes": "Lab equipment upgrade for PQC testing"
+    },
+    {
+      "id": "exp_ind1_proto",
+      "projectId": "proj_ind1",
+      "category": "material",
+      "date": "2025-09-05",
+      "amount": 15000,
+      "notes": "Prototype hardware for industry partner"
+    },
+    {
+      "id": "exp_ind2_kickoff",
+      "projectId": "proj_ind2",
+      "category": "travel",
+      "date": "2026-09-20",
+      "amount": 2800,
+      "notes": "Beta collaboration kickoff workshop"
+    },
+    {
+      "id": "exp_univ_office",
+      "projectId": "proj_univ1",
+      "category": "material",
+      "date": "2024-03-15",
+      "amount": 5000,
+      "notes": "Research group office equipment"
+    },
+    {
+      "id": "exp_dfg2_instruments",
+      "projectId": "proj_dfg2",
+      "category": "material",
+      "date": "2025-05-20",
+      "amount": 8500,
+      "notes": "Quantum-resistant measurement instruments"
+    }
+  ]
+}

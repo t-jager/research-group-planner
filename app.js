@@ -337,6 +337,18 @@
     return state.assignments.filter(a => a.projectId === projectId).reduce((sum, a) => sum + assignmentCost(a), 0);
   }
 
+  // Check if a person already has an overlapping assignment on the same project/account.
+  // excludeId lets us skip the assignment being resized.
+  function hasOverlappingAssignment(personId, projectId, start, end, excludeId) {
+    return state.assignments.some(a =>
+      a.id !== excludeId &&
+      a.personId === personId &&
+      a.projectId === projectId &&
+      a.start <= end &&
+      a.end >= start
+    );
+  }
+
   function projectExpense(projectId, category) {
     return state.expenses.filter(e => e.projectId === projectId && (!category || e.category === category)).reduce((s, e) => s + numberValue(e.amount), 0);
   }
@@ -606,7 +618,7 @@
         <td>${input('money', p.travelBudget, fieldAttrs('project', p.id, 'travelBudget'))}</td>
         <td>${input('money', p.materialBudget, fieldAttrs('project', p.id, 'materialBudget'))}</td>
         <td class="computed money" data-project-assigned="${p.id}">${formatMoney(projectAssigned(p.id))}</td>
-        <td class="computed money" data-project-free="${p.id}">${formatMoney(projectFreePersonnel(p))}</td>
+        <td class="computed money ${projectFreePersonnel(p) < 0 ? 'negative-funding' : ''}" data-project-free="${p.id}">${formatMoney(projectFreePersonnel(p))}</td>
         <td><textarea ${fieldAttrs('project', p.id, 'notes')}>${esc(p.notes)}</textarea></td>
         <td class="center"><input type="checkbox" ${fieldAttrs('project', p.id, 'hidden')} ${p.hidden ? 'checked' : ''}></td>
         <td><button class="danger delete-project" data-id="${p.id}">Delete</button></td>
@@ -876,9 +888,9 @@
     renderDashboard();
     $$('[data-assignment-cost]').forEach(td => { const a = state.assignments.find(x => x.id === td.dataset.assignmentCost); td.textContent = formatMoney(assignmentCost(a)); });
     $$('[data-project-assigned]').forEach(td => td.textContent = formatMoney(projectAssigned(td.dataset.projectAssigned)));
-    $$('[data-project-free]').forEach(td => { const p = getProject(td.dataset.projectFree); td.textContent = formatMoney(projectFreePersonnel(p)); });
+    $$('[data-project-free]').forEach(td => { const p = getProject(td.dataset.projectFree); td.textContent = formatMoney(projectFreePersonnel(p)); td.classList.toggle('negative-funding', projectFreePersonnel(p) < 0); });
     $$('[data-account-assigned]').forEach(td => td.textContent = formatMoney(accountAssigned(td.dataset.accountAssigned)));
-    $$('[data-account-free]').forEach(td => { const a = getAccount(td.dataset.accountFree); td.textContent = formatMoney(accountFreeBalance(a)); });
+    $$('[data-account-free]').forEach(td => { const a = getAccount(td.dataset.accountFree); td.textContent = formatMoney(accountFreeBalance(a)); td.classList.toggle('negative-funding', accountFreeBalance(a) < 0); });
     $$('[data-expense-summary]').forEach(td => {
       const p = getProject(td.dataset.projectId); if (!p) return;
       const travelSpent = projectExpense(p.id, 'travel');
@@ -931,8 +943,8 @@
     const header = `<div class="timeline-year-row">${yearHeader}</div><div class="timeline-month-row">${monthHeader}</div>`;
     $('#tab-timeline').innerHTML = `
       <div class="section-head"><h2>Assignments</h2><div class="section-actions">${pastToggleHtml()}<div class="help">Drag a person chip onto a project to create an assignment. Existing assignments can only be resized using their left or right edge. They may extend beyond the current contract or project end; planned extensions are striped and still count toward the budget. Hold Alt for day precision.</div></div></div>
-      <div class="assignments-wrap"><div class="person-palette">${visiblePersons().map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}">${esc(personName(p))}</span>`).join('')}</div>${timelineShell('Assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max)}</div>
-      ${timelineShell('Personnel view', 'personTimeline', personTimelineLabels(), personTimelineRows(min, months, width), header, width, min, max)}
+      ${timelineShell('Assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max)}
+      ${timelineShell('Personnel view', 'personTimeline', personTimelineLabels(), personTimelineRows(min, months, width), header, width, min, max, 'View only — edit assignments in the table above')}
       <div id="assignmentEditorModal" class="assignment-modal" hidden>
         <div class="assignment-modal-backdrop" data-assignment-editor-close></div>
         <div class="assignment-modal-card" role="dialog" aria-modal="true" aria-labelledby="assignmentEditorTitle">
@@ -967,13 +979,16 @@
         </div>
       </div>
     `;
+    const palette = $('#person-palette');
+    palette.innerHTML = visiblePersons().map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}">${esc(personName(p))}</span>`).join('');
+    palette.hidden = activeTab !== 'timeline';
     bindPastToggle($('#tab-timeline')); bindTimelineScroll(); bindAssignmentDrag(min); bindAssignmentEditor(); bindPersonDrop(min); restoreScroll();
   }
 
   // Wrap a timeline section (labels column + scrollable canvas) in a shell
-  function timelineShell(title, id, labels, rows, header, width, min, max) {
+  function timelineShell(title, id, labels, rows, header, width, min, max, note) {
     const marker = currentMonthMarker(min, max);
-    return `<div class="timeline-shell"><div class="timeline-title">${title}</div><div class="timeline-body">
+    return `<div class="timeline-shell"><div class="timeline-title">${title}${note ? `<span class="timeline-note">${note}</span>` : ''}</div><div class="timeline-body">
       <div class="timeline-labels"><div class="timeline-label-spacer"></div>${labels}</div>
       <div class="timeline-scroll" id="${id}"><div class="timeline-canvas" style="width:${width}px"><div class="timeline-header">${header}</div>${marker}${rows}</div></div>
     </div></div>`;
@@ -1047,7 +1062,7 @@
           <div class="meta">
             ${isAccount
               ? `<span>Balance</span><span class="money">${formatMoney(p.balance)}</span><span>From</span><span>${esc(p.balanceDate)}</span><span>Free</span><span class="money ${accountFreeBalance(p) < 0 ? 'negative-funding' : ''}">${formatMoney(accountFreeBalance(p))}</span>`
-              : `<span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span><span>Budget</span><span>${formatMoney(p.personnelBudget)}</span><span>Free</span><span>${formatMoney(projectFreePersonnel(p))}</span>`
+              : `<span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span><span>Budget</span><span>${formatMoney(p.personnelBudget)}</span><span>Free</span><span class="money ${projectFreePersonnel(p) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(p))}</span>`
             }
           </div>
         </div>`;
@@ -1367,7 +1382,8 @@
     const enablePan = source => {
       source.addEventListener('pointerdown', e => {
         if (e.button !== 0) return;
-        if (e.target.closest('.assignment-bar, .assignment-handle, button, input, select, textarea, a, .person-chip')) return;
+        const isPersonTimeline = source.id === 'personTimeline';
+        if (e.target.closest(`${isPersonTimeline ? '' : '.assignment-bar, .assignment-handle, '}button, input, select, textarea, a, .person-chip`)) return;
         const startX = e.clientX;
         const startScroll = source.scrollLeft;
         source.classList.add('panning');
@@ -1639,6 +1655,12 @@
         if (!changed) {
           history.pop();
           updateUndoButtons();
+        } else if (hasOverlappingAssignment(assignment.personId, assignment.projectId, assignment.start, assignment.end, assignment.id)) {
+          alert(`${personName(getPerson(assignment.personId))} already has an assignment on this project during this period. Reverting.`);
+          assignment.start = oldStart;
+          assignment.end = oldEnd;
+          history.pop();
+          updateUndoButtons();
         } else {
           markDirty();
         }
@@ -1771,6 +1793,11 @@
           alert('The drop date is outside the project duration or before the contract starts.');
           return;
         }
+        if (hasOverlappingAssignment(personId, projectId, start, end)) {
+          clearContractPreview();
+          alert(`${personName(getPerson(personId))} is already assigned to ${project?.name || 'this project'} during this period.`);
+          return;
+        }
         scrollMemory.project = $('#projectTimeline')?.scrollLeft || 0;
         scrollMemory.person = $('#personTimeline')?.scrollLeft || 0;
         clearContractPreview();
@@ -1788,7 +1815,10 @@
   }
 
   function switchTab(name) {
-    activeTab = name; $$('.header-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name)); $$('.tab').forEach(t => t.classList.toggle('active', t.id === `tab-${name}`)); if (name === 'timeline') renderTimeline();
+    activeTab = name; $$('.header-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name)); $$('.tab').forEach(t => t.classList.toggle('active', t.id === `tab-${name}`));
+    const palette = $('#person-palette');
+    if (palette) palette.hidden = name !== 'timeline';
+    if (name === 'timeline') renderTimeline();
   }
 
   // ─── Dirty State & File Status ───
