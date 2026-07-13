@@ -322,13 +322,15 @@
       // Sum cost contributions from each overlapping salary interval
       for (const interval of intervals) {
         const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, interval.start, interval.end);
-        total += numberValue(interval.monthlyCost) * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
+        const employmentFrac = (numberValue(interval.employmentPercent) || 100) / 100;
+        total += numberValue(interval.monthlyCost) * employmentFrac * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
       }
 
       // Planned employment beyond the last defined salary interval uses the latest known rate.
       if (lastInterval && validDateString(plannedStart)) {
         const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, plannedStart, a.end);
-        total += numberValue(lastInterval.monthlyCost) * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
+        const employmentFrac = (numberValue(lastInterval.employmentPercent) || 100) / 100;
+        total += numberValue(lastInterval.monthlyCost) * employmentFrac * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
       }
 
       cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
@@ -624,7 +626,11 @@
   function salaryIntervalsEditor(person) {
     const intervals = [...(person.salaryIntervals || [])].sort((a, b) => String(a.start).localeCompare(String(b.start)));
     if (!intervals.length) return '<div class="salary-empty">No salary intervals defined.</div>';
-    return `<div class="salary-editor"><table><thead><tr><th>Salary start</th><th>Salary end</th><th>Monthly employer cost</th><th>Employment %</th><th></th></tr></thead><tbody>${intervals.map(si => `<tr data-salary-id="${si.id}"><td>${input('date', si.start, salaryFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, salaryFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, salaryFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td>${input('percent', si.employmentPercent ?? 100, salaryFieldAttrs(person.id, si.id, 'employmentPercent'))}</td><td><button class="danger delete-salary" data-person-id="${person.id}" data-salary-id="${si.id}">Delete</button></td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="salary-editor"><table><thead><tr><th>Salary start</th><th>Salary end</th><th>Monthly employer cost 100%</th><th>Employment %</th><th>Monthly cost</th><th></th></tr></thead><tbody>${intervals.map(si => {
+      const empPct = numberValue(si.employmentPercent) || 100;
+      const monthlyActual = numberValue(si.monthlyCost) * empPct / 100;
+      return `<tr data-salary-id="${si.id}"><td>${input('date', si.start, salaryFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, salaryFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, salaryFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td>${input('percent', si.employmentPercent ?? 100, salaryFieldAttrs(person.id, si.id, 'employmentPercent'))}</td><td class="computed money">${formatMoney(monthlyActual)}</td><td><button class="danger delete-salary" data-person-id="${person.id}" data-salary-id="${si.id}">Delete</button></td></tr>`;
+    }).join('')}</tbody></table></div>`;
   }
 
   function salaryFieldAttrs(personId, salaryId, field) {
@@ -1368,10 +1374,12 @@
             const right = dateToX(addDays(si.end, 1), min);
             const bandWidth = Math.max(4, right - left);
             const shade = index % 3;
+            const empPct = numberValue(si.employmentPercent) || 100;
+            const actualCost = numberValue(si.monthlyCost) * empPct / 100;
             return `<div class="salary-interval-band salary-shade-${shade}"
               style="left:${left}px;width:${bandWidth}px;top:${salaryTop}px"
-              title="${si.start} – ${si.end}: ${formatMoney(si.monthlyCost)} / month">
-              <span>${formatMoney(si.monthlyCost)}</span>
+              title="${si.start} – ${si.end}: ${formatMoney(actualCost)} / month (${empPct}%)">
+              <span>${formatMoney(actualCost)}</span>
             </div>`;
           }).join('')
       : '';
