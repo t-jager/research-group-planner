@@ -111,8 +111,6 @@
     s.accounts = Array.isArray(raw?.accounts) ? raw.accounts.map(a => ({
       id: safeId(a.id) || uid('account'),
       name: String(a.name ?? ''),
-      start: validDateString(a.start) ? a.start : '',
-      end: validDateString(a.end) ? a.end : '',
       balance: numberValue(a.balance),
       balanceDate: validDateString(a.balanceDate) ? a.balanceDate : '',
       notes: String(a.notes ?? ''),
@@ -372,11 +370,9 @@
         if (cursor <= p.contractEnd) out.push({ level: 'error', text: `${personName(p)}: salary intervals end before contract (${cursor}).` });
       }
     }
-    // Validate projects: dates and budget overruns
+    // Validate projects: dates
     for (const p of state.projects.filter(x => !x.hidden)) {
       if (p.start && p.end && parseDate(p.start) > parseDate(p.end)) out.push({ level: 'error', text: `${p.name || '(unnamed project)'}: project start is after project end.` });
-      const free = projectFreePersonnel(p);
-      if (free < -0.005) out.push({ level: 'error', text: `${p.name || '(unnamed project)'}: personnel budget exceeded by ${formatMoney(-free)}.` });
     }
     // Validate assignments: orphaned refs, date validity, contract/project bounds
     for (const a of state.assignments.filter(x => !getPerson(x.personId)?.hidden && !getProjectOrAccount(x.projectId)?.hidden)) {
@@ -457,7 +453,7 @@
       <div class="dashboard-grid">
         <div class="dashboard-card">
           <h2>Free personnel funding</h2>
-          ${visibleProjects().length ? groupedFreePersonnelHtml() : '<div class="muted">No visible projects</div>'}
+          ${(visibleProjects().length || visibleAccounts().length) ? groupedFreePersonnelHtml() : '<div class="muted">No visible projects or accounts</div>'}
         </div>
         <div class="dashboard-card">
           <h2>Warnings</h2>
@@ -490,7 +486,12 @@
       String(a.type || '').localeCompare(String(b.type || ''), undefined, { numeric: true, sensitivity: 'base' }) ||
       String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
     );
-    const totalFree = projects.reduce((sum, project) => sum + projectFreePersonnel(project), 0);
+    const accounts = [...visibleAccounts()].sort((a, b) =>
+      String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
+    );
+    const totalFreeProjects = projects.reduce((sum, project) => sum + projectFreePersonnel(project), 0);
+    const totalFreeAccounts = accounts.reduce((sum, account) => sum + accountFreeBalance(account), 0);
+    const totalFree = totalFreeProjects + totalFreeAccounts;
 
     return `
       <div class="compact-budget-list">
@@ -500,6 +501,13 @@
             <strong class="${projectFreePersonnel(project) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(project))}</strong>
           </div>
         `).join('')}
+        ${accounts.length ? `<div class="budget-line compact-budget-line account-divider"><span><strong>Accounts</strong></span><span></span></div>
+        ${accounts.map(account => `
+          <div class="budget-line compact-budget-line">
+            <span>${esc(account.name || '(unnamed account)')}</span>
+            <strong class="${accountFreeBalance(account) < 0 ? 'negative-funding' : ''}">${formatMoney(accountFreeBalance(account))}</strong>
+          </div>
+        `).join('')}` : ''}
         <div class="budget-line compact-budget-total">
           <span>Total free funds</span>
           <strong class="${totalFree < 0 ? 'negative-funding' : ''}">${formatMoney(totalFree)}</strong>
@@ -645,12 +653,10 @@
     $('#tab-accounts').innerHTML = `
       <div class="section-head"><h2>Accounts</h2><div class="section-actions"><button class="primary" id="addAccountBtn">Add account</button></div></div>
       <div class="table-wrap"><table id="accountsTable" class="resizable-table"><thead><tr>
-        <th>Name</th><th>Start</th><th>End</th><th>Balance</th><th>Balance date</th><th>Assigned</th><th>Free balance</th><th>Notes</th><th>Hide</th><th></th>
+        <th>Name</th><th>Balance</th><th>Balance date</th><th>Assigned</th><th>Free balance</th><th>Notes</th><th>Hide</th><th></th>
       </tr></thead><tbody>
       ${accounts.map(a => `<tr data-account-id="${a.id}" class="${a.hidden ? 'hidden-row' : ''}">
         <td>${input('text', a.name, fieldAttrs('account', a.id, 'name'))}</td>
-        <td>${input('date', a.start, fieldAttrs('account', a.id, 'start'))}</td>
-        <td>${input('date', a.end, fieldAttrs('account', a.id, 'end'))}</td>
         <td>${input('money', a.balance, fieldAttrs('account', a.id, 'balance'))}</td>
         <td>${input('date', a.balanceDate, fieldAttrs('account', a.id, 'balanceDate'))}</td>
         <td class="computed money" data-account-assigned="${a.id}">${formatMoney(accountAssigned(a.id))}</td>
@@ -847,7 +853,7 @@
   }
 
   function addAccount() {
-    snapshot(); const a = { id: uid('account'), name: '', start: '', end: '', balance: 0, balanceDate: '', notes: '', hidden: false };
+    snapshot(); const a = { id: uid('account'), name: '', balance: 0, balanceDate: '', notes: '', hidden: false };
     state.accounts.push(a); renderAccounts(); renderDerived(); focusFirst(`[data-account-id="${a.id}"]`);
   }
 
@@ -895,7 +901,6 @@
   function timelineBounds() {
     const starts = [], ends = [];
     visibleProjects().forEach(p => { if (validDateString(p.start)) starts.push(parseDate(p.start)); if (validDateString(p.end)) ends.push(parseDate(p.end)); });
-    visibleAccounts().forEach(a => { if (validDateString(a.start)) starts.push(parseDate(a.start)); if (validDateString(a.end)) ends.push(parseDate(a.end)); });
     visiblePersons().forEach(p => { if (validDateString(p.contractStart)) starts.push(parseDate(p.contractStart)); if (validDateString(p.contractEnd)) ends.push(parseDate(p.contractEnd)); });
     visibleAssignments().forEach(a => { if (validDateString(a.start)) starts.push(parseDate(a.start)); if (validDateString(a.end)) ends.push(parseDate(a.end)); });
     if (!starts.length || !ends.length) { const now = new Date(); return [new Date(Date.UTC(now.getUTCFullYear(), 0, 1)), new Date(Date.UTC(now.getUTCFullYear() + 1, 11, 31))]; }
@@ -1039,10 +1044,10 @@
         const height = timelineRowHeight(assignments, PROJECT_TIMELINE_MIN_HEIGHT);
         const isAccount = p._isAccount;
         html += `<div class="timeline-label-row" style="height:${height}px">
-          <strong>${esc(p.name || isAccount ? '(unnamed account)' : '(unnamed project)')}</strong>
+          <strong>${esc(p.name || (isAccount ? '(unnamed account)' : '(unnamed project)'))}</strong>
           <div class="meta">
             ${isAccount
-              ? `<span>Balance</span><span>${formatMoney(p.balance)}</span><span>From</span><span>${esc(p.balanceDate)}</span><span>Assigned</span><span>${formatMoney(accountAssigned(p.id))}</span>`
+              ? `<span>Balance</span><span class="money">${formatMoney(p.balance)}</span><span>From</span><span>${esc(p.balanceDate)}</span><span>Assigned</span><span>${formatMoney(accountAssigned(p.id))}</span>`
               : `<span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span><span>Budget</span><span>${formatMoney(p.personnelBudget)}</span><span>Free</span><span>${formatMoney(projectFreePersonnel(p))}</span>`
             }
           </div>
@@ -1053,21 +1058,38 @@
   }
 
   function projectTimelineRows(min, months, width) {
+    const now = new Date();
     const groups = groupProjects();
     let html = '';
     for (const [, items] of groups) {
       html += `<div class="group-grid" style="width:${width}px"></div>`;
       for (const p of items) {
-        html += timelineRow(
-          'project',
-          p.id,
-          p.start || '',
-          p.end || '',
-          visibleAssignments().filter(a => a.projectId === p.id),
-          min,
-          months,
-          width
-        );
+        if (p._isAccount) {
+          const assignments = visibleAssignments().filter(a => a.projectId === p.id);
+          const height = timelineRowHeight(assignments, PROJECT_TIMELINE_MIN_HEIGHT);
+          const markerHtml = validDateString(p.balanceDate)
+            ? `<div class="balance-date-marker" style="left:${dateToX(p.balanceDate, min)}px;height:${height}px" title="Balance date: ${p.balanceDate}&#10;Balance: ${formatMoney(p.balance)}"></div>`
+            : '';
+          html += `<div class="timeline-row" data-drop-project="${p.id}" style="width:${width}px;height:${height}px">
+            <div class="timeline-row-grid">${months.map(month => {
+              const current = month.getUTCFullYear() === now.getFullYear() && month.getUTCMonth() === now.getMonth();
+              return `<div class="${current ? 'current-month-cell' : ''}"></div>`;
+            }).join('')}</div>
+            ${markerHtml}
+            ${packAssignmentLanes(assignments).packed.map(({ assignment, lane }) => assignmentBar(assignment, 'project', min, lane)).join('')}
+          </div>`;
+        } else {
+          html += timelineRow(
+            'project',
+            p.id,
+            p.start,
+            p.end,
+            visibleAssignments().filter(a => a.projectId === p.id),
+            min,
+            months,
+            width
+          );
+        }
       }
     }
     return html || '';
@@ -1126,7 +1148,7 @@
       .map(([type, items]) => [
         type,
         items.sort((a, b) =>
-          String(a.start || '9999-12-31').localeCompare(String(b.start || '9999-12-31')) ||
+          String(a._isAccount ? '0' : (a.start || '9999-12-31')).localeCompare(String(b._isAccount ? '0' : (b.start || '9999-12-31'))) ||
           String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
         )
       ]);
@@ -1274,7 +1296,7 @@
       planning.contractExtension ? '⚠ Contract extension required' : '',
       planning.projectExtension ? '⚠ Project extension required' : ''
     ].filter(Boolean).join('\n');
-    const tooltip = `${label}\n${a.start} – ${a.end}` +
+    const tooltip = `${label}\n${a.start} – ${a.end}\nCost: ${formatMoney(assignmentCost(a))}` +
       `${planningLines ? `\n\n${planningLines}` : ''}` +
       `${noteText ? `\n\nNote: ${noteText}` : ''}`;
 
