@@ -30,6 +30,7 @@
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
   const uid = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  function safeId(raw) { return String(raw ?? '').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128) || uid('unknown'); }
 
   function emptyState() {
     return { version: 2, persons: [], projects: [], assignments: [], expenses: [] };
@@ -50,7 +51,7 @@
   function normalizeState(raw) {
     const s = emptyState();
     s.persons = Array.isArray(raw?.persons) ? raw.persons.map(p => ({
-      id: p.id || uid('person'),
+      id: safeId(p.id) || uid('person'),
       firstName: String(p.firstName ?? ''),
       lastName: String(p.lastName ?? ''),
       role: String(p.role ?? ''),
@@ -58,7 +59,7 @@
       contractEnd: validDateString(p.contractEnd) ? p.contractEnd : '',
       salaryIntervals: Array.isArray(p.salaryIntervals)
         ? p.salaryIntervals.map(si => ({
-          id: si.id || uid('salary'),
+          id: safeId(si.id) || uid('salary'),
           start: validDateString(si.start) ? si.start : '',
           end: validDateString(si.end) ? si.end : '',
           monthlyCost: numberValue(si.monthlyCost)
@@ -73,7 +74,7 @@
       hidden: Boolean(p.hidden)
     })) : [];
     s.projects = Array.isArray(raw?.projects) ? raw.projects.map(p => ({
-      id: p.id || uid('project'),
+      id: safeId(p.id) || uid('project'),
       name: String(p.name ?? ''),
       type: String(p.type ?? ''),
       start: validDateString(p.start) ? p.start : '',
@@ -85,17 +86,17 @@
       hidden: Boolean(p.hidden)
     })) : [];
     s.assignments = Array.isArray(raw?.assignments) ? raw.assignments.map(a => ({
-      id: a.id || uid('assignment'),
-      personId: String(a.personId ?? ''),
-      projectId: String(a.projectId ?? ''),
+      id: safeId(a.id) || uid('assignment'),
+      personId: safeId(a.personId) || '',
+      projectId: safeId(a.projectId) || '',
       start: validDateString(a.start) ? a.start : '',
       end: validDateString(a.end) ? a.end : '',
       ftePercent: numberValue(a.ftePercent),
       notes: String(a.notes ?? '')
     })) : [];
     s.expenses = Array.isArray(raw?.expenses) ? raw.expenses.map(e => ({
-      id: e.id || uid('expense'),
-      projectId: String(e.projectId ?? ''),
+      id: safeId(e.id) || uid('expense'),
+      projectId: safeId(e.projectId) || '',
       category: ['travel', 'material', 'other'].includes(e.category) ? e.category : 'travel',
       date: validDateString(e.date) ? e.date : '',
       amount: numberValue(e.amount),
