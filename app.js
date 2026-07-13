@@ -86,7 +86,7 @@
           start: validDateString(si.start) ? si.start : '',
           end: validDateString(si.end) ? si.end : '',
           monthlyCost: numberValue(si.monthlyCost),
-          employmentPercent: numberValue(si.employmentPercent) || 100
+          employmentPercent: Math.min(100, Math.max(0, numberValue(si.employmentPercent) || 100))
         }))
         // Migrate legacy flat monthlyCost into a single salary interval
         : [{
@@ -939,6 +939,8 @@
       });
       if (el.classList.contains('money-input')) {
         el.addEventListener('blur', () => { el.value = formatNumber(numberValue(el.value), 2); endFieldEdit(el); });
+      } else if (el.classList.contains('percent-input')) {
+        el.addEventListener('blur', () => { el.value = Math.min(100, Math.max(0, numberValue(el.value))); endFieldEdit(el); });
       } else {
         el.addEventListener('blur', () => endFieldEdit(el));
       }
@@ -959,7 +961,9 @@
     if (!obj) return;
     const field = el.dataset.field;
     const numeric = ['monthlyCost', 'personnelBudget', 'travelBudget', 'materialBudget', 'ftePercent', 'amount', 'employmentPercent'].includes(field);
-    obj[field] = el.type === 'checkbox' ? el.checked : (numeric ? numberValue(el.value) : el.value);
+    let val = el.type === 'checkbox' ? el.checked : (numeric ? numberValue(el.value) : el.value);
+    if (field === 'employmentPercent' && numeric) val = Math.min(100, Math.max(0, val));
+    obj[field] = val;
     markDirty();
     if (field === 'hidden' && refreshDerived) { renderAll(); return; }
     if (refreshDerived) renderDerived();
