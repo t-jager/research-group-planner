@@ -403,7 +403,7 @@
         }
       }
       if (project && validDateString(a.start) && validDateString(a.end) && validDateString(project.start) && validDateString(project.end)) {
-        if (parseDate(a.start) < parseDate(project.start) || parseDate(a.end) > parseDate(project.end)) out.push({ level: 'error', text: `${who} / ${what}: assignment falls outside the project duration.` });
+        if (parseDate(a.start) < parseDate(project.start) || parseDate(a.end) > parseDate(project.end)) out.push({ level: 'warning', text: `${who} / ${what}: assignment falls outside the project duration and is treated as planned project extension.` });
       }
       if (numberValue(a.ftePercent) <= 0) out.push({ level: 'warning', text: `${who} / ${what}: FTE is zero.` });
     }
@@ -469,7 +469,7 @@
         </div>
         <div class="dashboard-card">
           <h2>Warnings</h2>
-          ${w.length ? `<ul class="warning-list">${w.map(x => `<li class="${x.level}">${esc(x.text)}</li>`).join('')}</ul>` : '<div class="ok">No errors or warnings.</div>'}
+          ${w.length ? `<ul class="warning-list">${w.map(x => `<li class="${x.level}"><span class="warning-icon">${x.level === 'error' ? '⛔' : '⚠️'}</span>${esc(x.text)}</li>`).join('')}</ul>` : '<div class="ok">No errors or warnings.</div>'}
         </div>
       </div>`;
   }
@@ -549,11 +549,11 @@
     $('#tab-persons').innerHTML = `
       <div class="section-head"><h2>Personnel</h2><div class="section-actions">${pastToggleHtml()}<button class="primary" id="addPersonBtn">Add person</button></div></div>
       <div class="table-wrap"><table id="personnelTable" class="resizable-table"><thead><tr>
-        ${personHeader('lastName', 'Last name')}${personHeader('firstName', 'First name')}${personHeader('role', 'Role')}${personHeader('contractStart', 'Contract start')}${personHeader('contractEnd', 'Contract end')}
+        ${personHeader('lastName', 'Last name', true)}${personHeader('firstName', 'First name')}${personHeader('role', 'Role')}${personHeader('contractStart', 'Contract start')}${personHeader('contractEnd', 'Contract end')}
         <th>Extension</th><th>Salary intervals</th><th>Notes</th>${personHeader('hidden', 'Hide')}<th></th>
       </tr></thead><tbody>
       ${rows.map(p => `<tr data-person-id="${p.id}" class="${p.hidden ? 'hidden-row' : ''}">
-        <td>${input('text', p.lastName, fieldAttrs('person', p.id, 'lastName'))}</td>
+        <td class="sticky-col">${input('text', p.lastName, fieldAttrs('person', p.id, 'lastName'))}</td>
         <td>${input('text', p.firstName, fieldAttrs('person', p.id, 'firstName'))}</td>
         <td>${input('text', p.role, fieldAttrs('person', p.id, 'role'))}</td>
         <td>${input('date', p.contractStart, fieldAttrs('person', p.id, 'contractStart'))}</td>
@@ -573,6 +573,7 @@
     bindEditorFields($('#tab-persons'));
     bindPastToggle($('#tab-persons'));
     bindResizableTables($('#tab-persons'));
+    bindTablePan($('#tab-persons'));
   }
 
   // Render the expandable salary interval sub-table for a person
@@ -586,9 +587,9 @@
     return `data-entity="salary" data-person-id="${personId}" data-id="${salaryId}" data-field="${field}"`;
   }
 
-  function personHeader(key, label) {
+  function personHeader(key, label, sticky) {
     const c = sortSpec.key === key ? (sortSpec.dir === 1 ? ' asc' : ' desc') : '';
-    return `<th class="sortable${c}" data-sort="${key}">${label}</th>`;
+    return `<th class="sortable${c}${sticky ? ' sticky-col' : ''}" data-sort="${key}">${label}</th>`;
   }
 
   function comparePersons(a, b, key) {
@@ -607,10 +608,10 @@
     const rows = [...tableProjects()].sort((a, b) => compareProjects(a, b, projectSortSpec.key) * projectSortSpec.dir);
     $('#tab-projects').innerHTML = `
       <div class="section-head"><h2>Projects</h2><div class="section-actions">${pastToggleHtml()}<button class="primary" id="addProjectBtn">Add project</button></div></div>
-      <div class="table-wrap"><table id="projectsTable" class="resizable-table"><thead><tr>${projectHeader('type', 'Type')}${projectHeader('name', 'Name')}${projectHeader('start', 'Start')}${projectHeader('end', 'End')}<th>Extension</th>${projectHeader('personnelBudget', 'Personnel budget')}${projectHeader('travelBudget', 'Travel budget')}${projectHeader('materialBudget', 'Material budget')}${projectHeader('assigned', 'Assigned personnel')}${projectHeader('free', 'Free personnel')}<th>Notes</th>${projectHeader('hidden', 'Hide')}<th></th></tr></thead><tbody>
+      <div class="table-wrap"><table id="projectsTable" class="resizable-table"><thead><tr>${projectHeader('name', 'Name', true)}${projectHeader('type', 'Type')}${projectHeader('start', 'Start')}${projectHeader('end', 'End')}<th>Extension</th>${projectHeader('personnelBudget', 'Personnel budget')}${projectHeader('travelBudget', 'Travel budget')}${projectHeader('materialBudget', 'Material budget')}${projectHeader('assigned', 'Assigned personnel')}${projectHeader('free', 'Free personnel')}<th>Notes</th>${projectHeader('hidden', 'Hide')}<th></th></tr></thead><tbody>
       ${rows.map(p => `<tr data-project-id="${p.id}" class="${p.hidden ? 'hidden-row' : ''}">
+        <td class="sticky-col">${input('text', p.name, fieldAttrs('project', p.id, 'name'))}</td>
         <td>${input('text', p.type, fieldAttrs('project', p.id, 'type'))}</td>
-        <td>${input('text', p.name, fieldAttrs('project', p.id, 'name'))}</td>
         <td>${input('date', p.start, fieldAttrs('project', p.id, 'start'))}</td>
         <td>${input('date', p.end, fieldAttrs('project', p.id, 'end'))}</td>
         <td class="computed">${requiredProjectExtension(p.id) ? `+${requiredProjectExtension(p.id)} months` : ''}</td>
@@ -630,11 +631,12 @@
     bindEditorFields($('#tab-projects'));
     bindPastToggle($('#tab-projects'));
     bindResizableTables($('#tab-projects'));
+    bindTablePan($('#tab-projects'));
   }
 
-  function projectHeader(key, label) {
+  function projectHeader(key, label, sticky) {
     const c = projectSortSpec.key === key ? (projectSortSpec.dir === 1 ? ' asc' : ' desc') : '';
-    return `<th class="sortable${c}" data-sort="${key}">${label}</th>`;
+    return `<th class="sortable${c}${sticky ? ' sticky-col' : ''}" data-sort="${key}">${label}</th>`;
   }
 
   function compareProjects(a, b, key) {
@@ -665,10 +667,10 @@
     $('#tab-accounts').innerHTML = `
       <div class="section-head"><h2>Accounts</h2><div class="section-actions"><button class="primary" id="addAccountBtn">Add account</button></div></div>
       <div class="table-wrap"><table id="accountsTable" class="resizable-table"><thead><tr>
-        <th>Name</th><th>Balance</th><th>Balance date</th><th>Assigned</th><th>Free balance</th><th>Notes</th><th>Hide</th><th></th>
+        <th class="sticky-col">Name</th><th>Balance</th><th>Balance date</th><th>Assigned</th><th>Free balance</th><th>Notes</th><th>Hide</th><th></th>
       </tr></thead><tbody>
       ${accounts.map(a => `<tr data-account-id="${a.id}" class="${a.hidden ? 'hidden-row' : ''}">
-        <td>${input('text', a.name, fieldAttrs('account', a.id, 'name'))}</td>
+        <td class="sticky-col">${input('text', a.name, fieldAttrs('account', a.id, 'name'))}</td>
         <td>${input('money', a.balance, fieldAttrs('account', a.id, 'balance'))}</td>
         <td>${input('date', a.balanceDate, fieldAttrs('account', a.id, 'balanceDate'))}</td>
         <td class="computed money" data-account-assigned="${a.id}">${formatMoney(accountAssigned(a.id))}</td>
@@ -682,6 +684,7 @@
     $$('.delete-account', $('#tab-accounts')).forEach(b => b.onclick = () => deleteAccount(b.dataset.id));
     bindEditorFields($('#tab-accounts'));
     bindResizableTables($('#tab-accounts'));
+    bindTablePan($('#tab-accounts'));
   }
 
   // Build <option> list for expense project selects (only projects with travel/material budget)
@@ -720,9 +723,9 @@
           ${overviewRows || '<tr><td colspan="7" class="muted">No projects to show.</td></tr>'}
         </tbody></table></div>
       </div>
-      <div class="table-wrap"><table id="expensesTable" class="resizable-table"><thead><tr><th>Project</th><th>Category</th><th>Date</th><th>Amount</th><th>Notes</th><th></th></tr></thead><tbody>
+      <div class="table-wrap"><table id="expensesTable" class="resizable-table"><thead><tr><th class="sticky-col">Project</th><th>Category</th><th>Date</th><th>Amount</th><th>Notes</th><th></th></tr></thead><tbody>
       ${visibleExpenses().map(e => `<tr data-expense-id="${e.id}">
-        <td><select ${fieldAttrs('expense', e.id, 'projectId')}>${projectOptions(e.projectId)}</select></td>
+        <td class="sticky-col"><select ${fieldAttrs('expense', e.id, 'projectId')}>${projectOptions(e.projectId)}</select></td>
         <td><select ${fieldAttrs('expense', e.id, 'category')}><option value="travel" ${e.category === 'travel' ? 'selected' : ''}>Travel</option><option value="material" ${e.category === 'material' ? 'selected' : ''}>Material</option><option value="other" ${e.category === 'other' ? 'selected' : ''}>Other</option></select></td>
         <td>${input('date', e.date, fieldAttrs('expense', e.id, 'date'))}</td>
         <td>${input('money', e.amount, fieldAttrs('expense', e.id, 'amount'))}</td>
@@ -735,6 +738,7 @@
     bindEditorFields($('#tab-expenses'));
     bindPastToggle($('#tab-expenses'));
     bindResizableTables($('#tab-expenses'));
+    bindTablePan($('#tab-expenses'));
   }
 
   // ─── Inline Editing System ───
@@ -1891,22 +1895,22 @@
       state.expenses.length > 0;
 
     if (isDirty) {
-      if (!confirmDiscardChanges('load the test data')) return;
+      if (!confirmDiscardChanges('load the example data')) return;
     } else if (hasCurrentData) {
       const proceed = confirm(
-        'Loading the test data will replace the currently open project. Continue?'
+        'Loading the example data will replace the currently open project. Continue?'
       );
       if (!proceed) return;
     }
 
     try {
-      const response = await fetch('research-group-planner-testdata.json', { cache: 'no-store' });
+      const response = await fetch('example-data.json', { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const raw = await response.json();
       snapshot();
       state = normalizeState(raw);
       fileHandle = null;
-      currentFileName = 'research-group-planner-testdata.json';
+      currentFileName = 'example-data.json';
       history = [];
       future = [];
       pendingEditSnapshot = null;
@@ -1915,8 +1919,8 @@
       markSaved();
     } catch (err) {
       alert(
-        'Could not load test data file.\n\n' +
-        'When running locally, please open research-group-planner-testdata.json via Open....'
+        'Could not load example data file.\n\n' +
+        'When running locally, please open example-data.json via Open....'
       );
     }
   }
@@ -1991,6 +1995,32 @@
           handle.addEventListener('pointerup', stop);
           handle.addEventListener('pointercancel', stop);
         });
+      });
+    });
+  }
+
+  function bindTablePan(root = document) {
+    root.querySelectorAll('.table-wrap').forEach(wrap => {
+      if (wrap.dataset.panBound === 'true') return;
+      wrap.dataset.panBound = 'true';
+      wrap.style.cursor = 'grab';
+      wrap.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
+        if (e.target.closest('button, input, select, textarea, a, th.sortable, .column-resize-handle')) return;
+        const startX = e.clientX;
+        const startScroll = wrap.scrollLeft;
+        wrap.classList.add('panning');
+        wrap.setPointerCapture(e.pointerId);
+        const move = ev => { wrap.scrollLeft = startScroll - (ev.clientX - startX); };
+        const stop = () => {
+          wrap.classList.remove('panning');
+          wrap.removeEventListener('pointermove', move);
+          wrap.removeEventListener('pointerup', stop);
+          wrap.removeEventListener('pointercancel', stop);
+        };
+        wrap.addEventListener('pointermove', move);
+        wrap.addEventListener('pointerup', stop);
+        wrap.addEventListener('pointercancel', stop);
       });
     });
   }

@@ -35,6 +35,7 @@ button {
   border-radius: 6px;
   padding: 7px 11px;
   cursor: pointer;
+  transition: background-color .12s ease, color .12s ease, border-color .12s ease, box-shadow .12s ease;
 }
 
 button:hover {
@@ -137,6 +138,12 @@ main {
 
 .tab.active {
   display: block;
+  animation: fadeIn .15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .section-head {
@@ -156,6 +163,12 @@ main {
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
+  touch-action: pan-y;
+}
+
+.table-wrap.panning {
+  cursor: grabbing !important;
+  user-select: none;
 }
 
 table {
@@ -170,6 +183,7 @@ td {
   border-right: 1px solid var(--line);
   padding: 6px;
   vertical-align: middle;
+  transition: background-color .12s ease;
 }
 
 th:last-child,
@@ -184,6 +198,36 @@ th {
   background: #f7f8fa;
   text-align: left;
   white-space: nowrap;
+}
+
+th.sticky-col {
+  left: 0;
+  z-index: 3;
+  box-shadow: 1px 0 0 var(--line);
+}
+
+td.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fff;
+  box-shadow: 1px 0 0 var(--line);
+}
+
+.table-wrap tbody tr:hover td {
+  background: #edf2fb;
+}
+
+.table-wrap tbody tr:hover td.computed {
+  background: #e4ebf5;
+}
+
+.table-wrap tbody tr:hover td.sticky-col {
+  background: #e0e8f3;
+}
+
+.table-wrap tbody tr.hidden-row:hover td {
+  background: #f0f2f5;
 }
 
 th.sortable {
@@ -212,9 +256,18 @@ td textarea {
   width: 100%;
   min-width: 100px;
   border: 1px solid transparent;
+  border-bottom: 1px solid transparent;
   border-radius: 4px;
   padding: 6px;
   background: transparent;
+  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+
+td input:hover,
+td select:hover,
+td textarea:hover {
+  border-color: #d0d5dd;
+  background: #fafbfc;
 }
 
 td input:focus,
@@ -236,7 +289,6 @@ td textarea {
 }
 
 .computed {
-  background: #f8fafc;
   white-space: nowrap;
 }
 
@@ -277,6 +329,14 @@ td textarea {
 
 .warning-list li {
   margin: 5px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.warning-icon {
+  flex-shrink: 0;
+  line-height: 1.4;
 }
 
 .error {
@@ -390,7 +450,7 @@ td textarea {
   color: #1e293b;
   border-right: 1px solid #cfd5dc;
   letter-spacing: .04em;
-  background: #fff;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .timeline-month-row {
@@ -518,7 +578,8 @@ td textarea {
   text-overflow: ellipsis;
   cursor: grab;
   user-select: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .08);
+  border: 1px solid rgba(255, 255, 255, .15);
 }
 
 .assignment-bar.dragging {

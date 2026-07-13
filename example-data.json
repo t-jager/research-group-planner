@@ -1,0 +1,305 @@
+{
+  "version": 2,
+  "persons": [
+    {
+      "id": "p1",
+      "firstName": "Anna",
+      "lastName": "Keller",
+      "role": "Professor",
+      "contractStart": "2024-01-01",
+      "contractEnd": "2028-12-31",
+      "salaryIntervals": [
+        {
+          "id": "s1",
+          "start": "2024-01-01",
+          "end": "2028-12-31",
+          "monthlyCost": 11000
+        }
+      ],
+      "notes": "Group leader",
+      "hidden": false
+    },
+    {
+      "id": "p2",
+      "firstName": "Jonas",
+      "lastName": "Weber",
+      "role": "Postdoc",
+      "contractStart": "2024-01-01",
+      "contractEnd": "2028-12-31",
+      "salaryIntervals": [
+        {
+          "id": "s2",
+          "start": "2024-01-01",
+          "end": "2028-12-31",
+          "monthlyCost": 7200
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "p3",
+      "firstName": "Mira",
+      "lastName": "Scholz",
+      "role": "Postdoc",
+      "contractStart": "2025-01-01",
+      "contractEnd": "2028-12-31",
+      "salaryIntervals": [
+        {
+          "id": "s3",
+          "start": "2025-01-01",
+          "end": "2028-12-31",
+          "monthlyCost": 7000
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "p4",
+      "firstName": "David",
+      "lastName": "Nguyen",
+      "role": "PhD student",
+      "contractStart": "2025-01-01",
+      "contractEnd": "2028-12-31",
+      "salaryIntervals": [
+        {
+          "id": "s4",
+          "start": "2025-01-01",
+          "end": "2028-12-31",
+          "monthlyCost": 4800
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "p5",
+      "firstName": "Lena",
+      "lastName": "Braun",
+      "role": "PhD student",
+      "contractStart": "2026-01-01",
+      "contractEnd": "2028-12-31",
+      "salaryIntervals": [
+        {
+          "id": "s5",
+          "start": "2026-01-01",
+          "end": "2028-12-31",
+          "monthlyCost": 4600
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "p6",
+      "firstName": "Tom",
+      "lastName": "Hoffmann",
+      "role": "Research assistant",
+      "contractStart": "2026-01-01",
+      "contractEnd": "2028-12-31",
+      "salaryIntervals": [
+        {
+          "id": "s6",
+          "start": "2026-01-01",
+          "end": "2028-12-31",
+          "monthlyCost": 3900
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    }
+  ],
+  "projects": [
+    {
+      "id": "pr1",
+      "name": "Adaptive Sensor Networks",
+      "type": "DFG Project",
+      "start": "2024-01-01",
+      "end": "2028-12-31",
+      "personnelBudget": 850000,
+      "travelBudget": 15000,
+      "materialBudget": 20000,
+      "notes": "Main funding source",
+      "hidden": false
+    },
+    {
+      "id": "pr2",
+      "name": "Explainable AI for Healthcare",
+      "type": "BMBF Project",
+      "start": "2024-01-01",
+      "end": "2028-12-31",
+      "personnelBudget": 621000,
+      "travelBudget": 25000,
+      "materialBudget": 10000,
+      "notes": "Collaboration with hospital",
+      "hidden": false
+    },
+    {
+      "id": "pr3",
+      "name": "Energy-Efficient Edge Computing",
+      "type": "Industry Project",
+      "start": "2024-01-01",
+      "end": "2028-12-31",
+      "personnelBudget": 522000,
+      "travelBudget": 15000,
+      "materialBudget": 30000,
+      "notes": "Close industry collaboration",
+      "hidden": false
+    }
+  ],
+  "accounts": [
+    {
+      "id": "a1",
+      "name": "Start-up funds",
+      "balance": "150,000.00",
+      "balanceDate": "2024-01-01",
+      "notes": "University seed money",
+      "hidden": false
+    }
+  ],
+  "assignments": [
+    {
+      "id": "a1",
+      "personId": "p1",
+      "projectId": "pr1",
+      "start": "2024-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 35,
+      "notes": "PI on main project"
+    },
+    {
+      "id": "a2",
+      "personId": "p1",
+      "projectId": "pr2",
+      "start": "2024-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 30,
+      "notes": "PI on healthcare project"
+    },
+    {
+      "id": "a3",
+      "personId": "p1",
+      "projectId": "pr3",
+      "start": "2024-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 25,
+      "notes": "PI on edge computing"
+    },
+    {
+      "id": "a4",
+      "personId": "p1",
+      "projectId": "a1",
+      "start": "2024-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 10,
+      "notes": "Admin and group management"
+    },
+    {
+      "id": "a5",
+      "personId": "p2",
+      "projectId": "pr1",
+      "start": "2024-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 60,
+      "notes": "Lead developer"
+    },
+    {
+      "id": "a6",
+      "personId": "p2",
+      "projectId": "pr2",
+      "start": "2024-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 40,
+      "notes": "ML pipeline"
+    },
+    {
+      "id": "a7",
+      "personId": "p3",
+      "projectId": "pr2",
+      "start": "2025-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 50,
+      "notes": "Healthcare AI researcher"
+    },
+    {
+      "id": "a8",
+      "personId": "p3",
+      "projectId": "pr3",
+      "start": "2025-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 50,
+      "notes": "Edge AI optimization"
+    },
+    {
+      "id": "a9",
+      "personId": "p4",
+      "projectId": "pr1",
+      "start": "2025-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 100,
+      "notes": "PhD on sensor networks"
+    },
+    {
+      "id": "a10",
+      "personId": "p5",
+      "projectId": "pr3",
+      "start": "2026-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 100,
+      "notes": "PhD on edge computing"
+    },
+    {
+      "id": "a11",
+      "personId": "p6",
+      "projectId": "pr1",
+      "start": "2026-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 70,
+      "notes": "Hardware prototyping"
+    },
+    {
+      "id": "a12",
+      "personId": "p6",
+      "projectId": "pr2",
+      "start": "2026-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 30,
+      "notes": "Data annotation tooling"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "e1",
+      "projectId": "pr1",
+      "category": "travel",
+      "date": "2025-03-15",
+      "amount": 1800,
+      "notes": "Conference in Berlin"
+    },
+    {
+      "id": "e2",
+      "projectId": "pr1",
+      "category": "travel",
+      "date": "2026-09-20",
+      "amount": 2200,
+      "notes": "Collaboration meeting"
+    },
+    {
+      "id": "e3",
+      "projectId": "pr3",
+      "category": "material",
+      "date": "2026-05-10",
+      "amount": 8500,
+      "notes": "Edge dev boards and sensors"
+    },
+    {
+      "id": "e4",
+      "projectId": "pr2",
+      "category": "travel",
+      "date": "2027-06-01",
+      "amount": 1500,
+      "notes": "Hospital partner meeting"
+    }
+  ]
+}
