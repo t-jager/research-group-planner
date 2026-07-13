@@ -1698,8 +1698,22 @@
         currentRow?.querySelectorAll('.contract-preview, .valid-drop-preview').forEach(el => el.remove());
       };
 
+      // Show contract duration highlight strip during resize
+      const showContractPreview = () => {
+        if (!person || !validDateString(person.contractStart) || !validDateString(person.contractEnd)) return;
+        if (!currentRow) return;
+        const contractLeft = dateToX(person.contractStart, min);
+        const contractRight = dateToX(addDays(person.contractEnd, 1), min);
+        const contract = document.createElement('div');
+        contract.className = 'contract-preview';
+        contract.style.left = `${contractLeft}px`;
+        contract.style.width = `${Math.max(1, contractRight - contractLeft)}px`;
+        currentRow.appendChild(contract);
+      };
+
       snapshot();
       clearPreview();
+      showContractPreview();
       bar.classList.add('dragging');
       if (isDeleteDrag) bar.classList.add('delete-dragging');
       bar.setPointerCapture(e.pointerId);
