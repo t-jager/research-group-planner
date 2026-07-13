@@ -1084,7 +1084,7 @@ body.modal-open {
 }
 .balance-label {
   position: absolute;
-  top: 2px;
+  bottom: 2px;
   left: 6px;
   background: #dbeafe;
   color: #1e40af;
