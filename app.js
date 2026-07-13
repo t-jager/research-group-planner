@@ -1134,7 +1134,7 @@
           <div class="assignment-modal-body">
             <div id="assignmentEditorPlanning" class="assignment-editor-planning" hidden></div>
             <label class="assignment-field">
-              <span>FTE percentage <abbr class="info-abbr" title="FTE = Full-Time Equivalent. 100% means full-time, 50% means half-time, etc. All percentages in this tool are expressed as a fraction of full-time equivalent.">?</abbr></span>
+              <span>FTE percentage <abbr class="info-abbr" title="FTE = Full-Time Equivalent. 100% means full-time, 50% means half-time, etc. All percentages in this tool are expressed as a fraction of full-time equivalent." onclick="alert(this.title)">?</abbr></span>
               <div class="fte-input-wrap">
                 <input id="assignmentEditorFte" type="text" inputmode="decimal" autocomplete="off">
                 <span>%</span>
