@@ -643,6 +643,14 @@ td textarea {
   margin: 0;
 }
 
+.expense-summary-table tbody tr[data-overview-project] {
+  cursor: pointer;
+}
+
+.expense-summary-table tbody tr[data-overview-project]:hover {
+  background: #edf2fb;
+}
+
 .expense-overview {
   margin: 0 0 18px;
 }
@@ -1099,6 +1107,198 @@ body.modal-open {
 }
 
 .assignment-comment-icon { margin-left: 5px; font-size: 11px; line-height: 1; vertical-align: middle; }
+
+/* ─── Expense Timeline Modal ─── */
+
+.expense-timeline-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.expense-timeline-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, .48);
+  backdrop-filter: blur(2px);
+}
+
+.expense-timeline-card {
+  position: relative;
+  width: min(720px, 100%);
+  border: 1px solid rgba(148, 163, 184, .55);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, .35);
+  overflow: hidden;
+}
+
+.expense-timeline-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--line);
+  background: #f8fafc;
+}
+
+.expense-timeline-header h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.expense-timeline-close {
+  border: 0;
+  background: transparent;
+  padding: 0 4px;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.expense-timeline-body {
+  padding: 20px;
+}
+
+.expense-timeline-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.expense-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.expense-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.expense-timeline-track {
+  margin-bottom: 16px;
+}
+
+.expense-timeline-bar {
+  position: relative;
+  background: #f1f5f9;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: visible;
+}
+
+.expense-marker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  z-index: 2;
+  transition: filter .1s, box-shadow .1s;
+}
+
+.expense-marker:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, .12);
+}
+
+.expense-today-line {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: rgba(210, 45, 45, .7);
+  z-index: 1;
+}
+
+.expense-timeline-months {
+  position: relative;
+  height: 22px;
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.expense-month-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.expense-month-tick:last-child {
+  transform: translateX(-100%);
+}
+
+.expense-timeline-list {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.expense-timeline-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 13px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background .15s;
+}
+
+.expense-timeline-list-item.highlighted {
+  background: #dbeafe;
+  border-radius: 4px;
+  margin: 0 -6px;
+  padding: 5px 6px;
+}
+
+.expense-timeline-list-item:last-child {
+  border-bottom: 0;
+}
+
+.expense-list-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.expense-list-date {
+  font-variant-numeric: tabular-nums;
+  min-width: 90px;
+}
+
+.expense-list-amount {
+  min-width: 80px;
+  text-align: right;
+}
+
+.expense-list-cat {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.expense-list-notes {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 
 .assignment-planned-segment {

@@ -711,7 +711,7 @@
       .map(p => {
         const travelSpent = projectExpense(p.id, 'travel');
         const materialSpent = projectExpense(p.id, 'material');
-        return `<tr>
+        return `<tr data-overview-project="${p.id}">
         <td>${esc(p.name || '(unnamed project)')}</td>
         <td class="money">${formatMoney(p.travelBudget)}</td>
         <td class="money" data-expense-summary="travel-spent" data-project-id="${p.id}">${formatMoney(travelSpent)}</td>
@@ -725,6 +725,7 @@
       <div class="section-head"><h2>Expenses</h2><div class="section-actions">${pastToggleHtml()}<button class="primary" id="addExpenseBtn">Add expense</button></div></div>
       <div class="expense-overview">
         <h3>Expense budget overview</h3>
+        <div class="help" style="margin-bottom:8px">Double-click on a project to show a graphical timeline of expenses.</div>
         <div class="table-wrap"><table class="expense-summary-table"><thead><tr>
           <th rowspan="2">Project</th><th colspan="3">Travel</th><th colspan="3">Material</th>
         </tr><tr><th>Budget</th><th>Spent</th><th>Left</th><th>Budget</th><th>Spent</th><th>Left</th></tr></thead><tbody>
@@ -747,6 +748,113 @@
     bindPastToggle($('#tab-expenses'));
     bindResizableTables($('#tab-expenses'));
     bindTablePan($('#tab-expenses'));
+    const overviewTable = $('.expense-summary-table', $('#tab-expenses'));
+    if (overviewTable) overviewTable.addEventListener('dblclick', e => {
+      const tr = e.target.closest('tr[data-overview-project]');
+      if (tr) openExpenseTimeline(tr.dataset.overviewProject);
+    });
+  }
+
+  function openExpenseTimeline(projectId) {
+    const project = getProject(projectId);
+    if (!project) return;
+    const expenses = state.expenses.filter(e => e.projectId === projectId);
+    const projStart = parseDate(project.start);
+    const projEnd = parseDate(project.end);
+    const totalMs = projEnd - projStart;
+    if (totalMs <= 0) return;
+
+    const categoryColors = { travel: '#2563eb', material: '#16a34a', other: '#6b7280' };
+    const categoryLabels = { travel: 'Travel', material: 'Material', other: 'Other' };
+
+    const sortedExpenses = expenses
+      .filter(e => validDateString(e.date))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Assign rows to avoid overlapping markers
+    const DOT_DIAMETER_PX = 12;
+    const rowGapPct = (DOT_DIAMETER_PX / Math.max(1, totalMs)) * 100 * 86400000;
+    const rows = [];
+    const markerData = sortedExpenses.map(e => {
+      const d = parseDate(e.date);
+      const pct = Math.max(0, Math.min(100, ((d - projStart) / totalMs) * 100));
+      let row = 0;
+      while (rows[row] != null && pct - rows[row] < rowGapPct * 1.5) row++;
+      rows[row] = pct;
+      return { e, pct, row };
+    });
+    const maxRow = markerData.reduce((m, d) => Math.max(m, d.row), 0);
+    const barHeight = 16 + maxRow * 24;
+
+    const expenseMarkers = markerData.map(({ e, pct, row }) => {
+      const color = categoryColors[e.category] || categoryColors.other;
+      return `<div class="expense-marker" data-expense-id="${e.id}" style="left:${pct}%;background:${color};top:${2 + row * 24}px" title="${e.date} – ${formatMoney(numberValue(e.amount))} (${categoryLabels[e.category] || e.category})${e.notes ? '\n' + e.notes : ''}"></div>`;
+    }).join('');
+
+    const todayMs = Date.now();
+    const todayPct = ((todayMs - projStart.getTime()) / totalMs) * 100;
+    const todayLine = (todayPct >= 0 && todayPct <= 100) ? `<div class="expense-today-line" style="left:${todayPct}%"></div>` : '';
+
+    const monthTicks = `<div class="expense-month-tick" style="left:0%"><span>${esc(project.start)}</span></div><div class="expense-month-tick" style="left:100%"><span>${esc(project.end)}</span></div>`;
+
+    const travelTotal = expenses.filter(e => e.category === 'travel').reduce((s, e) => s + numberValue(e.amount), 0);
+    const materialTotal = expenses.filter(e => e.category === 'material').reduce((s, e) => s + numberValue(e.amount), 0);
+    const otherTotal = expenses.filter(e => e.category !== 'travel' && e.category !== 'material').reduce((s, e) => s + numberValue(e.amount), 0);
+
+    const modal = document.createElement('div');
+    modal.className = 'expense-timeline-modal';
+    modal.innerHTML = `
+      <div class="expense-timeline-backdrop" data-expense-timeline-close></div>
+      <div class="expense-timeline-card">
+        <div class="expense-timeline-header">
+          <div>
+            <h3>${esc(project.name || '(unnamed project)')}</h3>
+            <div class="muted">${esc(project.start)} – ${esc(project.end)} · ${expenses.length} expense${expenses.length === 1 ? '' : 's'}</div>
+          </div>
+          <button class="expense-timeline-close" data-expense-timeline-close aria-label="Close">×</button>
+        </div>
+        <div class="expense-timeline-body">
+          <div class="expense-timeline-legend">
+            <span class="expense-legend-item"><span class="expense-legend-dot" style="background:#2563eb"></span>Travel ${formatMoney(travelTotal)}</span>
+            <span class="expense-legend-item"><span class="expense-legend-dot" style="background:#16a34a"></span>Material ${formatMoney(materialTotal)}</span>
+            ${otherTotal ? `<span class="expense-legend-item"><span class="expense-legend-dot" style="background:#6b7280"></span>Other ${formatMoney(otherTotal)}</span>` : ''}
+          </div>
+          <div class="expense-timeline-track">
+            <div class="expense-timeline-bar" style="height:${barHeight}px">${expenseMarkers}${todayLine}</div>
+            <div class="expense-timeline-months">${monthTicks}</div>
+          </div>
+          ${expenses.length ? `<div class="expense-timeline-list">
+            ${expenses.sort((a, b) => a.date.localeCompare(b.date)).map(e => {
+              const color = categoryColors[e.category] || categoryColors.other;
+              return `<div class="expense-timeline-list-item" data-expense-id="${e.id}">
+                <span class="expense-list-dot" style="background:${color}"></span>
+                <span class="expense-list-date">${e.date}</span>
+                <span class="expense-list-amount money">${formatMoney(numberValue(e.amount))}</span>
+                <span class="expense-list-cat">${categoryLabels[e.category] || e.category}</span>
+                ${e.notes ? `<span class="expense-list-notes muted">${esc(e.notes)}</span>` : ''}
+              </div>`;
+            }).join('')}
+          </div>` : '<div class="muted" style="padding:12px">No expenses recorded for this project.</div>'}
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    modal.querySelectorAll('[data-expense-timeline-close]').forEach(el => {
+      el.onclick = () => modal.remove();
+    });
+    modal.addEventListener('keydown', e => { if (e.key === 'Escape') modal.remove(); });
+    modal.querySelectorAll('.expense-marker[data-expense-id]').forEach(marker => {
+      marker.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = marker.dataset.expenseId;
+        modal.querySelectorAll('.expense-timeline-list-item.highlighted').forEach(el => el.classList.remove('highlighted'));
+        const target = modal.querySelector(`.expense-timeline-list-item[data-expense-id="${id}"]`);
+        if (target) {
+          target.classList.add('highlighted');
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+    });
   }
 
   // ─── Inline Editing System ───
@@ -2014,7 +2122,7 @@
       wrap.style.cursor = 'grab';
       wrap.addEventListener('pointerdown', e => {
         if (e.button !== 0) return;
-        if (e.target.closest('button, input, select, textarea, a, th.sortable, .column-resize-handle')) return;
+        if (e.target.closest('button, input, select, textarea, a, th.sortable, .column-resize-handle, tr[data-overview-project]')) return;
         const startX = e.clientX;
         const startScroll = wrap.scrollLeft;
         wrap.classList.add('panning');
