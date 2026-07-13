@@ -24,15 +24,14 @@ Switch to the **Projects** tab and add your research projects. For each project,
 
 ### 3. Create Assignments
 
-Go to the **Assignments** tab (labeled *Assignments* in the nav) to assign people to projects:
+Go to the **Assignments** tab to assign people to projects:
 
-- Select a person and a project from the dropdowns
-- Set the assignment period (must fall within the project dates)
-- Set the **FTE percentage** (e.g. 50 for half-time)
+- Drag a person chip from the palette onto a project row
+- Set the **FTE percentage** (e.g. 50 for half-time) in the editor that appears
+- Drag the left or right edge of an assignment bar to resize it (hold **Alt** for day-level precision)
+- Click an existing assignment bar to edit its FTE or notes
 
 The tool automatically calculates personnel costs based on the person's salary intervals and the overlap with the assignment period.
-
-Alternatively, use the **Timeline** view: drag a person chip from the palette onto a project row. Click an existing assignment bar to edit its FTE or notes. Drag the left or right edge of an assignment bar to resize it. Hold **Alt** for day-level precision.
 
 ### 4. Track Expenses
 
