@@ -1,0 +1,554 @@
+{
+  "version": 2,
+  "persons": [
+    {
+      "id": "person_0a9e4a42b9",
+      "firstName": "Anna",
+      "lastName": "Keller",
+      "role": "Professor",
+      "contractStart": "2022-01-01",
+      "contractEnd": "2032-12-31",
+      "salaryIntervals": [
+        {
+          "id": "salary_b6e8f79406",
+          "start": "2022-01-01",
+          "end": "2025-12-31",
+          "monthlyCost": 11500
+        },
+        {
+          "id": "salary_488d49f540",
+          "start": "2026-01-01",
+          "end": "2028-12-31",
+          "monthlyCost": 12200
+        },
+        {
+          "id": "salary_162783fa16",
+          "start": "2029-01-01",
+          "end": "2032-12-31",
+          "monthlyCost": 13000
+        }
+      ],
+      "notes": "Group leader",
+      "hidden": false
+    },
+    {
+      "id": "person_3efae977ae",
+      "firstName": "Jonas",
+      "lastName": "Weber",
+      "role": "Postdoc",
+      "contractStart": "2024-04-01",
+      "contractEnd": "2028-03-31",
+      "salaryIntervals": [
+        {
+          "id": "salary_14795213e7",
+          "start": "2024-04-01",
+          "end": "2025-12-31",
+          "monthlyCost": 7200
+        },
+        {
+          "id": "salary_4fd4da823a",
+          "start": "2026-01-01",
+          "end": "2028-03-31",
+          "monthlyCost": 7600
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_7c288210e1",
+      "firstName": "Mira",
+      "lastName": "Scholz",
+      "role": "Postdoc",
+      "contractStart": "2025-01-01",
+      "contractEnd": "2029-12-31",
+      "salaryIntervals": [
+        {
+          "id": "salary_5e71576833",
+          "start": "2025-01-01",
+          "end": "2026-12-31",
+          "monthlyCost": 7100
+        },
+        {
+          "id": "salary_69d6e9945b",
+          "start": "2027-01-01",
+          "end": "2029-12-31",
+          "monthlyCost": 7800
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_ac8de38fcb",
+      "firstName": "David",
+      "lastName": "Nguyen",
+      "role": "PhD student",
+      "contractStart": "2023-10-01",
+      "contractEnd": "2027-09-30",
+      "salaryIntervals": [
+        {
+          "id": "salary_d6085a635e",
+          "start": "2023-10-01",
+          "end": "2025-12-31",
+          "monthlyCost": 5100
+        },
+        {
+          "id": "salary_13d52709d8",
+          "start": "2026-01-01",
+          "end": "2027-09-30",
+          "monthlyCost": 5450
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_860f21e977",
+      "firstName": "Lea",
+      "lastName": "Fischer",
+      "role": "PhD student",
+      "contractStart": "2025-04-01",
+      "contractEnd": "2029-03-31",
+      "salaryIntervals": [
+        {
+          "id": "salary_329921e7bc",
+          "start": "2025-04-01",
+          "end": "2026-12-31",
+          "monthlyCost": 5000
+        },
+        {
+          "id": "salary_bdfda255ee",
+          "start": "2027-01-01",
+          "end": "2029-03-31",
+          "monthlyCost": 5400
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_81e8ab2b32",
+      "firstName": "Omar",
+      "lastName": "Haddad",
+      "role": "PhD student",
+      "contractStart": "2026-01-15",
+      "contractEnd": "2030-01-14",
+      "salaryIntervals": [
+        {
+          "id": "salary_141a678572",
+          "start": "2026-01-15",
+          "end": "2027-12-31",
+          "monthlyCost": 5150
+        },
+        {
+          "id": "salary_130db52f0a",
+          "start": "2028-01-01",
+          "end": "2030-01-14",
+          "monthlyCost": 5600
+        }
+      ],
+      "notes": "Mid-month contract start for prorating test",
+      "hidden": false
+    },
+    {
+      "id": "person_c735939ec2",
+      "firstName": "Sophie",
+      "lastName": "Brandt",
+      "role": "Research software engineer",
+      "contractStart": "2024-01-01",
+      "contractEnd": "2028-12-31",
+      "salaryIntervals": [
+        {
+          "id": "salary_2ae26a3af0",
+          "start": "2024-01-01",
+          "end": "2026-06-30",
+          "monthlyCost": 6800
+        },
+        {
+          "id": "salary_f05eff23fc",
+          "start": "2026-07-01",
+          "end": "2028-12-31",
+          "monthlyCost": 7350
+        }
+      ],
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "person_5f48cccc04",
+      "firstName": "Felix",
+      "lastName": "Bauer",
+      "role": "PhD student",
+      "contractStart": "2022-01-01",
+      "contractEnd": "2024-12-31",
+      "salaryIntervals": [
+        {
+          "id": "salary_5a75497564",
+          "start": "2022-01-01",
+          "end": "2024-12-31",
+          "monthlyCost": 4900
+        }
+      ],
+      "notes": "Former group member",
+      "hidden": true
+    }
+  ],
+  "projects": [
+    {
+      "id": "project_3bc5737962",
+      "name": "Secure Foundations",
+      "type": "ERC",
+      "start": "2025-01-01",
+      "end": "2029-12-31",
+      "personnelBudget": 1450000,
+      "travelBudget": 55000,
+      "materialBudget": 120000,
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "project_a061cd9c1e",
+      "name": "SPP CryptoNext",
+      "type": "DFG",
+      "start": "2024-07-01",
+      "end": "2027-06-30",
+      "personnelBudget": 420000,
+      "travelBudget": 28000,
+      "materialBudget": 18000,
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "project_dcdecd89f2",
+      "name": "CRC 1780",
+      "type": "DFG",
+      "start": "2026-01-01",
+      "end": "2029-12-31",
+      "personnelBudget": 620000,
+      "travelBudget": 35000,
+      "materialBudget": 45000,
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "project_6ebb11b9e1",
+      "name": "SecureCloud",
+      "type": "BMBF",
+      "start": "2025-04-01",
+      "end": "2028-03-31",
+      "personnelBudget": 530000,
+      "travelBudget": 22000,
+      "materialBudget": 90000,
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "project_7c9feb08d6",
+      "name": "Horizon PQC",
+      "type": "EU",
+      "start": "2026-06-01",
+      "end": "2030-05-31",
+      "personnelBudget": 760000,
+      "travelBudget": 65000,
+      "materialBudget": 70000,
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "project_a85aae8d0d",
+      "name": "2025",
+      "type": "Faculty",
+      "start": "2025-01-01",
+      "end": "2025-12-31",
+      "personnelBudget": 150000,
+      "travelBudget": 5000,
+      "materialBudget": 8000,
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "project_16e167e06f",
+      "name": "2026",
+      "type": "Faculty",
+      "start": "2026-01-01",
+      "end": "2026-12-31",
+      "personnelBudget": 175000,
+      "travelBudget": 7000,
+      "materialBudget": 12000,
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "project_4407d77643",
+      "name": "2027",
+      "type": "Faculty",
+      "start": "2027-01-01",
+      "end": "2027-12-31",
+      "personnelBudget": 160000,
+      "travelBudget": 6000,
+      "materialBudget": 10000,
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "project_8c0a0f8de7",
+      "name": "Legacy Industry Study",
+      "type": "Industry",
+      "start": "2022-01-01",
+      "end": "2023-12-31",
+      "personnelBudget": 180000,
+      "travelBudget": 0,
+      "materialBudget": 25000,
+      "notes": "Completed and hidden",
+      "hidden": true
+    }
+  ],
+  "assignments": [
+    {
+      "id": "assignment_14247f1b03",
+      "personId": "person_0a9e4a42b9",
+      "projectId": "project_a85aae8d0d",
+      "start": "2025-01-01",
+      "end": "2025-12-31",
+      "ftePercent": 25,
+      "notes": ""
+    },
+    {
+      "id": "assignment_28ee79c6a4",
+      "personId": "person_0a9e4a42b9",
+      "projectId": "project_3bc5737962",
+      "start": "2025-01-01",
+      "end": "2029-12-31",
+      "ftePercent": 50,
+      "notes": ""
+    },
+    {
+      "id": "assignment_bb49ec2179",
+      "personId": "person_0a9e4a42b9",
+      "projectId": "project_a061cd9c1e",
+      "start": "2025-01-01",
+      "end": "2027-06-30",
+      "ftePercent": 25,
+      "notes": ""
+    },
+    {
+      "id": "assignment_6f5b9fa659",
+      "personId": "person_3efae977ae",
+      "projectId": "project_a061cd9c1e",
+      "start": "2024-07-01",
+      "end": "2025-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "assignment_74ebe1fc43",
+      "personId": "person_3efae977ae",
+      "projectId": "project_3bc5737962",
+      "start": "2026-01-01",
+      "end": "2028-03-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "assignment_872f879d19",
+      "personId": "person_7c288210e1",
+      "projectId": "project_6ebb11b9e1",
+      "start": "2025-01-01",
+      "end": "2026-05-17",
+      "ftePercent": 60,
+      "notes": "Mid-month project switch follows"
+    },
+    {
+      "id": "assignment_421a61cfa8",
+      "personId": "person_7c288210e1",
+      "projectId": "project_7c9feb08d6",
+      "start": "2026-05-18",
+      "end": "2029-12-31",
+      "ftePercent": 60,
+      "notes": ""
+    },
+    {
+      "id": "assignment_837c3a5d71",
+      "personId": "person_7c288210e1",
+      "projectId": "project_3bc5737962",
+      "start": "2025-01-01",
+      "end": "2029-12-31",
+      "ftePercent": 40,
+      "notes": ""
+    },
+    {
+      "id": "assignment_5daab62e21",
+      "personId": "person_ac8de38fcb",
+      "projectId": "project_a061cd9c1e",
+      "start": "2023-10-01",
+      "end": "2025-06-30",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "assignment_3c3871d199",
+      "personId": "person_ac8de38fcb",
+      "projectId": "project_6ebb11b9e1",
+      "start": "2025-07-01",
+      "end": "2027-09-30",
+      "ftePercent": 75,
+      "notes": "Intentional 25% underfunding warning"
+    },
+    {
+      "id": "assignment_1e6cf37a60",
+      "personId": "person_860f21e977",
+      "projectId": "project_3bc5737962",
+      "start": "2025-04-01",
+      "end": "2027-12-31",
+      "ftePercent": 50,
+      "notes": ""
+    },
+    {
+      "id": "assignment_16e07c05a3",
+      "personId": "person_860f21e977",
+      "projectId": "project_a85aae8d0d",
+      "start": "2025-04-01",
+      "end": "2025-12-31",
+      "ftePercent": 50,
+      "notes": ""
+    },
+    {
+      "id": "assignment_093387ba25",
+      "personId": "person_860f21e977",
+      "projectId": "project_16e167e06f",
+      "start": "2026-01-01",
+      "end": "2026-12-31",
+      "ftePercent": 50,
+      "notes": ""
+    },
+    {
+      "id": "assignment_0ed6c85e9d",
+      "personId": "person_860f21e977",
+      "projectId": "project_dcdecd89f2",
+      "start": "2027-01-01",
+      "end": "2029-03-31",
+      "ftePercent": 50,
+      "notes": ""
+    },
+    {
+      "id": "assignment_762e2e0f58",
+      "personId": "person_81e8ab2b32",
+      "projectId": "project_7c9feb08d6",
+      "start": "2026-01-15",
+      "end": "2030-01-14",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "assignment_c28e200b0d",
+      "personId": "person_c735939ec2",
+      "projectId": "project_6ebb11b9e1",
+      "start": "2024-01-01",
+      "end": "2026-06-30",
+      "ftePercent": 50,
+      "notes": ""
+    },
+    {
+      "id": "assignment_406ea0a686",
+      "personId": "person_c735939ec2",
+      "projectId": "project_dcdecd89f2",
+      "start": "2026-07-01",
+      "end": "2028-12-31",
+      "ftePercent": 50,
+      "notes": ""
+    },
+    {
+      "id": "assignment_93bb341f3b",
+      "personId": "person_c735939ec2",
+      "projectId": "project_3bc5737962",
+      "start": "2025-01-01",
+      "end": "2028-12-31",
+      "ftePercent": 50,
+      "notes": ""
+    },
+    {
+      "id": "assignment_160d2a4833",
+      "personId": "person_5f48cccc04",
+      "projectId": "project_8c0a0f8de7",
+      "start": "2022-01-01",
+      "end": "2023-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    }
+  ],
+  "expenses": [
+    {
+      "id": "expense_8530b3d2da",
+      "projectId": "project_3bc5737962",
+      "category": "travel",
+      "date": "2025-09-14",
+      "amount": 1850.5,
+      "notes": "Conference travel"
+    },
+    {
+      "id": "expense_ccba67fff0",
+      "projectId": "project_3bc5737962",
+      "category": "material",
+      "date": "2026-02-10",
+      "amount": 34900,
+      "notes": "GPU workstation"
+    },
+    {
+      "id": "expense_21e126723b",
+      "projectId": "project_a061cd9c1e",
+      "category": "travel",
+      "date": "2025-11-03",
+      "amount": 920,
+      "notes": "SPP workshop"
+    },
+    {
+      "id": "expense_586b60f236",
+      "projectId": "project_a061cd9c1e",
+      "category": "material",
+      "date": "2026-01-22",
+      "amount": 3200,
+      "notes": "Test hardware"
+    },
+    {
+      "id": "expense_07df4d3654",
+      "projectId": "project_6ebb11b9e1",
+      "category": "travel",
+      "date": "2026-03-18",
+      "amount": 1480,
+      "notes": "Consortium meeting"
+    },
+    {
+      "id": "expense_ac0ed81452",
+      "projectId": "project_6ebb11b9e1",
+      "category": "material",
+      "date": "2025-08-08",
+      "amount": 17800,
+      "notes": "Server equipment"
+    },
+    {
+      "id": "expense_40b3730878",
+      "projectId": "project_7c9feb08d6",
+      "category": "travel",
+      "date": "2026-07-10",
+      "amount": 2450,
+      "notes": "Kickoff meeting"
+    },
+    {
+      "id": "expense_da584bb489",
+      "projectId": "project_dcdecd89f2",
+      "category": "material",
+      "date": "2026-04-01",
+      "amount": 7600,
+      "notes": "Measurement equipment"
+    },
+    {
+      "id": "expense_23375b623a",
+      "projectId": "project_16e167e06f",
+      "category": "material",
+      "date": "2026-02-14",
+      "amount": 2100,
+      "notes": "Laptops"
+    }
+  ]
+}

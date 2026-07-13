@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research Group Planner</title>
+  <link rel="stylesheet" href="style.css?v=0.26">
+</head>
+<body>
+  <header class="topbar">
+    <div class="header-brand">
+      <h1>Research Group Planner <span class="version">v0.26</span></h1>
+      <div id="fileStatus" class="muted">Unsaved project</div>
+    </div>
+
+    <nav class="header-tabs" aria-label="Views">
+      <button data-tab="persons" class="active">Persons</button>
+      <button data-tab="projects">Projects</button>
+      <button data-tab="timeline">Assignments</button>
+      <button data-tab="expenses">Expenses</button>
+      </nav>
+
+    <nav class="toolbar" aria-label="File actions">
+      <button id="newBtn">New</button>
+      <button id="openBtn">Open…</button>
+      <button id="loadTestDataBtn">Load test data</button>
+      <button id="saveBtn">Save</button>
+      <button id="saveAsBtn">Save As…</button>
+      <button id="undoBtn">Undo</button>
+      <button id="redoBtn">Redo</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="dashboard" class="panel dashboard"></section>
+
+    <section id="tab-persons" class="tab panel active"></section>
+    <section id="tab-projects" class="tab panel"></section>
+<section id="tab-expenses" class="tab panel"></section>
+    <section id="tab-timeline" class="tab panel"></section>
+</main>
+
+  <script src="app.js?v=0.26"></script>
+</body>
+</html>
