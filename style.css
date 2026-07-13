@@ -293,11 +293,16 @@ td textarea {
 }
 
 .person-palette {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
   align-content: flex-start;
   padding: 8px 10px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
 }
 
 .person-chip {
@@ -311,7 +316,7 @@ td textarea {
 .timeline-shell {
   border: 1px solid var(--line);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: clip;
   margin-bottom: 16px;
 }
 
@@ -409,7 +414,6 @@ td textarea {
   height: 84px;
   border-bottom: 1px solid var(--line);
   background: #fafbfc;
-  overflow-y: auto;
 }
 
 .group-label {
