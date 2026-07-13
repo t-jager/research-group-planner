@@ -1,7 +1,8 @@
 /**
  * Research Group Planner – client-side single-page application.
+ * Version: 0.3
  *
- * Manages personnel, projects, assignments, and expenses for a research group.
+ * Manages personnel, projects, accounts, assignments, expenses for a research group.
  * Features: undo/redo, cost calculations, validation warnings, inline-editable
  * tables, a timeline view with drag-and-drop assignment creation and resizing,
  * file I/O via the File System Access API (with fallback), and resizable columns.

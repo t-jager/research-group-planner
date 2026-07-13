@@ -222,10 +222,6 @@ td.sticky-col {
   background: #e4ebf5;
 }
 
-.table-wrap tbody tr:hover td.sticky-col {
-  background: #e0e8f3;
-}
-
 .table-wrap tbody tr.hidden-row:hover td {
   background: #f0f2f5;
 }
