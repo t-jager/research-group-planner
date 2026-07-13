@@ -85,14 +85,16 @@
           id: safeId(si.id) || uid('salary'),
           start: validDateString(si.start) ? si.start : '',
           end: validDateString(si.end) ? si.end : '',
-          monthlyCost: numberValue(si.monthlyCost)
+          monthlyCost: numberValue(si.monthlyCost),
+          employmentPercent: numberValue(si.employmentPercent) || 100
         }))
         // Migrate legacy flat monthlyCost into a single salary interval
         : [{
           id: uid('salary'),
           start: validDateString(p.contractStart) ? p.contractStart : '',
           end: validDateString(p.contractEnd) ? p.contractEnd : '',
-          monthlyCost: numberValue(p.monthlyCost)
+          monthlyCost: numberValue(p.monthlyCost),
+          employmentPercent: 100
         }].filter(si => si.start || si.end || si.monthlyCost),
       notes: String(p.notes ?? ''),
       hidden: Boolean(p.hidden)
@@ -420,7 +422,7 @@
         numberValue(a.ftePercent) > 0
       );
 
-      // Collect all segment boundary dates (contract start/end + assignment boundaries)
+      // Collect all segment boundary dates (contract start/end + assignment + salary interval boundaries)
       const events = new Set([person.contractStart, addDays(person.contractEnd, 1)]);
       for (const a of personAssignments) {
         const clippedStart = a.start < person.contractStart ? person.contractStart : a.start;
@@ -429,6 +431,11 @@
           events.add(clippedStart);
           events.add(addDays(clippedEnd, 1));
         }
+      }
+      const validSalaryIntervals = (person.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end));
+      for (const si of validSalaryIntervals) {
+        events.add(si.start);
+        events.add(addDays(si.end, 1));
       }
 
       // Sum FTE within each segment to detect under/over allocation
@@ -443,14 +450,16 @@
           .filter(a => a.start <= segmentStart && a.end >= segmentStart)
           .reduce((sum, a) => sum + numberValue(a.ftePercent), 0);
 
-        if (total < 99.9999) {
-          const period = segmentStart === segmentEnd ? segmentStart : `${segmentStart} to ${segmentEnd}`;
-          const assigned = Math.max(0, total);
-          const missing = Math.max(0, 100 - assigned);
-          out.push({ level: 'warning', text: `${personName(person)} has ${formatNumber(assigned, 1)}% funding assigned from ${period}; ${formatNumber(missing, 1)}% is missing.` });
+        // Find the matching salary interval for this segment and get its employment %
+        const matchingInterval = validSalaryIntervals.find(si => si.start <= segmentStart && si.end >= segmentStart);
+        const targetPercent = matchingInterval ? (numberValue(matchingInterval.employmentPercent) || 100) : 100;
+
+        const period = segmentStart === segmentEnd ? segmentStart : `${segmentStart} to ${segmentEnd}`;
+        if (Math.abs(total - targetPercent) > 0.0001) {
+          out.push({ level: 'error', text: `${personName(person)}: assigned FTE is ${formatNumber(total, 1)}% from ${period}; expected ${formatNumber(targetPercent, 1)}% (employment level).` });
         }
-        if (!overAllocationReported && total > 100.0001) {
-          out.push({ level: 'error', text: `${personName(person)} exceeds 100% FTE from ${segmentStart} (${formatNumber(total, 1)}%).` });
+        if (!overAllocationReported && total > targetPercent + 0.0001) {
+          out.push({ level: 'error', text: `${personName(person)} exceeds ${formatNumber(targetPercent, 1)}% FTE from ${segmentStart} (${formatNumber(total, 1)}%).` });
           overAllocationReported = true;
         }
       }
@@ -615,7 +624,7 @@
   function salaryIntervalsEditor(person) {
     const intervals = [...(person.salaryIntervals || [])].sort((a, b) => String(a.start).localeCompare(String(b.start)));
     if (!intervals.length) return '<div class="salary-empty">No salary intervals defined.</div>';
-    return `<div class="salary-editor"><table><thead><tr><th>Salary start</th><th>Salary end</th><th>Monthly employer cost</th><th></th></tr></thead><tbody>${intervals.map(si => `<tr data-salary-id="${si.id}"><td>${input('date', si.start, salaryFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, salaryFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, salaryFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td><button class="danger delete-salary" data-person-id="${person.id}" data-salary-id="${si.id}">Delete</button></td></tr>`).join('')}</tbody></table></div>`;
+    return `<div class="salary-editor"><table><thead><tr><th>Salary start</th><th>Salary end</th><th>Monthly employer cost</th><th>Employment %</th><th></th></tr></thead><tbody>${intervals.map(si => `<tr data-salary-id="${si.id}"><td>${input('date', si.start, salaryFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, salaryFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, salaryFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td>${input('percent', si.employmentPercent ?? 100, salaryFieldAttrs(person.id, si.id, 'employmentPercent'))}</td><td><button class="danger delete-salary" data-person-id="${person.id}" data-salary-id="${si.id}">Delete</button></td></tr>`).join('')}</tbody></table></div>`;
   }
 
   function salaryFieldAttrs(personId, salaryId, field) {
@@ -949,7 +958,7 @@
     }
     if (!obj) return;
     const field = el.dataset.field;
-    const numeric = ['monthlyCost', 'personnelBudget', 'travelBudget', 'materialBudget', 'ftePercent', 'amount'].includes(field);
+    const numeric = ['monthlyCost', 'personnelBudget', 'travelBudget', 'materialBudget', 'ftePercent', 'amount', 'employmentPercent'].includes(field);
     obj[field] = el.type === 'checkbox' ? el.checked : (numeric ? numberValue(el.value) : el.value);
     markDirty();
     if (field === 'hidden' && refreshDerived) { renderAll(); return; }
@@ -970,7 +979,7 @@
     snapshot();
     const validIntervals = (person.salaryIntervals || []).filter(si => validDateString(si.end)).sort((a, b) => a.end.localeCompare(b.end));
     const previous = validIntervals.length ? validIntervals[validIntervals.length - 1] : null;
-    const interval = { id: uid('salary'), start: previous ? addDays(previous.end, 1) : (person.contractStart || ''), end: person.contractEnd || '', monthlyCost: 0 };
+    const interval = { id: uid('salary'), start: previous ? addDays(previous.end, 1) : (person.contractStart || ''), end: person.contractEnd || '', monthlyCost: 0, employmentPercent: 100 };
     person.salaryIntervals.push(interval);
     renderPersons(); renderDerived();
     requestAnimationFrame(() => $(`[data-salary-id="${interval.id}"] input`)?.focus());
@@ -1381,31 +1390,6 @@
     const contractExtension = Boolean(person && validDateString(person.contractEnd) && validDateString(a.end) && a.end > person.contractEnd);
     const projectExtension = Boolean(project && validDateString(project.end) && validDateString(a.end) && a.end > project.end);
     return { contractExtension, projectExtension, badge: contractExtension && projectExtension ? 'CP' : contractExtension ? 'C' : projectExtension ? 'P' : '' };
-  }
-
-  // Calculate the number of months between two dates, rounding up partial months
-  function monthsExtension(fromDate, toDate) {
-    if (!validDateString(fromDate) || !validDateString(toDate) || toDate <= fromDate) return 0;
-    const from = parseDate(fromDate), to = parseDate(toDate);
-    let months = (to.getUTCFullYear() - from.getUTCFullYear()) * 12 + (to.getUTCMonth() - from.getUTCMonth());
-    if (to.getUTCDate() > from.getUTCDate()) months += 1;
-    return Math.max(1, months);
-  }
-
-  // How many months of contract extension a person needs based on their latest assignment
-  function requiredContractExtension(personId) {
-    const person = getPerson(personId);
-    if (!person || !validDateString(person.contractEnd)) return 0;
-    const latest = state.assignments.filter(a => a.personId === personId && validDateString(a.end)).map(a => a.end).sort().at(-1);
-    return latest ? monthsExtension(person.contractEnd, latest) : 0;
-  }
-
-  // How many months of project extension a project needs based on its latest assignment
-  function requiredProjectExtension(projectId) {
-    const project = getProject(projectId);
-    if (!project || !validDateString(project.end)) return 0;
-    const latest = state.assignments.filter(a => a.projectId === projectId && validDateString(a.end)).map(a => a.end).sort().at(-1);
-    return latest ? monthsExtension(project.end, latest) : 0;
   }
 
   // Striped overlay for the portion of an assignment that extends past the project end
