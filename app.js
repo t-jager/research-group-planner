@@ -556,7 +556,7 @@
     return `<option value="">Select person</option>` + [...persons].sort((a, b) => comparePersons(a, b, 'lastName')).map(p => `<option value="${p.id}" ${p.id === selected ? 'selected' : ''}>${esc(personName(p))}</option>`).join('');
   }
   function projectOptions(selected) {
-    const projects = visibleProjects();
+    const projects = visibleProjects().filter(p => numberValue(p.travelBudget) > 0 || numberValue(p.materialBudget) > 0);
     const selectedProject = getProject(selected);
     if (selectedProject && !selectedProject.hidden && !projects.some(p => p.id === selectedProject.id)) projects.push(selectedProject);
     return `<option value="">Select project</option>` + projects.map(p => `<option value="${p.id}" ${p.id === selected ? 'selected' : ''}>${esc(p.name || '(unnamed project)')}</option>`).join('');
