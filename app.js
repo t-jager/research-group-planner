@@ -1700,10 +1700,11 @@
 
       // Show contract duration highlight strip during resize
       const showContractPreview = () => {
-        if (!person || !validDateString(person.contractStart) || !validDateString(person.contractEnd)) return;
+        const p = getPerson(assignment.personId);
+        if (!p || !validDateString(p.contractStart) || !validDateString(p.contractEnd)) return;
         if (!currentRow) return;
-        const contractLeft = dateToX(person.contractStart, min);
-        const contractRight = dateToX(addDays(person.contractEnd, 1), min);
+        const contractLeft = dateToX(p.contractStart, min);
+        const contractRight = dateToX(addDays(p.contractEnd, 1), min);
         const contract = document.createElement('div');
         contract.className = 'contract-preview';
         contract.style.left = `${contractLeft}px`;
@@ -1781,6 +1782,9 @@
         const right = dateToX(addDays(assignment.end, 1), min);
         bar.style.left = `${left}px`;
         bar.style.width = `${Math.max(8, right - left)}px`;
+        // Update contract highlight to reflect latest contract dates
+        clearPreview();
+        showContractPreview();
         updateTip(ev);
       };
 

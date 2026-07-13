@@ -12,7 +12,7 @@
         {
           "id": "s1",
           "start": "2024-01-01",
-          "end": "2028-12-31",
+          "end": "2050-12-31",
           "monthlyCost": 11247.83,
           "employmentPercent": 100
         }
@@ -31,9 +31,9 @@
         {
           "id": "s2",
           "start": "2024-01-01",
-          "end": "2028-12-31",
-          "monthlyCost": 7234.56,
-          "employmentPercent": 85
+          "end": "2026-12-31",
+          "monthlyCost": 7123.11,
+          "employmentPercent": 100
         }
       ],
       "notes": "Lattice-based cryptography",
@@ -49,10 +49,10 @@
       "salaryIntervals": [
         {
           "id": "s3",
-          "start": "2025-01-01",
-          "end": "2028-12-31",
-          "monthlyCost": 7089.41,
-          "employmentPercent": 50
+          "start": "2026-06-01",
+          "end": "2028-12-17",
+          "monthlyCost": 7234.56,
+          "employmentPercent": 100
         }
       ],
       "notes": "Zero-knowledge proofs",
@@ -68,9 +68,9 @@
       "salaryIntervals": [
         {
           "id": "s4",
-          "start": "2025-01-01",
-          "end": "2028-12-31",
-          "monthlyCost": 4812.73,
+          "start": "2025-05-01",
+          "end": "2028-02-29",
+          "monthlyCost": 5812.73,
           "employmentPercent": 100
         }
       ],
@@ -80,7 +80,7 @@
     {
       "id": "p5",
       "firstName": "Lena",
-      "lastName": "Braun",
+      "lastName": "Braunwald",
       "role": "PhD student",
       "contractStart": "2026-01-01",
       "contractEnd": "2028-12-31",
@@ -89,8 +89,8 @@
           "id": "s5",
           "start": "2026-01-01",
           "end": "2028-12-31",
-          "monthlyCost": 4637.29,
-          "employmentPercent": 75
+          "monthlyCost": 6637.29,
+          "employmentPercent": 100
         }
       ],
       "notes": "Hash function cryptanalysis",
@@ -106,10 +106,10 @@
       "salaryIntervals": [
         {
           "id": "s6",
-          "start": "2026-01-01",
-          "end": "2028-12-31",
-          "monthlyCost": 3927.18,
-          "employmentPercent": 60
+          "start": "2026-02-01",
+          "end": "2028-07-31",
+          "monthlyCost": 5927.18,
+          "employmentPercent": 50
         }
       ],
       "notes": "Implementation and benchmarks",
@@ -157,7 +157,7 @@
   "accounts": [
     {
       "id": "a1",
-      "name": "Start-up funds",
+      "name": "Faculty 2026",
       "balance": 147832.46,
       "balanceDate": "2024-01-01",
       "notes": "University seed money for lab equipment",
@@ -166,130 +166,40 @@
   ],
   "assignments": [
     {
-      "id": "a1",
-      "personId": "p1",
-      "projectId": "pr1",
-      "start": "2024-01-01",
-      "end": "2027-12-31",
-      "ftePercent": 32.5,
-      "notes": "PI, proving pizza optimally"
-    },
-    {
-      "id": "a2",
-      "personId": "p1",
-      "projectId": "pr2",
-      "start": "2024-06-01",
-      "end": "2029-05-31",
-      "ftePercent": 22.5,
-      "notes": "Co-PI, temporal key exchange"
-    },
-    {
-      "id": "a3",
-      "personId": "p1",
-      "projectId": "pr3",
-      "start": "2025-01-01",
-      "end": "2028-06-30",
-      "ftePercent": 25,
-      "notes": "PI, humor encryption protocols"
-    },
-    {
-      "id": "a4",
+      "id": "assignment_mrjl6gwf_1ia4qs",
       "personId": "p1",
       "projectId": "a1",
       "start": "2024-01-01",
       "end": "2028-12-31",
-      "ftePercent": 20,
-      "notes": "Lab administration"
+      "ftePercent": 100,
+      "notes": ""
     },
     {
-      "id": "a5",
+      "id": "assignment_mrjl80e2_wgfyt2",
       "personId": "p2",
-      "projectId": "pr1",
+      "projectId": "a1",
       "start": "2024-01-01",
-      "end": "2027-12-31",
-      "ftePercent": 47.5,
-      "notes": "Lattice pizza proofs"
+      "end": "2024-12-31",
+      "ftePercent": 100,
+      "notes": ""
     },
     {
-      "id": "a6",
+      "id": "assignment_mrjl87bk_um1913",
       "personId": "p2",
-      "projectId": "pr2",
-      "start": "2024-06-01",
-      "end": "2029-05-31",
-      "ftePercent": 37.5,
-      "notes": "Post-quantum lattice constructions"
-    },
-    {
-      "id": "a7",
-      "personId": "p3",
-      "projectId": "pr2",
-      "start": "2025-01-01",
-      "end": "2029-05-31",
-      "ftePercent": 27.5,
-      "notes": "Zero-knowledge in time-travel scenarios"
-    },
-    {
-      "id": "a8",
-      "personId": "p3",
       "projectId": "pr3",
       "start": "2025-01-01",
-      "end": "2028-06-30",
-      "ftePercent": 22.5,
-      "notes": "Symmetric comedy schemes"
+      "end": "2028-09-30",
+      "ftePercent": 100,
+      "notes": ""
     },
     {
-      "id": "a9",
-      "personId": "p4",
+      "id": "assignment_mrjlc0p2_wf045t",
+      "personId": "p2",
       "projectId": "pr1",
-      "start": "2025-01-01",
-      "end": "2027-12-31",
-      "ftePercent": 63.5,
-      "notes": "PhD: provably optimal pizza"
-    },
-    {
-      "id": "a10",
-      "personId": "p4",
-      "projectId": "pr2",
-      "start": "2025-06-01",
-      "end": "2029-05-31",
-      "ftePercent": 36.5,
-      "notes": "PhD: quantum-resistant time capsules"
-    },
-    {
-      "id": "a11",
-      "personId": "p5",
-      "projectId": "pr3",
-      "start": "2026-01-01",
-      "end": "2028-06-30",
-      "ftePercent": 52.5,
-      "notes": "PhD: breaking hash function humor"
-    },
-    {
-      "id": "a12",
-      "personId": "p5",
-      "projectId": "pr1",
-      "start": "2026-06-01",
-      "end": "2027-12-31",
-      "ftePercent": 22.5,
-      "notes": "Pizza hash collisions"
-    },
-    {
-      "id": "a13",
-      "personId": "p6",
-      "projectId": "pr1",
-      "start": "2026-01-01",
-      "end": "2027-12-31",
-      "ftePercent": 37.5,
-      "notes": "Implementation benchmarks"
-    },
-    {
-      "id": "a14",
-      "personId": "p6",
-      "projectId": "pr2",
-      "start": "2026-06-01",
-      "end": "2029-05-31",
-      "ftePercent": 22.5,
-      "notes": "Quantum circuit benchmarks"
+      "start": "2024-11-01",
+      "end": "2024-11-30",
+      "ftePercent": 100,
+      "notes": ""
     }
   ],
   "expenses": [
