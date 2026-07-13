@@ -30,7 +30,7 @@
     <ul>
       <li><strong>Name and role</strong> (e.g. Professor, Postdoc, PhD student)</li>
       <li><strong>Contract start and end dates</strong></li>
-      <li><strong>Salary intervals</strong>: Click <em>Add interval</em> to define periods with different monthly employer costs. Intervals must cover the full contract without gaps or overlaps. If a salary changes mid-contract, create two intervals (e.g. one for 2024–2025 and another for 2026-onwards).</li>
+      <li><strong>Salary intervals</strong>: Click <em>Add interval</em> to define periods with different monthly employer costs. Each interval has a <strong>Monthly employer cost 100%</strong> (the cost at full-time) and an <strong>Employment %</strong> (the person's actual employment level during that period; defaults to 100%). A computed <strong>Monthly cost</strong> column shows the actual cost at the given employment level. Intervals must cover the full contract without gaps or overlaps. If a salary or employment level changes mid-contract, create separate intervals.</li>
     </ul>
 
     <h3>2. Set Up Projects</h3>
@@ -54,11 +54,11 @@
     <p>Go to the <strong>Assignments</strong> tab to assign people to projects:</p>
     <ul>
       <li>Drag a person chip from the palette onto a project row</li>
-      <li>Set the <strong>FTE percentage</strong> (e.g. 50 for half-time) in the editor that appears</li>
+      <li>Set the <strong>FTE percentage</strong> (Full-Time Equivalent, e.g. 50 for half-time) in the editor that appears. All percentages in this tool are expressed as a fraction of full-time equivalent.</li>
       <li>Drag the left or right edge of an assignment bar to resize it (hold <strong>Alt</strong> for day-level precision)</li>
       <li>Click an existing assignment bar to edit its FTE or notes</li>
     </ul>
-    <p>The tool automatically calculates personnel costs based on the person's salary intervals and the overlap with the assignment period.</p>
+    <p>The tool automatically calculates personnel costs based on the person's salary intervals and the FTE percentage of the assignment. A 25% assignment means 25% of full-time equivalent, so the cost is 25% of the 100% monthly employer cost for the overlapping period.</p>
 
     <h3>5. Track Expenses</h3>
     <p>In the <strong>Expenses</strong> tab, log travel and material costs against projects. Only projects with non-zero travel or material budgets appear in the project dropdown. The overview table at the top shows remaining budgets at a glance.</p>
@@ -67,7 +67,7 @@
     <p>The dashboard at the top of the page shows:</p>
     <ul>
       <li><strong>Free personnel funding</strong> per project and per account (remaining budget after assignments, shown in red when exceeded)</li>
-      <li><strong>Warnings</strong> for issues like overlapping salary intervals, FTE over/under-allocation, and date conflicts</li>
+      <li><strong>Warnings</strong> for issues like overlapping salary intervals, FTE (Full-Time Equivalent) under/over-allocation relative to the employment level, and date conflicts</li>
     </ul>
     <p>Check the warnings regularly to catch problems early.</p>
 
