@@ -617,6 +617,17 @@
     $$('.delete-salary', $('#tab-persons')).forEach(b => b.onclick = () => deleteSalaryInterval(b.dataset.personId, b.dataset.salaryId));
     $$('th.sortable', $('#tab-persons')).forEach(th => th.onclick = () => sortPersons(th.dataset.sort));
     bindEditorFields($('#tab-persons'));
+    // Update computed monthly cost cells when cost or employment % changes
+    $$('[data-salary-cost]').forEach(td => {
+      const siId = td.dataset.salaryCost;
+      const row = td.closest(`[data-salary-id="${siId}"]`);
+      if (!row) return;
+      const costInput = row.querySelector('[data-field="monthlyCost"]');
+      const pctInput = row.querySelector('[data-field="employmentPercent"]');
+      const update = () => { td.textContent = formatMoney(numberValue(costInput?.value) * (numberValue(pctInput?.value) || 100) / 100); };
+      costInput?.addEventListener('input', update);
+      pctInput?.addEventListener('input', update);
+    });
     bindPastToggle($('#tab-persons'));
     bindResizableTables($('#tab-persons'));
     bindTablePan($('#tab-persons'));
@@ -629,7 +640,7 @@
     return `<div class="salary-editor"><table><thead><tr><th>Salary start</th><th>Salary end</th><th>Monthly employer cost 100%</th><th>Employment %</th><th>Monthly cost</th><th></th></tr></thead><tbody>${intervals.map(si => {
       const empPct = numberValue(si.employmentPercent) || 100;
       const monthlyActual = numberValue(si.monthlyCost) * empPct / 100;
-      return `<tr data-salary-id="${si.id}"><td>${input('date', si.start, salaryFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, salaryFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, salaryFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td>${input('percent', si.employmentPercent ?? 100, salaryFieldAttrs(person.id, si.id, 'employmentPercent'))}</td><td class="computed money">${formatMoney(monthlyActual)}</td><td><button class="danger delete-salary" data-person-id="${person.id}" data-salary-id="${si.id}">Delete</button></td></tr>`;
+      return `<tr data-salary-id="${si.id}"><td>${input('date', si.start, salaryFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, salaryFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, salaryFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td>${input('percent', si.employmentPercent ?? 100, salaryFieldAttrs(person.id, si.id, 'employmentPercent'))}</td><td class="computed money" data-salary-cost="${si.id}">${formatMoney(monthlyActual)}</td><td><button class="danger delete-salary" data-person-id="${person.id}" data-salary-id="${si.id}">Delete</button></td></tr>`;
     }).join('')}</tbody></table></div>`;
   }
 
