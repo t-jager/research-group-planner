@@ -466,6 +466,23 @@
         }
       }
     }
+    // Info-level: contract/project extension required (deduplicated per entity)
+    const contractExtensionsNeeded = new Set();
+    const projectExtensionsNeeded = new Set();
+    for (const a of state.assignments.filter(x => !getPerson(x.personId)?.hidden && !getProjectOrAccount(x.projectId)?.hidden)) {
+      const person = getPerson(a.personId);
+      const project = getProjectOrAccount(a.projectId);
+      if (person && validDateString(a.end) && validDateString(person.contractEnd) && a.end > person.contractEnd) contractExtensionsNeeded.add(person.id);
+      if (project && validDateString(a.end) && validDateString(project.end) && a.end > project.end) projectExtensionsNeeded.add(project.id);
+    }
+    for (const id of contractExtensionsNeeded) {
+      const p = getPerson(id);
+      if (p) out.push({ level: 'info', text: `Extension of contract for ${personName(p)} required.` });
+    }
+    for (const id of projectExtensionsNeeded) {
+      const p = getProjectOrAccount(id);
+      if (p) out.push({ level: 'info', text: `Extension of project ${p.name || '(unnamed project)'} required.` });
+    }
     // Validate expenses: date within project duration
     for (const e of state.expenses) {
       const project = getProject(e.projectId);
@@ -488,7 +505,7 @@
         </div>
         <div class="dashboard-card">
           <h2>Warnings</h2>
-          ${w.length ? `<ul class="warning-list">${w.map(x => `<li class="${x.level}"><span class="warning-icon">${x.level === 'error' ? '⛔' : '⚠️'}</span>${esc(x.text)}</li>`).join('')}</ul>` : '<div class="ok">No errors or warnings.</div>'}
+          ${w.length ? `<ul class="warning-list">${w.map(x => `<li class="${x.level}"><span class="warning-icon">${x.level === 'error' ? '⛔' : x.level === 'info' ? '🔷' : '⚠️'}</span>${esc(x.text)}</li>`).join('')}</ul>` : '<div class="ok">Everything looks good.</div>'}
         </div>
       </div>`;
   }
@@ -569,7 +586,7 @@
       <div class="section-head"><h2>Personnel</h2><div class="section-actions">${pastToggleHtml()}<button class="primary" id="addPersonBtn">Add person</button></div></div>
       <div class="table-wrap"><table id="personnelTable" class="resizable-table"><thead><tr>
         ${personHeader('lastName', 'Last name', true)}${personHeader('firstName', 'First name')}${personHeader('role', 'Role')}${personHeader('contractStart', 'Contract start')}${personHeader('contractEnd', 'Contract end')}
-        <th>Extension</th><th>Salary intervals</th><th>Notes</th>${personHeader('hidden', 'Hide')}<th></th>
+        <th>Salary intervals</th><th>Notes</th>${personHeader('hidden', 'Hide')}<th></th>
       </tr></thead><tbody>
       ${rows.map(p => `<tr data-person-id="${p.id}" class="${p.hidden ? 'hidden-row' : ''}">
         <td class="sticky-col">${input('text', p.lastName, fieldAttrs('person', p.id, 'lastName'))}</td>
@@ -577,12 +594,11 @@
         <td>${input('text', p.role, fieldAttrs('person', p.id, 'role'))}</td>
         <td>${input('date', p.contractStart, fieldAttrs('person', p.id, 'contractStart'))}</td>
         <td>${input('date', p.contractEnd, fieldAttrs('person', p.id, 'contractEnd'))}</td>
-        <td class="computed extension-cell">${requiredContractExtension(p.id) ? `+${requiredContractExtension(p.id)} months` : ''}</td>
         <td class="salary-summary">${(p.salaryIntervals || []).length} interval${(p.salaryIntervals || []).length === 1 ? '' : 's'} <button class="add-salary" data-id="${p.id}">Add interval</button></td>
         <td><textarea ${fieldAttrs('person', p.id, 'notes')}>${esc(p.notes)}</textarea></td>
         <td class="center"><input type="checkbox" ${fieldAttrs('person', p.id, 'hidden')} ${p.hidden ? 'checked' : ''}></td>
         <td><button class="danger delete-person" data-id="${p.id}">Delete</button></td>
-      </tr><tr class="salary-detail-row ${p.hidden ? 'hidden-row' : ''}"><td colspan="10">${salaryIntervalsEditor(p)}</td></tr>`).join('')}
+      </tr><tr class="salary-detail-row ${p.hidden ? 'hidden-row' : ''}"><td colspan="9">${salaryIntervalsEditor(p)}</td></tr>`).join('')}
       </tbody></table></div>`;
     $('#addPersonBtn').onclick = () => addPerson();
     $$('.delete-person', $('#tab-persons')).forEach(b => b.onclick = () => deletePerson(b.dataset.id));
@@ -627,13 +643,12 @@
     const rows = [...tableProjects()].sort((a, b) => compareProjects(a, b, projectSortSpec.key) * projectSortSpec.dir);
     $('#tab-projects').innerHTML = `
       <div class="section-head"><h2>Projects</h2><div class="section-actions">${pastToggleHtml()}<button class="primary" id="addProjectBtn">Add project</button></div></div>
-      <div class="table-wrap"><table id="projectsTable" class="resizable-table"><thead><tr>${projectHeader('name', 'Name', true)}${projectHeader('type', 'Type')}${projectHeader('start', 'Start')}${projectHeader('end', 'End')}<th>Extension</th>${projectHeader('personnelBudget', 'Personnel budget')}${projectHeader('travelBudget', 'Travel budget')}${projectHeader('materialBudget', 'Material budget')}${projectHeader('assigned', 'Assigned personnel')}${projectHeader('free', 'Free personnel')}<th>Notes</th>${projectHeader('hidden', 'Hide')}<th></th></tr></thead><tbody>
+      <div class="table-wrap"><table id="projectsTable" class="resizable-table"><thead><tr>${projectHeader('name', 'Name', true)}${projectHeader('type', 'Type')}${projectHeader('start', 'Start')}${projectHeader('end', 'End')}${projectHeader('personnelBudget', 'Personnel budget')}${projectHeader('travelBudget', 'Travel budget')}${projectHeader('materialBudget', 'Material budget')}${projectHeader('assigned', 'Assigned personnel')}${projectHeader('free', 'Free personnel')}<th>Notes</th>${projectHeader('hidden', 'Hide')}<th></th></tr></thead><tbody>
       ${rows.map(p => `<tr data-project-id="${p.id}" class="${p.hidden ? 'hidden-row' : ''}">
         <td class="sticky-col">${input('text', p.name, fieldAttrs('project', p.id, 'name'))}</td>
         <td>${input('text', p.type, fieldAttrs('project', p.id, 'type'))}</td>
         <td>${input('date', p.start, fieldAttrs('project', p.id, 'start'))}</td>
         <td>${input('date', p.end, fieldAttrs('project', p.id, 'end'))}</td>
-        <td class="computed">${requiredProjectExtension(p.id) ? `+${requiredProjectExtension(p.id)} months` : ''}</td>
         <td>${input('money', p.personnelBudget, fieldAttrs('project', p.id, 'personnelBudget'))}</td>
         <td>${input('money', p.travelBudget, fieldAttrs('project', p.id, 'travelBudget'))}</td>
         <td>${input('money', p.materialBudget, fieldAttrs('project', p.id, 'materialBudget'))}</td>

@@ -343,6 +343,10 @@ td textarea {
   color: var(--warning);
 }
 
+.info {
+  color: #2563eb;
+}
+
 .ok {
   color: #16794b;
 }
@@ -1407,9 +1411,6 @@ body.modal-open {
   color: #b91c1c;
 }
 
-.extension-cell {
-  white-space: nowrap;
-}
 
 
 .resizable-table {
