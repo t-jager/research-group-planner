@@ -303,10 +303,10 @@
         let cursor = p.contractStart;
         for (const si of intervals) {
           if (si.end < cursor) continue;
-          if (si.start > cursor) out.push({ level: 'error', text: `${personName(p)}: no salary interval covers ${cursor} to ${addDays(si.start, -1)}.` });
+          if (si.start > cursor) out.push({ level: 'error', text: `${personName(p)}: salary interval gap from ${cursor} to ${addDays(si.start, -1)}.` });
           if (si.end >= cursor) cursor = addDays(si.end, 1);
         }
-        if (cursor <= p.contractEnd) out.push({ level: 'error', text: `${personName(p)}: no salary interval covers ${cursor} to ${p.contractEnd}.` });
+        if (cursor <= p.contractEnd) out.push({ level: 'error', text: `${personName(p)}: salary intervals end before contract (${cursor}).` });
       }
     }
     for (const p of state.projects.filter(x => !x.hidden)) {
@@ -1743,12 +1743,8 @@
       markSaved();
     } catch (err) {
       alert(
-        'Could not load research-group-planner-testdata.json from beside index.html.\\n\\n' +
-        'When index.html is opened with file://, browsers usually block fetch() for local files. ' +
-        'Run a local server in this folder, for example:\\n\\n' +
-        'python3 -m http.server\\n\\n' +
-        'Then open http://localhost:8000/\\n\\n' +
-        `Technical error: ${err.message}`
+        'Could not load test data file.\n\n' +
+        'When running locally, please open research-group-planner-testdata.json via Open....'
       );
     }
   }
