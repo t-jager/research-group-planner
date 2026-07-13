@@ -694,14 +694,14 @@ td textarea {
 }
 
 .salary-editor {
-  max-width: 760px;
+  max-width: 960px;
   border: 1px solid var(--line);
   border-radius: 7px;
   overflow: auto;
 }
 
 .salary-editor table {
-  min-width: 620px;
+  min-width: 820px;
 }
 
 .salary-editor th {
