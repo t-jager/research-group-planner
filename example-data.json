@@ -13,10 +13,11 @@
           "id": "s1",
           "start": "2024-01-01",
           "end": "2028-12-31",
-          "monthlyCost": 11000
+          "monthlyCost": 11247.83,
+          "employmentPercent": 100
         }
       ],
-      "notes": "Group leader",
+      "notes": "Group leader, cryptographic protocols",
       "hidden": false
     },
     {
@@ -31,10 +32,11 @@
           "id": "s2",
           "start": "2024-01-01",
           "end": "2028-12-31",
-          "monthlyCost": 7200
+          "monthlyCost": 7234.56,
+          "employmentPercent": 85
         }
       ],
-      "notes": "",
+      "notes": "Lattice-based cryptography",
       "hidden": false
     },
     {
@@ -49,10 +51,11 @@
           "id": "s3",
           "start": "2025-01-01",
           "end": "2028-12-31",
-          "monthlyCost": 7000
+          "monthlyCost": 7089.41,
+          "employmentPercent": 50
         }
       ],
-      "notes": "",
+      "notes": "Zero-knowledge proofs",
       "hidden": false
     },
     {
@@ -67,10 +70,11 @@
           "id": "s4",
           "start": "2025-01-01",
           "end": "2028-12-31",
-          "monthlyCost": 4800
+          "monthlyCost": 4812.73,
+          "employmentPercent": 100
         }
       ],
-      "notes": "",
+      "notes": "Post-quantum key exchange",
       "hidden": false
     },
     {
@@ -85,10 +89,11 @@
           "id": "s5",
           "start": "2026-01-01",
           "end": "2028-12-31",
-          "monthlyCost": 4600
+          "monthlyCost": 4637.29,
+          "employmentPercent": 75
         }
       ],
-      "notes": "",
+      "notes": "Hash function cryptanalysis",
       "hidden": false
     },
     {
@@ -103,48 +108,49 @@
           "id": "s6",
           "start": "2026-01-01",
           "end": "2028-12-31",
-          "monthlyCost": 3900
+          "monthlyCost": 3927.18,
+          "employmentPercent": 60
         }
       ],
-      "notes": "",
+      "notes": "Implementation and benchmarks",
       "hidden": false
     }
   ],
   "projects": [
     {
       "id": "pr1",
-      "name": "Adaptive Sensor Networks",
+      "name": "Zero-Knowledge Proofs of Better Pizza",
       "type": "DFG Project",
       "start": "2024-01-01",
-      "end": "2028-12-31",
-      "personnelBudget": 850000,
-      "travelBudget": 15000,
-      "materialBudget": 20000,
-      "notes": "Main funding source",
+      "end": "2027-12-31",
+      "personnelBudget": 847325.50,
+      "travelBudget": 15432.75,
+      "materialBudget": 21387.25,
+      "notes": "Proving pizza quality without revealing the recipe",
       "hidden": false
     },
     {
       "id": "pr2",
-      "name": "Explainable AI for Healthcare",
-      "type": "BMBF Project",
-      "start": "2024-01-01",
-      "end": "2028-12-31",
-      "personnelBudget": 621000,
-      "travelBudget": 25000,
-      "materialBudget": 10000,
-      "notes": "Collaboration with hospital",
+      "name": "Post-Quantum Cryptography for Time Travelers",
+      "type": "ERC Project",
+      "start": "2024-06-01",
+      "end": "2029-05-31",
+      "personnelBudget": 1487650.75,
+      "travelBudget": 27843.50,
+      "materialBudget": 12456.80,
+      "notes": "Because even flux capacitors need encryption",
       "hidden": false
     },
     {
       "id": "pr3",
-      "name": "Energy-Efficient Edge Computing",
-      "type": "Industry Project",
-      "start": "2024-01-01",
-      "end": "2028-12-31",
-      "personnelBudget": 522000,
-      "travelBudget": 15000,
-      "materialBudget": 30000,
-      "notes": "Close industry collaboration",
+      "name": "Symmetric Keys, Asymmetric Humor",
+      "type": "BMBF Project",
+      "start": "2025-01-01",
+      "end": "2028-06-30",
+      "personnelBudget": 621438.25,
+      "travelBudget": 18765.40,
+      "materialBudget": 9876.30,
+      "notes": "Exploring the comedy potential of public-key infrastructure",
       "hidden": false
     }
   ],
@@ -152,9 +158,9 @@
     {
       "id": "a1",
       "name": "Start-up funds",
-      "balance": "150,000.00",
+      "balance": "147832.46",
       "balanceDate": "2024-01-01",
-      "notes": "University seed money",
+      "notes": "University seed money for lab equipment",
       "hidden": false
     }
   ],
@@ -164,27 +170,27 @@
       "personId": "p1",
       "projectId": "pr1",
       "start": "2024-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 35,
-      "notes": "PI on main project"
+      "end": "2027-12-31",
+      "ftePercent": 32.5,
+      "notes": "PI, proving pizza optimally"
     },
     {
       "id": "a2",
       "personId": "p1",
       "projectId": "pr2",
-      "start": "2024-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 30,
-      "notes": "PI on healthcare project"
+      "start": "2024-06-01",
+      "end": "2029-05-31",
+      "ftePercent": 22.5,
+      "notes": "Co-PI, temporal key exchange"
     },
     {
       "id": "a3",
       "personId": "p1",
       "projectId": "pr3",
-      "start": "2024-01-01",
-      "end": "2028-12-31",
+      "start": "2025-01-01",
+      "end": "2028-06-30",
       "ftePercent": 25,
-      "notes": "PI on edge computing"
+      "notes": "PI, humor encryption protocols"
     },
     {
       "id": "a4",
@@ -192,80 +198,98 @@
       "projectId": "a1",
       "start": "2024-01-01",
       "end": "2028-12-31",
-      "ftePercent": 10,
-      "notes": "Admin and group management"
+      "ftePercent": 20,
+      "notes": "Lab administration"
     },
     {
       "id": "a5",
       "personId": "p2",
       "projectId": "pr1",
       "start": "2024-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 60,
-      "notes": "Lead developer"
+      "end": "2027-12-31",
+      "ftePercent": 47.5,
+      "notes": "Lattice pizza proofs"
     },
     {
       "id": "a6",
       "personId": "p2",
       "projectId": "pr2",
-      "start": "2024-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 40,
-      "notes": "ML pipeline"
+      "start": "2024-06-01",
+      "end": "2029-05-31",
+      "ftePercent": 37.5,
+      "notes": "Post-quantum lattice constructions"
     },
     {
       "id": "a7",
       "personId": "p3",
       "projectId": "pr2",
       "start": "2025-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 50,
-      "notes": "Healthcare AI researcher"
+      "end": "2029-05-31",
+      "ftePercent": 27.5,
+      "notes": "Zero-knowledge in time-travel scenarios"
     },
     {
       "id": "a8",
       "personId": "p3",
       "projectId": "pr3",
       "start": "2025-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 50,
-      "notes": "Edge AI optimization"
+      "end": "2028-06-30",
+      "ftePercent": 22.5,
+      "notes": "Symmetric comedy schemes"
     },
     {
       "id": "a9",
       "personId": "p4",
       "projectId": "pr1",
       "start": "2025-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 100,
-      "notes": "PhD on sensor networks"
+      "end": "2027-12-31",
+      "ftePercent": 63.5,
+      "notes": "PhD: provably optimal pizza"
     },
     {
       "id": "a10",
-      "personId": "p5",
-      "projectId": "pr3",
-      "start": "2026-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 100,
-      "notes": "PhD on edge computing"
+      "personId": "p4",
+      "projectId": "pr2",
+      "start": "2025-06-01",
+      "end": "2029-05-31",
+      "ftePercent": 36.5,
+      "notes": "PhD: quantum-resistant time capsules"
     },
     {
       "id": "a11",
-      "personId": "p6",
-      "projectId": "pr1",
+      "personId": "p5",
+      "projectId": "pr3",
       "start": "2026-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 70,
-      "notes": "Hardware prototyping"
+      "end": "2028-06-30",
+      "ftePercent": 52.5,
+      "notes": "PhD: breaking hash function humor"
     },
     {
       "id": "a12",
+      "personId": "p5",
+      "projectId": "pr1",
+      "start": "2026-06-01",
+      "end": "2027-12-31",
+      "ftePercent": 22.5,
+      "notes": "Pizza hash collisions"
+    },
+    {
+      "id": "a13",
+      "personId": "p6",
+      "projectId": "pr1",
+      "start": "2026-01-01",
+      "end": "2027-12-31",
+      "ftePercent": 37.5,
+      "notes": "Implementation benchmarks"
+    },
+    {
+      "id": "a14",
       "personId": "p6",
       "projectId": "pr2",
-      "start": "2026-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 30,
-      "notes": "Data annotation tooling"
+      "start": "2026-06-01",
+      "end": "2029-05-31",
+      "ftePercent": 22.5,
+      "notes": "Quantum circuit benchmarks"
     }
   ],
   "expenses": [
@@ -274,32 +298,32 @@
       "projectId": "pr1",
       "category": "travel",
       "date": "2025-03-15",
-      "amount": 1800,
-      "notes": "Conference in Berlin"
+      "amount": 1847.50,
+      "notes": "Pizza research conference in Naples"
     },
     {
       "id": "e2",
       "projectId": "pr1",
       "category": "travel",
       "date": "2026-09-20",
-      "amount": 2200,
-      "notes": "Collaboration meeting"
+      "amount": 2234.75,
+      "notes": "Crypto pizza collaboration meeting"
     },
     {
       "id": "e3",
-      "projectId": "pr3",
+      "projectId": "pr2",
       "category": "material",
       "date": "2026-05-10",
-      "amount": 8500,
-      "notes": "Edge dev boards and sensors"
+      "amount": 8567.25,
+      "notes": "Quantum-resistant hardware tokens"
     },
     {
       "id": "e4",
-      "projectId": "pr2",
+      "projectId": "pr3",
       "category": "travel",
       "date": "2027-06-01",
-      "amount": 1500,
-      "notes": "Hospital partner meeting"
+      "amount": 1523.80,
+      "notes": "Comedy cryptography workshop"
     }
   ]
 }
