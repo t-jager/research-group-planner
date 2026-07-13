@@ -7,12 +7,12 @@
       "lastName": "Keller",
       "role": "Professor",
       "contractStart": "2024-01-01",
-      "contractEnd": "2050-12-31",
+      "contractEnd": "2030-12-31",
       "salaryIntervals": [
         {
           "id": "s1",
           "start": "2024-01-01",
-          "end": "2050-12-31",
+          "end": "2030-12-31",
           "monthlyCost": 11247.83,
           "employmentPercent": 100
         }
@@ -44,7 +44,7 @@
       "firstName": "Mira",
       "lastName": "Scholz",
       "role": "Postdoc",
-      "contractStart": "2025-01-01",
+      "contractStart": "2026-06-01",
       "contractEnd": "2028-12-17",
       "salaryIntervals": [
         {
@@ -63,8 +63,8 @@
       "firstName": "David",
       "lastName": "Nguyen",
       "role": "PhD student",
-      "contractStart": "2025-01-01",
-      "contractEnd": "2028-12-31",
+      "contractStart": "2025-05-01",
+      "contractEnd": "2028-02-29",
       "salaryIntervals": [
         {
           "id": "s4",
@@ -101,7 +101,7 @@
       "firstName": "Tom",
       "lastName": "Hoffmann",
       "role": "Research assistant",
-      "contractStart": "2026-01-01",
+      "contractStart": "2026-02-01",
       "contractEnd": "2028-07-31",
       "salaryIntervals": [
         {
@@ -170,34 +170,43 @@
       "personId": "p1",
       "projectId": "a1",
       "start": "2024-01-01",
-      "end": "2028-12-31",
+      "end": "2030-12-31",
       "ftePercent": 100,
       "notes": ""
     },
     {
-      "id": "assignment_mrjl80e2_wgfyt2",
-      "personId": "p2",
-      "projectId": "a1",
-      "start": "2024-01-01",
-      "end": "2024-12-31",
-      "ftePercent": 100,
-      "notes": ""
-    },
-    {
-      "id": "assignment_mrjl87bk_um1913",
-      "personId": "p2",
+      "id": "assignment_mrjlufpk_4gv0qg",
+      "personId": "p4",
       "projectId": "pr3",
-      "start": "2025-01-01",
-      "end": "2028-09-30",
+      "start": "2025-05-01",
+      "end": "2028-08-31",
       "ftePercent": 100,
       "notes": ""
     },
     {
-      "id": "assignment_mrjlc0p2_wf045t",
+      "id": "assignment_mrjluvcz_lqkpxd",
       "personId": "p2",
       "projectId": "pr1",
-      "start": "2024-11-01",
-      "end": "2024-11-30",
+      "start": "2024-01-01",
+      "end": "2026-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "assignment_mrjlvnnp_grvup0",
+      "personId": "p6",
+      "projectId": "pr2",
+      "start": "2026-02-01",
+      "end": "2029-05-31",
+      "ftePercent": 50,
+      "notes": ""
+    },
+    {
+      "id": "assignment_mrjlyozl_q7sd1b",
+      "personId": "p3",
+      "projectId": "pr2",
+      "start": "2026-06-01",
+      "end": "2028-11-30",
       "ftePercent": 100,
       "notes": ""
     }
