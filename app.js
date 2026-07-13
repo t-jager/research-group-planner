@@ -1695,21 +1695,22 @@
         .at(-1) || '';
 
       const clearPreview = () => {
-        currentRow?.querySelectorAll('.contract-preview, .valid-drop-preview').forEach(el => el.remove());
+        $$('[data-drop-project]').forEach(row => row.querySelectorAll('.contract-preview, .valid-drop-preview').forEach(el => el.remove()));
       };
 
-      // Show contract duration highlight strip during resize
+      // Show contract duration highlight strip on every row during resize
       const showContractPreview = () => {
         const p = getPerson(assignment.personId);
         if (!p || !validDateString(p.contractStart) || !validDateString(p.contractEnd)) return;
-        if (!currentRow) return;
         const contractLeft = dateToX(p.contractStart, min);
         const contractRight = dateToX(addDays(p.contractEnd, 1), min);
-        const contract = document.createElement('div');
-        contract.className = 'contract-preview';
-        contract.style.left = `${contractLeft}px`;
-        contract.style.width = `${Math.max(1, contractRight - contractLeft)}px`;
-        currentRow.appendChild(contract);
+        $$('[data-drop-project]').forEach(row => {
+          const contract = document.createElement('div');
+          contract.className = 'contract-preview';
+          contract.style.left = `${contractLeft}px`;
+          contract.style.width = `${Math.max(1, contractRight - contractLeft)}px`;
+          row.appendChild(contract);
+        });
       };
 
       snapshot();
