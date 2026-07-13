@@ -1446,12 +1446,15 @@
       `${planningLines ? `\n\n${planningLines}` : ''}` +
       `${noteText ? `\n\nNote: ${noteText}` : ''}`;
 
+    const barColor = colorFor(key);
+    const labelBg = `style="background:${barColor}"`;
+
     // Person-mode bars are read-only (no resize handles)
     if (mode === 'person') {
       return `<div class="assignment-bar assignment-bar-readonly"
-        style="left:${left}px;width:${width}px;top:${top}px;background:${colorFor(key)}"
+        style="left:${left}px;width:${width}px;top:${top}px;background:${barColor}"
         title="${esc(tooltip)}">
-        <span class="assignment-label-text">${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${planningBadge}${plannedOverlay}${plannedProject}
+        <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${planningBadge}${plannedOverlay}${plannedProject}
       </div>`;
     }
 
@@ -1459,10 +1462,10 @@
     return `<div class="assignment-bar assignment-bar-resize-only"
       data-assignment-bar="${a.id}"
       data-mode="${mode}"
-      style="left:${left}px;width:${width}px;top:${top}px;background:${colorFor(key)}"
+      style="left:${left}px;width:${width}px;top:${top}px;background:${barColor}"
       title="${esc(tooltip)}">
       <span class="assignment-handle left" data-edge="left"></span>
-      <span class="assignment-label-text">${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${planningBadge}${plannedOverlay}${plannedProject}
+      <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${planningBadge}${plannedOverlay}${plannedProject}
       <span class="assignment-handle right" data-edge="right"></span>
     </div>`;
   }
