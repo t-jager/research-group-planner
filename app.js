@@ -1048,6 +1048,7 @@
     visibleAssignments().forEach(a => { if (validDateString(a.start)) starts.push(parseDate(a.start)); if (validDateString(a.end)) ends.push(parseDate(a.end)); });
     if (!starts.length || !ends.length) { const now = new Date(); return [new Date(Date.UTC(now.getUTCFullYear(), 0, 1)), new Date(Date.UTC(now.getUTCFullYear() + 1, 11, 31))]; }
     const min = new Date(Math.min(...starts.map(d => d.getTime()))), max = new Date(Math.max(...ends.map(d => d.getTime())));
+    max.setUTCMonth(max.getUTCMonth() + 12);
     return [new Date(Date.UTC(min.getUTCFullYear(), min.getUTCMonth(), 1)), new Date(Date.UTC(max.getUTCFullYear(), max.getUTCMonth() + 1, 0))];
   }
 
