@@ -1823,6 +1823,7 @@
     try {
       if ('showOpenFilePicker' in window) {
         const [handle] = await window.showOpenFilePicker({ types: [{ description: 'JSON files', accept: { 'application/json': ['.json'] } }], multiple: false });
+        if (handle.requestPermission) { const perm = await handle.requestPermission({ mode: 'readwrite' }); if (perm !== 'granted') throw new DOMException('Permission denied', 'NotAllowedError'); }
         const file = await handle.getFile(); const raw = JSON.parse(await file.text()); fileHandle = handle; currentFileName = file.name; state = normalizeState(raw);
       } else {
         const raw = await pickJsonFallback(); state = normalizeState(raw.data); currentFileName = raw.name; fileHandle = null;
@@ -1843,6 +1844,7 @@
     try {
       if ('showSaveFilePicker' in window) {
         if (saveAs || !fileHandle) fileHandle = await window.showSaveFilePicker({ suggestedName: currentFileName || 'research-group-planner.json', types: [{ description: 'JSON files', accept: { 'application/json': ['.json'] } }] });
+        if (fileHandle.requestPermission) { const perm = await fileHandle.requestPermission({ mode: 'readwrite' }); if (perm !== 'granted') throw new DOMException('Permission denied', 'NotAllowedError'); }
         const writable = await fileHandle.createWritable(); await writable.write(text); await writable.close(); currentFileName = (await fileHandle.getFile()).name;
       } else {
         const blob = new Blob([text], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = currentFileName || 'research-group-planner.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
