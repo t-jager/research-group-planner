@@ -1082,6 +1082,19 @@ body.modal-open {
 .balance-date-marker:hover::after {
   opacity: 1;
 }
+.balance-label {
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+}
 
 .assignment-planned-project-segment {
   position: absolute;

@@ -1047,7 +1047,7 @@
           <strong>${esc(p.name || (isAccount ? '(unnamed account)' : '(unnamed project)'))}</strong>
           <div class="meta">
             ${isAccount
-              ? `<span>Balance</span><span class="money">${formatMoney(p.balance)}</span><span>From</span><span>${esc(p.balanceDate)}</span><span>Assigned</span><span>${formatMoney(accountAssigned(p.id))}</span>`
+              ? `<span>Balance</span><span class="money">${formatMoney(p.balance)}</span><span>From</span><span>${esc(p.balanceDate)}</span><span>Free</span><span class="money ${accountFreeBalance(p) < 0 ? 'negative-funding' : ''}">${formatMoney(accountFreeBalance(p))}</span>`
               : `<span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span><span>Budget</span><span>${formatMoney(p.personnelBudget)}</span><span>Free</span><span>${formatMoney(projectFreePersonnel(p))}</span>`
             }
           </div>
@@ -1068,7 +1068,7 @@
           const assignments = visibleAssignments().filter(a => a.projectId === p.id);
           const height = timelineRowHeight(assignments, PROJECT_TIMELINE_MIN_HEIGHT);
           const markerHtml = validDateString(p.balanceDate)
-            ? `<div class="balance-date-marker" style="left:${dateToX(p.balanceDate, min)}px;height:${height}px" title="Balance date: ${p.balanceDate}&#10;Balance: ${formatMoney(p.balance)}"></div>`
+            ? `<div class="balance-date-marker" style="left:${dateToX(p.balanceDate, min)}px;height:${height}px" title="Balance date: ${p.balanceDate}&#10;Balance: ${formatMoney(p.balance)}"><span class="balance-label">${formatMoney(p.balance)}</span></div>`
             : '';
           html += `<div class="timeline-row" data-drop-project="${p.id}" style="width:${width}px;height:${height}px">
             <div class="timeline-row-grid">${months.map(month => {
