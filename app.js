@@ -322,15 +322,13 @@
       // Sum cost contributions from each overlapping salary interval
       for (const interval of intervals) {
         const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, interval.start, interval.end);
-        const employmentFrac = (numberValue(interval.employmentPercent) || 100) / 100;
-        total += numberValue(interval.monthlyCost) * employmentFrac * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
+        total += numberValue(interval.monthlyCost) * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
       }
 
       // Planned employment beyond the last defined salary interval uses the latest known rate.
       if (lastInterval && validDateString(plannedStart)) {
         const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, plannedStart, a.end);
-        const employmentFrac = (numberValue(lastInterval.employmentPercent) || 100) / 100;
-        total += numberValue(lastInterval.monthlyCost) * employmentFrac * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
+        total += numberValue(lastInterval.monthlyCost) * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
       }
 
       cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
