@@ -1049,19 +1049,6 @@ body.modal-open {
 }
 
 
-.timeline-view-only-note {
-  margin: 14px 0 8px;
-  padding: 9px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 12px;
-}
-
-.timeline-view-only-note strong {
-  color: #1f2937;
-}
 
 
 .assignment-planned-project-segment {

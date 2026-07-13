@@ -53,7 +53,7 @@
   // ─── State Factory & Serialization ───
 
   function emptyState() {
-    return { version: 2, persons: [], projects: [], assignments: [], expenses: [] };
+    return { version: 2, persons: [], projects: [], accounts: [], assignments: [], expenses: [] };
   }
 
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -63,6 +63,7 @@
       version: 2,
       persons: clone(state.persons),
       projects: clone(state.projects),
+      accounts: clone(state.accounts),
       assignments: clone(state.assignments),
       expenses: clone(state.expenses)
     };
@@ -106,6 +107,16 @@
       materialBudget: numberValue(p.materialBudget),
       notes: String(p.notes ?? ''),
       hidden: Boolean(p.hidden)
+    })) : [];
+    s.accounts = Array.isArray(raw?.accounts) ? raw.accounts.map(a => ({
+      id: safeId(a.id) || uid('account'),
+      name: String(a.name ?? ''),
+      start: validDateString(a.start) ? a.start : '',
+      end: validDateString(a.end) ? a.end : '',
+      balance: numberValue(a.balance),
+      balanceDate: validDateString(a.balanceDate) ? a.balanceDate : '',
+      notes: String(a.notes ?? ''),
+      hidden: Boolean(a.hidden)
     })) : [];
     s.assignments = Array.isArray(raw?.assignments) ? raw.assignments.map(a => ({
       id: safeId(a.id) || uid('assignment'),
@@ -216,6 +227,8 @@
   }
   function getPerson(id) { return state.persons.find(p => p.id === id); }
   function getProject(id) { return state.projects.find(p => p.id === id); }
+  function getAccount(id) { return state.accounts.find(a => a.id === id); }
+  function getProjectOrAccount(id) { return getProject(id) || getAccount(id); }
 
   function todayString() {
     const now = new Date();
@@ -235,8 +248,9 @@
   function tableProjects() { return showPast ? state.projects : state.projects.filter(p => !isPastProject(p)); }
   function visiblePersons() { return tablePersons().filter(p => !p.hidden); }
   function visibleProjects() { return tableProjects().filter(p => !p.hidden); }
+  function visibleAccounts() { return state.accounts.filter(a => !a.hidden); }
   function visibleAssignments() {
-    const items = state.assignments.filter(a => !getPerson(a.personId)?.hidden && !getProject(a.projectId)?.hidden);
+    const items = state.assignments.filter(a => !getPerson(a.personId)?.hidden && !getProjectOrAccount(a.projectId)?.hidden);
     if (showPast) return items;
     return items.filter(a => !isPastPerson(getPerson(a.personId)) && !isPastProject(getProject(a.projectId)));
   }
@@ -285,7 +299,10 @@
   function assignmentCost(a) {
     const person = getPerson(a.personId);
     if (!person || !validDateString(a.start) || !validDateString(a.end) || parseDate(a.start) > parseDate(a.end)) return 0;
-    let cursor = monthStartFor(parseDate(a.start));
+    const account = getAccount(a.projectId);
+    const effectiveStart = account && validDateString(account.balanceDate) && account.balanceDate > a.start ? account.balanceDate : a.start;
+    if (parseDate(effectiveStart) > parseDate(a.end)) return 0;
+    let cursor = monthStartFor(parseDate(effectiveStart));
     const finish = parseDate(a.end);
     let total = 0;
     const intervals = (Array.isArray(person.salaryIntervals) ? person.salaryIntervals : [])
@@ -303,13 +320,13 @@
 
       // Sum cost contributions from each overlapping salary interval
       for (const interval of intervals) {
-        const days = overlapDays(a.start, a.end, monthStart, monthEnd, interval.start, interval.end);
+        const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, interval.start, interval.end);
         total += numberValue(interval.monthlyCost) * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
       }
 
       // Planned employment beyond the last defined salary interval uses the latest known rate.
       if (lastInterval && validDateString(plannedStart)) {
-        const days = overlapDays(a.start, a.end, monthStart, monthEnd, plannedStart, a.end);
+        const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, plannedStart, a.end);
         total += numberValue(lastInterval.monthlyCost) * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
       }
 
@@ -362,8 +379,8 @@
       if (free < -0.005) out.push({ level: 'error', text: `${p.name || '(unnamed project)'}: personnel budget exceeded by ${formatMoney(-free)}.` });
     }
     // Validate assignments: orphaned refs, date validity, contract/project bounds
-    for (const a of state.assignments.filter(x => !getPerson(x.personId)?.hidden && !getProject(x.projectId)?.hidden)) {
-      const person = getPerson(a.personId), project = getProject(a.projectId);
+    for (const a of state.assignments.filter(x => !getPerson(x.personId)?.hidden && !getProjectOrAccount(x.projectId)?.hidden)) {
+      const person = getPerson(a.personId), project = getProjectOrAccount(a.projectId);
       const who = personName(person);
       const what = project?.name || '(missing project)';
       if (!person) out.push({ level: 'error', text: `Assignment references a missing person.` });
@@ -613,6 +630,42 @@
     renderProjects();
   }
 
+  // ─── Accounts Tab ───
+
+  function accountAssigned(accountId) {
+    return state.assignments.filter(a => a.projectId === accountId).reduce((sum, a) => sum + assignmentCost(a), 0);
+  }
+
+  function accountFreeBalance(account) {
+    return numberValue(account.balance) - accountAssigned(account.id);
+  }
+
+  function renderAccounts() {
+    const accounts = [...state.accounts].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' }));
+    $('#tab-accounts').innerHTML = `
+      <div class="section-head"><h2>Accounts</h2><div class="section-actions"><button class="primary" id="addAccountBtn">Add account</button></div></div>
+      <div class="table-wrap"><table id="accountsTable" class="resizable-table"><thead><tr>
+        <th>Name</th><th>Start</th><th>End</th><th>Balance</th><th>Balance date</th><th>Assigned</th><th>Free balance</th><th>Notes</th><th>Hide</th><th></th>
+      </tr></thead><tbody>
+      ${accounts.map(a => `<tr data-account-id="${a.id}" class="${a.hidden ? 'hidden-row' : ''}">
+        <td>${input('text', a.name, fieldAttrs('account', a.id, 'name'))}</td>
+        <td>${input('date', a.start, fieldAttrs('account', a.id, 'start'))}</td>
+        <td>${input('date', a.end, fieldAttrs('account', a.id, 'end'))}</td>
+        <td>${input('money', a.balance, fieldAttrs('account', a.id, 'balance'))}</td>
+        <td>${input('date', a.balanceDate, fieldAttrs('account', a.id, 'balanceDate'))}</td>
+        <td class="computed money" data-account-assigned="${a.id}">${formatMoney(accountAssigned(a.id))}</td>
+        <td class="computed money" data-account-free="${a.id}">${formatMoney(accountFreeBalance(a))}</td>
+        <td><textarea ${fieldAttrs('account', a.id, 'notes')}>${esc(a.notes)}</textarea></td>
+        <td class="center"><input type="checkbox" ${fieldAttrs('account', a.id, 'hidden')} ${a.hidden ? 'checked' : ''}></td>
+        <td><button class="danger delete-account" data-id="${a.id}">Delete</button></td>
+      </tr>`).join('')}
+      </tbody></table></div>`;
+    $('#addAccountBtn').onclick = () => addAccount();
+    $$('.delete-account', $('#tab-accounts')).forEach(b => b.onclick = () => deleteAccount(b.dataset.id));
+    bindEditorFields($('#tab-accounts'));
+    bindResizableTables($('#tab-accounts'));
+  }
+
   // Build <option> list for expense project selects (only projects with travel/material budget)
   function projectOptions(selected) {
     const projects = visibleProjects().filter(p => numberValue(p.travelBudget) > 0 || numberValue(p.materialBudget) > 0);
@@ -727,7 +780,7 @@
     if (el.dataset.entity === 'salary') {
       obj = getPerson(el.dataset.personId)?.salaryIntervals?.find(x => x.id === el.dataset.id);
     } else {
-      const collection = ({ person: 'persons', project: 'projects', assignment: 'assignments', expense: 'expenses' })[el.dataset.entity];
+      const collection = ({ person: 'persons', project: 'projects', account: 'accounts', assignment: 'assignments', expense: 'expenses' })[el.dataset.entity];
       obj = state[collection]?.find(x => x.id === el.dataset.id);
     }
     if (!obj) return;
@@ -793,6 +846,16 @@
     snapshot(); state.projects = state.projects.filter(p => p.id !== id); state.assignments = state.assignments.filter(a => a.projectId !== id); state.expenses = state.expenses.filter(e => e.projectId !== id); renderAll();
   }
 
+  function addAccount() {
+    snapshot(); const a = { id: uid('account'), name: '', start: '', end: '', balance: 0, balanceDate: '', notes: '', hidden: false };
+    state.accounts.push(a); renderAccounts(); renderDerived(); focusFirst(`[data-account-id="${a.id}"]`);
+  }
+
+  function deleteAccount(id) {
+    if (!confirm('Delete this account and its assignments?')) return;
+    snapshot(); state.accounts = state.accounts.filter(a => a.id !== id); state.assignments = state.assignments.filter(a => a.projectId !== id); renderAll();
+  }
+
   function deleteExpense(id) { snapshot(); state.expenses = state.expenses.filter(e => e.id !== id); renderExpenses(); renderDerived(); }
 
   function focusFirst(selector) {
@@ -808,6 +871,8 @@
     $$('[data-assignment-cost]').forEach(td => { const a = state.assignments.find(x => x.id === td.dataset.assignmentCost); td.textContent = formatMoney(assignmentCost(a)); });
     $$('[data-project-assigned]').forEach(td => td.textContent = formatMoney(projectAssigned(td.dataset.projectAssigned)));
     $$('[data-project-free]').forEach(td => { const p = getProject(td.dataset.projectFree); td.textContent = formatMoney(projectFreePersonnel(p)); });
+    $$('[data-account-assigned]').forEach(td => td.textContent = formatMoney(accountAssigned(td.dataset.accountAssigned)));
+    $$('[data-account-free]').forEach(td => { const a = getAccount(td.dataset.accountFree); td.textContent = formatMoney(accountFreeBalance(a)); });
     $$('[data-expense-summary]').forEach(td => {
       const p = getProject(td.dataset.projectId); if (!p) return;
       const travelSpent = projectExpense(p.id, 'travel');
@@ -830,6 +895,7 @@
   function timelineBounds() {
     const starts = [], ends = [];
     visibleProjects().forEach(p => { if (validDateString(p.start)) starts.push(parseDate(p.start)); if (validDateString(p.end)) ends.push(parseDate(p.end)); });
+    visibleAccounts().forEach(a => { if (validDateString(a.start)) starts.push(parseDate(a.start)); if (validDateString(a.end)) ends.push(parseDate(a.end)); });
     visiblePersons().forEach(p => { if (validDateString(p.contractStart)) starts.push(parseDate(p.contractStart)); if (validDateString(p.contractEnd)) ends.push(parseDate(p.contractEnd)); });
     visibleAssignments().forEach(a => { if (validDateString(a.start)) starts.push(parseDate(a.start)); if (validDateString(a.end)) ends.push(parseDate(a.end)); });
     if (!starts.length || !ends.length) { const now = new Date(); return [new Date(Date.UTC(now.getUTCFullYear(), 0, 1)), new Date(Date.UTC(now.getUTCFullYear() + 1, 11, 31))]; }
@@ -861,11 +927,8 @@
     $('#tab-timeline').innerHTML = `
       <div class="section-head"><h2>Assignments</h2><div class="section-actions">${pastToggleHtml()}<div class="help">Drag a person chip onto a project to create an assignment. Existing assignments can only be resized using their left or right edge. They may extend beyond the current contract or project end; planned extensions are striped and still count toward the budget. Hold Alt for day precision.</div></div></div>
       <div class="person-palette"><strong>Drag a person onto a project month:</strong>${visiblePersons().map((p, i) => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}">${esc(personName(p))}</span>`).join('')}</div>
-      ${timelineShell('Project assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max)}
-      <div class="timeline-view-only-note">
-        <strong>View only.</strong> Assignments are edited in the Project assignments above.
-      </div>
-      ${timelineShell('Personnel assignments', 'personTimeline', personTimelineLabels(), personTimelineRows(min, months, width), header, width, min, max)}
+      ${timelineShell('Assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max)}
+      ${timelineShell('Personnel view', 'personTimeline', personTimelineLabels(), personTimelineRows(min, months, width), header, width, min, max)}
       <div id="assignmentEditorModal" class="assignment-modal" hidden>
         <div class="assignment-modal-backdrop" data-assignment-editor-close></div>
         <div class="assignment-modal-card" role="dialog" aria-modal="true" aria-labelledby="assignmentEditorTitle">
@@ -969,17 +1032,19 @@
   function projectTimelineLabels() {
     const groups = groupProjects();
     let html = '';
-    for (const [type, projects] of groups) {
+    for (const [type, items] of groups) {
       html += `<div class="group-label">${esc(type)}</div>`;
-      for (const p of projects) {
+      for (const p of items) {
         const assignments = visibleAssignments().filter(a => a.projectId === p.id);
         const height = timelineRowHeight(assignments, PROJECT_TIMELINE_MIN_HEIGHT);
+        const isAccount = p._isAccount;
         html += `<div class="timeline-label-row" style="height:${height}px">
-          <strong>${esc(p.name || '(unnamed project)')}</strong>
+          <strong>${esc(p.name || isAccount ? '(unnamed account)' : '(unnamed project)')}</strong>
           <div class="meta">
-            <span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span>
-            <span>Budget</span><span>${formatMoney(p.personnelBudget)}</span>
-            <span>Free</span><span>${formatMoney(projectFreePersonnel(p))}</span>
+            ${isAccount
+              ? `<span>Balance</span><span>${formatMoney(p.balance)}</span><span>From</span><span>${esc(p.balanceDate)}</span><span>Assigned</span><span>${formatMoney(accountAssigned(p.id))}</span>`
+              : `<span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span><span>Budget</span><span>${formatMoney(p.personnelBudget)}</span><span>Free</span><span>${formatMoney(projectFreePersonnel(p))}</span>`
+            }
           </div>
         </div>`;
       }
@@ -990,14 +1055,14 @@
   function projectTimelineRows(min, months, width) {
     const groups = groupProjects();
     let html = '';
-    for (const [, projects] of groups) {
+    for (const [, items] of groups) {
       html += `<div class="group-grid" style="width:${width}px"></div>`;
-      for (const p of projects) {
+      for (const p of items) {
         html += timelineRow(
           'project',
           p.id,
-          p.start,
-          p.end,
+          p.start || '',
+          p.end || '',
           visibleAssignments().filter(a => a.projectId === p.id),
           min,
           months,
@@ -1054,11 +1119,13 @@
       if (!map.has(type)) map.set(type, []);
       map.get(type).push(p);
     });
+    const accountEntries = visibleAccounts().map(a => ({ ...a, _isAccount: true }));
+    if (accountEntries.length) map.set('Accounts', accountEntries);
     return [...map.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([type, projects]) => [
+      .map(([type, items]) => [
         type,
-        projects.sort((a, b) =>
+        items.sort((a, b) =>
           String(a.start || '9999-12-31').localeCompare(String(b.start || '9999-12-31')) ||
           String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
         )
@@ -1127,7 +1194,7 @@
   // project's end date, requiring a planned extension
   function assignmentPlanningStatus(a) {
     const person = getPerson(a.personId);
-    const project = getProject(a.projectId);
+    const project = getProjectOrAccount(a.projectId);
     const contractExtension = Boolean(person && validDateString(person.contractEnd) && validDateString(a.end) && a.end > person.contractEnd);
     const projectExtension = Boolean(project && validDateString(project.end) && validDateString(a.end) && a.end > project.end);
     return { contractExtension, projectExtension, badge: contractExtension && projectExtension ? 'CP' : contractExtension ? 'C' : projectExtension ? 'P' : '' };
@@ -1160,7 +1227,7 @@
 
   // Striped overlay for the portion of an assignment that extends past the project end
   function plannedProjectOverlay(a, min, barLeft, barRight) {
-    const project = getProject(a.projectId);
+    const project = getProjectOrAccount(a.projectId);
     if (!project || !validDateString(project.end) || !validDateString(a.end) || a.end <= project.end) return '';
     const plannedStart = a.start > project.end ? a.start : addDays(project.end, 1);
     const plannedLeft = Math.max(barLeft, dateToX(plannedStart, min));
@@ -1193,9 +1260,9 @@
       ? `<span class="assignment-planning-badge" title="${planning.badge === 'CP' ? 'Contract and project extension required' : planning.badge === 'C' ? 'Contract extension required' : 'Project extension required'}">${planning.badge}</span>`
       : '';
     const person = getPerson(a.personId);
-    const project = getProject(a.projectId);
+    const project = getProjectOrAccount(a.projectId);
     const sourceName = project
-      ? `${project.type ? `${project.type}: ` : ''}${project.name || '(missing project)'}`
+      ? `${project._isAccount ? 'Accounts' : (project.type ? `${project.type}: ` : '')}${project.name || '(missing project)'}`
       : '(missing project)';
     const label = mode === 'project'
       ? `${personName(person)} ${formatNumber(a.ftePercent, 1)}%`
@@ -1340,12 +1407,12 @@
         if (!assignment) return;
 
         const person = getPerson(assignment.personId);
-        const project = getProject(assignment.projectId);
+        const project = getProjectOrAccount(assignment.projectId);
 
         modal.dataset.assignmentId = assignment.id;
         context.innerHTML = `
           <strong>${esc(personName(person))}</strong>
-          <span>${esc(project?.type || 'Other')}: ${esc(project?.name || '(missing project)')}</span>
+          <span>${esc(project?._isAccount ? 'Accounts' : (project?.type || 'Other'))}: ${esc(project?.name || '(missing project)')}</span>
           <span>${assignment.start} to ${assignment.end}</span>
         `;
         fteInput.value = formatNumber(assignment.ftePercent, 1);
@@ -1406,7 +1473,7 @@
       const assignment = state.assignments.find(x => x.id === bar.dataset.assignmentBar);
       if (!assignment) return;
       const person = getPerson(assignment.personId);
-      const project = getProject(assignment.projectId);
+      const project = getProjectOrAccount(assignment.projectId);
       if (!person || !project) return;
 
       const handle = e.target.closest('.assignment-handle');
@@ -1602,7 +1669,7 @@
       if (!person || !validDateString(person.contractStart) || !validDateString(person.contractEnd)) return;
 
       $$('[data-drop-project]').forEach(row => {
-        const project = getProject(row.dataset.dropProject);
+        const project = getProjectOrAccount(row.dataset.dropProject);
         if (!project) return;
 
         const contractLeft = dateToX(person.contractStart, min);
@@ -1647,7 +1714,7 @@
         // Show contextual tooltip with contract/project dates
         const personId = draggedPersonId || e.dataTransfer.getData('text/person-id');
         const person = getPerson(personId);
-        const project = getProject(row.dataset.dropProject);
+        const project = getProjectOrAccount(row.dataset.dropProject);
         if (!person || !project) return;
 
         const tip = ensureTip();
@@ -1674,7 +1741,7 @@
         const x = e.clientX - rect.left;
         let start = xToDate(x, min, e.altKey);
         let end = e.altKey ? start : formatDate(monthEndFor(parseDate(start)));
-        const person = getPerson(personId), project = getProject(projectId);
+        const person = getPerson(personId), project = getProjectOrAccount(projectId);
         if (person?.contractStart && start < person.contractStart) start = person.contractStart;
         if (project?.start && start < project.start) start = project.start;
         if (project?.end && end > project.end) end = project.end;
@@ -1696,7 +1763,7 @@
   // ─── Top-Level Render & Tab Switching ───
 
   function renderAll() {
-    renderPersons(); renderProjects(); renderExpenses(); renderTimeline(); renderDashboard(); switchTab(activeTab); updateUndoButtons();
+    renderPersons(); renderProjects(); renderAccounts(); renderExpenses(); renderTimeline(); renderDashboard(); switchTab(activeTab); updateUndoButtons();
   }
 
   function switchTab(name) {
