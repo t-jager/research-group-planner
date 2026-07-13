@@ -1884,7 +1884,7 @@
         tip.innerHTML = `<strong>${esc(personName(person))}</strong><br>` +
           `Contract: ${esc(person.contractStart)} – ${esc(person.contractEnd)}<br>` +
           `Project: ${esc(project.start)} – ${esc(project.end)}<br>` +
-          `After ${esc(person.contractEnd)}: planned employment`;
+          `After project/contract end: planned extension`;
         tip.style.left = `${e.clientX + 14}px`;
         tip.style.top = `${e.clientY + 14}px`;
       });
@@ -1907,10 +1907,9 @@
         const person = getPerson(personId), project = getProjectOrAccount(projectId);
         if (person?.contractStart && start < person.contractStart) start = person.contractStart;
         if (project?.start && start < project.start) start = project.start;
-        if (project?.end && end > project.end) end = project.end;
         if (start > end) {
           clearContractPreview();
-          alert('The drop date is outside the project duration or before the contract starts.');
+          alert('The drop date is before the project or contract starts.');
           return;
         }
         if (hasOverlappingAssignment(personId, projectId, start, end)) {
