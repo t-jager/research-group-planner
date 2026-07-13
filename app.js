@@ -1824,7 +1824,6 @@
     try {
       if ('showOpenFilePicker' in window) {
         const [handle] = await window.showOpenFilePicker({ types: [{ description: 'JSON files', accept: { 'application/json': ['.json'] } }], multiple: false });
-        if (handle.requestPermission) { const perm = await handle.requestPermission({ mode: 'readwrite' }); if (perm !== 'granted') throw new DOMException('Permission denied', 'NotAllowedError'); }
         const file = await handle.getFile(); const raw = JSON.parse(await file.text()); fileHandle = handle; currentFileName = file.name; state = normalizeState(raw);
       } else {
         const raw = await pickJsonFallback(); state = normalizeState(raw.data); currentFileName = raw.name; fileHandle = null;
