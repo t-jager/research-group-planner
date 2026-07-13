@@ -931,8 +931,7 @@
     const header = `<div class="timeline-year-row">${yearHeader}</div><div class="timeline-month-row">${monthHeader}</div>`;
     $('#tab-timeline').innerHTML = `
       <div class="section-head"><h2>Assignments</h2><div class="section-actions">${pastToggleHtml()}<div class="help">Drag a person chip onto a project to create an assignment. Existing assignments can only be resized using their left or right edge. They may extend beyond the current contract or project end; planned extensions are striped and still count toward the budget. Hold Alt for day precision.</div></div></div>
-      ${timelineShell('Assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max, true)}
-      ${timelineShell('Assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max)}
+      <div class="assignments-wrap"><div class="person-palette">${visiblePersons().map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}">${esc(personName(p))}</span>`).join('')}</div>${timelineShell('Assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max)}</div>
       ${timelineShell('Personnel view', 'personTimeline', personTimelineLabels(), personTimelineRows(min, months, width), header, width, min, max)}
       <div id="assignmentEditorModal" class="assignment-modal" hidden>
         <div class="assignment-modal-backdrop" data-assignment-editor-close></div>
@@ -972,11 +971,10 @@
   }
 
   // Wrap a timeline section (labels column + scrollable canvas) in a shell
-  function timelineShell(title, id, labels, rows, header, width, min, max, showPersonPalette = false) {
+  function timelineShell(title, id, labels, rows, header, width, min, max) {
     const marker = currentMonthMarker(min, max);
-    const paletteHtml = showPersonPalette ? `<div class="person-palette">${visiblePersons().map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}">${esc(personName(p))}</span>`).join('')}</div>` : '';
     return `<div class="timeline-shell"><div class="timeline-title">${title}</div><div class="timeline-body">
-      <div class="timeline-labels">${paletteHtml}<div class="timeline-label-spacer"></div>${labels}</div>
+      <div class="timeline-labels"><div class="timeline-label-spacer"></div>${labels}</div>
       <div class="timeline-scroll" id="${id}"><div class="timeline-canvas" style="width:${width}px"><div class="timeline-header">${header}</div>${marker}${rows}</div></div>
     </div></div>`;
   }

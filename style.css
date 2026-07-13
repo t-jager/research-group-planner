@@ -296,13 +296,21 @@ td textarea {
   position: sticky;
   top: 0;
   z-index: 10;
+  align-self: flex-start;
   display: flex;
+  flex-direction: column;
   gap: 4px;
-  flex-wrap: wrap;
-  align-content: flex-start;
   padding: 8px 10px;
   background: #fff;
-  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-radius: 8px 0 0 8px;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+.assignments-wrap {
+  display: flex;
+  gap: 0;
 }
 
 .person-chip {
