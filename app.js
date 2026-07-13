@@ -1,9 +1,21 @@
+/**
+ * Research Group Planner – client-side single-page application.
+ *
+ * Manages personnel, projects, assignments, and expenses for a research group.
+ * Features: undo/redo, cost calculations, validation warnings, inline-editable
+ * tables, a timeline view with drag-and-drop assignment creation and resizing,
+ * file I/O via the File System Access API (with fallback), and resizable columns.
+ */
 (() => {
   'use strict';
+
+  // ─── Constants ───
 
   const DAY_MS = 86400000;
   const MONTH_WIDTH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--month-width"));
   const COLORS = ['#2563eb', '#0f766e', '#7c3aed', '#b45309', '#be123c', '#0369a1', '#4d7c0f', '#a21caf', '#c2410c', '#4338ca', '#047857', '#9f1239'];
+
+  // Timeline layout constants (pixels)
   const TIMELINE_BAR_TOP = 10;
   const TIMELINE_LANE_HEIGHT = 28;
   const TIMELINE_BOTTOM_PADDING = 10;
@@ -11,26 +23,34 @@
   const PROJECT_TIMELINE_MIN_HEIGHT = 92;
   const PERSON_TIMELINE_MIN_HEIGHT = 70;
 
+  // ─── Application State ───
+
   let state = emptyState();
-  let fileHandle = null;
+  let fileHandle = null;       // File System Access API handle for the open file
   let currentFileName = '';
   let activeTab = 'persons';
   let sortSpec = { key: 'lastName', dir: 1 };
   let projectSortSpec = { key: 'name', dir: 1 };
 
-  let showPast = false;
-  let history = [];
-  let future = [];
-  let pendingEditSnapshot = null;
-  let pendingEditElement = null;
-  let syncingScroll = false;
+  let showPast = false;        // Whether to include past projects/contracts in views
+  let history = [];            // Undo stack (serialized snapshots)
+  let future = [];             // Redo stack
+  let pendingEditSnapshot = null;  // Snapshot taken when a field edit begins
+  let pendingEditElement = null;   // Element that is currently being edited
+  let syncingScroll = false;   // Guard to prevent infinite scroll-sync loop
   let scrollMemory = { project: 0, person: 0 };
-  let isDirty = false;
+  let isDirty = false;         // Unsaved-changes flag
+
+  // ─── DOM Helpers ───
 
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+
+  // Generate a unique ID with a prefix
   const uid = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   function safeId(raw) { return String(raw ?? '').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128) || uid('unknown'); }
+
+  // ─── State Factory & Serialization ───
 
   function emptyState() {
     return { version: 2, persons: [], projects: [], assignments: [], expenses: [] };
@@ -48,6 +68,7 @@
     };
   }
 
+  // Normalize raw imported/loaded data into a well-formed state object
   function normalizeState(raw) {
     const s = emptyState();
     s.persons = Array.isArray(raw?.persons) ? raw.persons.map(p => ({
@@ -64,6 +85,7 @@
           end: validDateString(si.end) ? si.end : '',
           monthlyCost: numberValue(si.monthlyCost)
         }))
+        // Migrate legacy flat monthlyCost into a single salary interval
         : [{
           id: uid('salary'),
           start: validDateString(p.contractStart) ? p.contractStart : '',
@@ -105,6 +127,9 @@
     return s;
   }
 
+  // ─── Undo / Redo ───
+
+  // Push a snapshot of the current state onto the undo stack before a mutation
   function snapshot() {
     history.push(JSON.stringify(serializableState()));
     if (history.length > 100) history.shift();
@@ -135,6 +160,8 @@
     $('#redoBtn').disabled = future.length === 0;
   }
 
+  // ─── Date Utilities ───
+
   function parseDate(s) {
     if (!validDateString(s)) return null;
     const [y, m, d] = s.split('-').map(Number);
@@ -150,6 +177,7 @@
     return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')) && !!parseDateSafe(String(s));
   }
 
+  // Parse and reject dates that don't round-trip (e.g. 2024-02-30)
   function parseDateSafe(s) {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
     if (!m) return null;
@@ -165,6 +193,9 @@
     return formatDate(d);
   }
 
+  // ─── Number Utilities ───
+
+  // Coerce a value to a finite number, stripping commas
   function numberValue(value) {
     if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
     const cleaned = String(value ?? '').replace(/,/g, '').trim();
@@ -177,6 +208,8 @@
   }
 
   function formatMoney(n) { return `${formatNumber(n, 2)} €`; }
+
+  // ─── Entity Lookups ───
 
   function personName(p) {
     return [p?.firstName, p?.lastName].filter(Boolean).join(' ') || '(unnamed person)';
@@ -197,6 +230,7 @@
     return validDateString(project?.end) && project.end < todayString();
   }
 
+  // Filtered lists that respect the "show past" toggle
   function tablePersons() { return showPast ? state.persons : state.persons.filter(p => !isPastPerson(p)); }
   function tableProjects() { return showPast ? state.projects : state.projects.filter(p => !isPastProject(p)); }
   function visiblePersons() { return tablePersons().filter(p => !p.hidden); }
@@ -212,6 +246,8 @@
     return items.filter(e => !isPastProject(getProject(e.projectId)));
   }
 
+  // ─── "Show Past" Toggle ───
+
   function pastToggleHtml() {
     return `<label class="past-toggle"><input type="checkbox" class="show-past-toggle" ${showPast ? 'checked' : ''}> Show past projects and contracts</label>`;
   }
@@ -223,9 +259,12 @@
     }));
   }
 
+  // ─── Cost Calculation Engine ───
+
   function monthStartFor(date) { return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1)); }
   function monthEndFor(date) { return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)); }
 
+  // Count the overlap in days across multiple date ranges passed as start/end pairs
   function overlapDays(...ranges) {
     const starts = [], ends = [];
     for (let i = 0; i < ranges.length; i += 2) {
@@ -238,6 +277,11 @@
     return start > end ? 0 : Math.floor((end - start) / DAY_MS) + 1;
   }
 
+  // Calculate the total personnel cost for an assignment.
+  // Iterates month-by-month from assignment start to end, prorating each
+  // salary interval that overlaps the current month by the FTE percentage.
+  // Beyond the last defined salary interval, the latest known monthly rate
+  // is used as a "planned employment" projection.
   function assignmentCost(a) {
     const person = getPerson(a.personId);
     if (!person || !validDateString(a.start) || !validDateString(a.end) || parseDate(a.start) > parseDate(a.end)) return 0;
@@ -257,6 +301,7 @@
       const monthEnd = formatDate(monthEndDate);
       const daysInMonth = monthEndDate.getUTCDate();
 
+      // Sum cost contributions from each overlapping salary interval
       for (const interval of intervals) {
         const days = overlapDays(a.start, a.end, monthStart, monthEnd, interval.start, interval.end);
         total += numberValue(interval.monthlyCost) * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
@@ -283,8 +328,13 @@
 
   function projectFreePersonnel(p) { return numberValue(p.personnelBudget) - projectAssigned(p.id); }
 
+  // ─── Validation & Warnings ───
+
+  // Scan all entities for data integrity issues: date misalignments,
+  // budget overruns, FTE over/under-allocation, salary gaps, etc.
   function warnings() {
     const out = [];
+    // Validate persons: contract dates, salary intervals, gaps and overlaps
     for (const p of state.persons.filter(x => !x.hidden)) {
       if (p.contractStart && p.contractEnd && parseDate(p.contractStart) > parseDate(p.contractEnd)) out.push({ level: 'error', text: `${personName(p)}: contract start is after contract end.` });
       const intervals = [...(p.salaryIntervals || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
@@ -292,7 +342,9 @@
         if (!validDateString(si.start) || !validDateString(si.end) || parseDate(si.start) > parseDate(si.end)) out.push({ level: 'error', text: `${personName(p)}: invalid salary interval.` });
         else if (validDateString(p.contractStart) && validDateString(p.contractEnd) && (si.start < p.contractStart || si.end > p.contractEnd)) out.push({ level: 'warning', text: `${personName(p)}: salary interval ${si.start} – ${si.end} lies outside the contract.` });
       }
+      // Check for overlapping salary intervals
       for (let i = 1; i < intervals.length; i++) if (intervals[i].start <= intervals[i - 1].end) out.push({ level: 'error', text: `${personName(p)}: salary intervals overlap.` });
+      // Walk the contract range to detect gaps between salary intervals
       if (validDateString(p.contractStart) && validDateString(p.contractEnd)) {
         let cursor = p.contractStart;
         for (const si of intervals) {
@@ -303,11 +355,13 @@
         if (cursor <= p.contractEnd) out.push({ level: 'error', text: `${personName(p)}: salary intervals end before contract (${cursor}).` });
       }
     }
+    // Validate projects: dates and budget overruns
     for (const p of state.projects.filter(x => !x.hidden)) {
       if (p.start && p.end && parseDate(p.start) > parseDate(p.end)) out.push({ level: 'error', text: `${p.name || '(unnamed project)'}: project start is after project end.` });
       const free = projectFreePersonnel(p);
       if (free < -0.005) out.push({ level: 'error', text: `${p.name || '(unnamed project)'}: personnel budget exceeded by ${formatMoney(-free)}.` });
     }
+    // Validate assignments: orphaned refs, date validity, contract/project bounds
     for (const a of state.assignments.filter(x => !getPerson(x.personId)?.hidden && !getProject(x.projectId)?.hidden)) {
       const person = getPerson(a.personId), project = getProject(a.projectId);
       const who = personName(person);
@@ -328,6 +382,7 @@
       }
       if (numberValue(a.ftePercent) <= 0) out.push({ level: 'warning', text: `${who} / ${what}: FTE is zero.` });
     }
+    // Per-person FTE under/over-allocation across timeline segments
     for (const person of state.persons.filter(x => !x.hidden)) {
       if (!validDateString(person.contractStart) || !validDateString(person.contractEnd) || parseDate(person.contractStart) > parseDate(person.contractEnd)) continue;
 
@@ -339,6 +394,7 @@
         numberValue(a.ftePercent) > 0
       );
 
+      // Collect all segment boundary dates (contract start/end + assignment boundaries)
       const events = new Set([person.contractStart, addDays(person.contractEnd, 1)]);
       for (const a of personAssignments) {
         const clippedStart = a.start < person.contractStart ? person.contractStart : a.start;
@@ -349,6 +405,7 @@
         }
       }
 
+      // Sum FTE within each segment to detect under/over allocation
       const points = [...events].sort();
       let overAllocationReported = false;
       for (let i = 0; i < points.length - 1; i++) {
@@ -375,6 +432,8 @@
     return out;
   }
 
+  // ─── Dashboard Rendering ───
+
   function renderDashboard() {
     const w = warnings();
     $('#dashboard').innerHTML = `
@@ -390,11 +449,13 @@
       </div>`;
   }
 
+  // HTML-escape a value for safe insertion into markup
   function esc(value) {
     return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
 
+  // Group projects by their type field for the free-funds summary
   function projectsGroupedByType(projects) {
     const groups = new Map();
     for (const project of projects) {
@@ -429,6 +490,8 @@
       </div>`;
   }
 
+  // ─── Inline Input Helper ───
+
   function input(kind, value, attrs = '') {
     const type = kind === 'date' ? 'date' : 'text';
     const cls = kind === 'money'
@@ -441,6 +504,8 @@
     const display = kind === 'money' ? formatNumber(value, 2) : esc(value);
     return `<input type="${type}" class="${cls}" value="${display}" ${attrs}>`;
   }
+
+  // ─── Persons Tab ───
 
   function renderPersons() {
     const rows = [...tablePersons()].sort((a, b) => comparePersons(a, b, sortSpec.key) * sortSpec.dir);
@@ -473,6 +538,7 @@
     bindResizableTables($('#tab-persons'));
   }
 
+  // Render the expandable salary interval sub-table for a person
   function salaryIntervalsEditor(person) {
     const intervals = [...(person.salaryIntervals || [])].sort((a, b) => String(a.start).localeCompare(String(b.start)));
     if (!intervals.length) return '<div class="salary-empty">No salary intervals defined.</div>';
@@ -497,6 +563,9 @@
     if (sortSpec.key === key) sortSpec.dir *= -1; else sortSpec = { key, dir: 1 };
     renderPersons();
   }
+
+  // ─── Projects Tab ───
+
   function renderProjects() {
     const rows = [...tableProjects()].sort((a, b) => compareProjects(a, b, projectSortSpec.key) * projectSortSpec.dir);
     $('#tab-projects').innerHTML = `
@@ -544,12 +613,15 @@
     renderProjects();
   }
 
+  // Build <option> list for expense project selects (only projects with travel/material budget)
   function projectOptions(selected) {
     const projects = visibleProjects().filter(p => numberValue(p.travelBudget) > 0 || numberValue(p.materialBudget) > 0);
     const selectedProject = getProject(selected);
     if (selectedProject && !selectedProject.hidden && !projects.some(p => p.id === selectedProject.id)) projects.push(selectedProject);
     return `<option value="">Select project</option>` + projects.map(p => `<option value="${p.id}" ${p.id === selected ? 'selected' : ''}>${esc(p.name || '(unnamed project)')}</option>`).join('');
   }
+
+  // ─── Expenses Tab ───
 
   function renderExpenses() {
     const overviewRows = visibleProjects()
@@ -594,13 +666,18 @@
     bindResizableTables($('#tab-expenses'));
   }
 
+  // ─── Inline Editing System ───
+
   function fieldAttrs(entity, id, field) { return `data-entity="${entity}" data-id="${id}" data-field="${field}"`; }
 
+  // Record the state snapshot at the moment a field edit begins (for undo granularity)
   function beginFieldEdit(el) {
     pendingEditSnapshot = JSON.stringify(serializableState());
     pendingEditElement = el;
   }
 
+  // On the first input event for a given element, push the pre-edit snapshot
+  // onto the undo stack so the entire field change is one undo step
   function recordFieldEdit(el) {
     if (pendingEditElement !== el || !pendingEditSnapshot) {
       pendingEditSnapshot = JSON.stringify(serializableState());
@@ -622,6 +699,7 @@
     }
   }
 
+  // Attach focus/input/blur handlers to all inline-editable fields
   function bindEditorFields(root) {
     $$('[data-entity]', root).forEach(el => {
       el.addEventListener('focus', () => {
@@ -643,6 +721,7 @@
     });
   }
 
+  // Write the DOM element's current value back into the state model
   function updateModelFromElement(el, refreshDerived) {
     let obj;
     if (el.dataset.entity === 'salary') {
@@ -660,11 +739,15 @@
     if (refreshDerived) renderDerived();
   }
 
+  // ─── CRUD Operations ───
+
   function addPerson() {
     snapshot();
     const p = { id: uid('person'), firstName: '', lastName: '', role: '', contractStart: '', contractEnd: '', salaryIntervals: [], notes: '', hidden: false };
     state.persons.push(p); renderPersons(); renderDerived(); focusFirst(`[data-person-id="${p.id}"]`);
   }
+
+  // Auto-populate the start date of a new salary interval based on the previous one
   function addSalaryInterval(personId) {
     const person = getPerson(personId); if (!person) return;
     snapshot();
@@ -682,33 +765,44 @@
     person.salaryIntervals = (person.salaryIntervals || []).filter(si => si.id !== salaryId);
     renderPersons(); renderDerived();
   }
+
   function addProject() {
     snapshot(); const p = { id: uid('project'), name: '', type: '', start: '', end: '', personnelBudget: 0, travelBudget: 0, materialBudget: 0, notes: '', hidden: false };
     state.projects.push(p); renderProjects(); renderDerived(); focusFirst(`[data-project-id="${p.id}"]`);
   }
+
   function addAssignment(defaults = {}) {
     snapshot(); const a = { id: uid('assignment'), personId: defaults.personId || '', projectId: defaults.projectId || '', start: defaults.start || '', end: defaults.end || '', ftePercent: defaults.ftePercent ?? 100, notes: '' };
     state.assignments.push(a); renderDerived(); return a;
   }
+
   function addExpense() {
     snapshot(); const e = { id: uid('expense'), projectId: '', category: 'travel', date: '', amount: 0, notes: '' };
     state.expenses.push(e); renderExpenses(); renderDerived(); focusFirst(`[data-expense-id="${e.id}"]`);
   }
 
+  // Delete a person and cascade-remove all their assignments
   function deletePerson(id) {
     if (!confirm('Delete this person and all their assignments?')) return;
     snapshot(); state.persons = state.persons.filter(p => p.id !== id); state.assignments = state.assignments.filter(a => a.personId !== id); renderAll();
   }
+
+  // Delete a project and cascade-remove its assignments and expenses
   function deleteProject(id) {
     if (!confirm('Delete this project, its assignments, and expenses?')) return;
     snapshot(); state.projects = state.projects.filter(p => p.id !== id); state.assignments = state.assignments.filter(a => a.projectId !== id); state.expenses = state.expenses.filter(e => e.projectId !== id); renderAll();
   }
+
   function deleteExpense(id) { snapshot(); state.expenses = state.expenses.filter(e => e.id !== id); renderExpenses(); renderDerived(); }
 
   function focusFirst(selector) {
     requestAnimationFrame(() => { const root = $(selector); const el = root?.querySelector('input,select,textarea'); el?.focus(); });
   }
 
+  // ─── Derived / Computed UI Updates ───
+
+  // Refresh all computed cells (costs, free budget, expense summaries) without
+  // re-rendering entire tables
   function renderDerived() {
     renderDashboard();
     $$('[data-assignment-cost]').forEach(td => { const a = state.assignments.find(x => x.id === td.dataset.assignmentCost); td.textContent = formatMoney(assignmentCost(a)); });
@@ -730,6 +824,9 @@
     
   }
 
+  // ─── Timeline View ───
+
+  // Determine the date range for the timeline from all visible entities
   function timelineBounds() {
     const starts = [], ends = [];
     visibleProjects().forEach(p => { if (validDateString(p.start)) starts.push(parseDate(p.start)); if (validDateString(p.end)) ends.push(parseDate(p.end)); });
@@ -740,6 +837,7 @@
     return [new Date(Date.UTC(min.getUTCFullYear(), min.getUTCMonth(), 1)), new Date(Date.UTC(max.getUTCFullYear(), max.getUTCMonth() + 1, 0))];
   }
 
+  // Generate an array of first-of-month dates between start and end (inclusive)
   function monthsBetween(start, end) {
     const arr = []; let d = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1));
     while (d <= end) { arr.push(new Date(d)); d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)); }
@@ -749,6 +847,7 @@
   function renderTimeline() {
     const [min, max] = timelineBounds(); const months = monthsBetween(min, max); const width = months.length * MONTH_WIDTH;
     const now = new Date(); const currentYear = now.getFullYear(), currentMonth = now.getMonth();
+    // Build year-group header spans
     const yearGroups = [];
     for (const m of months) {
       const year = m.getUTCFullYear();
@@ -804,6 +903,7 @@
     bindPastToggle($('#tab-timeline')); bindTimelineScroll(); bindAssignmentDrag(min); bindAssignmentEditor(); bindPersonDrop(min); restoreScroll();
   }
 
+  // Wrap a timeline section (labels column + scrollable canvas) in a shell
   function timelineShell(title, id, labels, rows, header, width, min, max) {
     const marker = currentMonthMarker(min, max);
     return `<div class="timeline-shell"><div class="timeline-title">${title}</div><div class="timeline-body">
@@ -812,6 +912,7 @@
     </div></div>`;
   }
 
+  // Render the "today" line and current-month highlight band
   function currentMonthMarker(min, max) {
     const now = new Date();
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -824,6 +925,7 @@
     return `<div class="current-month-band" style="left:${left}px;width:${Math.max(1, right - left)}px"></div><div class="today-line" style="left:${todayX}px" title="Today"></div>`;
   }
 
+  // Filter to assignments that have valid, non-contradictory dates
   function validTimelineAssignments(assignments) {
     return assignments.filter(a =>
       validDateString(a.start) &&
@@ -832,6 +934,9 @@
     );
   }
 
+  // Timeline lane-packing: assigns each assignment to the first available
+  // vertical lane so bars don't overlap. Uses a greedy first-fit approach
+  // sorted by start date then end date.
   function packAssignmentLanes(assignments) {
     const sorted = [...validTimelineAssignments(assignments)].sort((a, b) =>
       a.start.localeCompare(b.start) || a.end.localeCompare(b.end)
@@ -851,6 +956,7 @@
     return { packed, laneCount: Math.max(1, laneEnds.length) };
   }
 
+  // Compute the pixel height for a timeline row based on the number of lanes
   function timelineRowHeight(assignments, minimumHeight, includeSalaryBand = false) {
     const { laneCount } = packAssignmentLanes(assignments);
     const contentHeight = TIMELINE_BAR_TOP +
@@ -902,6 +1008,7 @@
     return html || '';
   }
 
+  // Sort persons by contract start for the person timeline ordering
   function timelinePersonsByContractStart() {
     return [...visiblePersons()].sort((a, b) =>
       String(a.contractStart || '9999-12-31').localeCompare(String(b.contractStart || '9999-12-31')) ||
@@ -939,6 +1046,7 @@
       )).join('');
   }
 
+  // Group visible projects by type, sorted alphabetically
   function groupProjects() {
     const map = new Map();
     visibleProjects().forEach(p => {
@@ -964,6 +1072,8 @@
     return overlapDays(monthStart, monthEnd, start, end) > 0;
   }
 
+  // Render a single timeline row: the background grid, assignment bars, and
+  // optional salary interval bands (for person-mode rows)
   function timelineRow(mode, entityId, start, end, assignments, min, months, width, person = null) {
     const now = new Date();
     const grid = `<div class="timeline-row-grid">${months.map(month => {
@@ -984,6 +1094,7 @@
       assignmentBar(assignment, mode, min, lane)
     ).join('');
 
+    // Salary interval bands rendered below the assignment bars in person mode
     const salaryTop = TIMELINE_BAR_TOP + laneCount * TIMELINE_LANE_HEIGHT + 2;
     const salaryBands = includeSalaryBand && person
       ? [...(person.salaryIntervals || [])]
@@ -1012,6 +1123,8 @@
     </div>`;
   }
 
+  // Determine whether an assignment extends beyond its person's contract or
+  // project's end date, requiring a planned extension
   function assignmentPlanningStatus(a) {
     const person = getPerson(a.personId);
     const project = getProject(a.projectId);
@@ -1020,6 +1133,7 @@
     return { contractExtension, projectExtension, badge: contractExtension && projectExtension ? 'CP' : contractExtension ? 'C' : projectExtension ? 'P' : '' };
   }
 
+  // Calculate the number of months between two dates, rounding up partial months
   function monthsExtension(fromDate, toDate) {
     if (!validDateString(fromDate) || !validDateString(toDate) || toDate <= fromDate) return 0;
     const from = parseDate(fromDate), to = parseDate(toDate);
@@ -1028,6 +1142,7 @@
     return Math.max(1, months);
   }
 
+  // How many months of contract extension a person needs based on their latest assignment
   function requiredContractExtension(personId) {
     const person = getPerson(personId);
     if (!person || !validDateString(person.contractEnd)) return 0;
@@ -1035,6 +1150,7 @@
     return latest ? monthsExtension(person.contractEnd, latest) : 0;
   }
 
+  // How many months of project extension a project needs based on its latest assignment
   function requiredProjectExtension(projectId) {
     const project = getProject(projectId);
     if (!project || !validDateString(project.end)) return 0;
@@ -1042,6 +1158,7 @@
     return latest ? monthsExtension(project.end, latest) : 0;
   }
 
+  // Striped overlay for the portion of an assignment that extends past the project end
   function plannedProjectOverlay(a, min, barLeft, barRight) {
     const project = getProject(a.projectId);
     if (!project || !validDateString(project.end) || !validDateString(a.end) || a.end <= project.end) return '';
@@ -1052,6 +1169,7 @@
     return `<span class="assignment-planned-project-segment" style="left:${left}px;width:${width}px" title="Project extension required"></span>`;
   }
 
+  // Striped overlay for the portion of an assignment that extends past the contract end
   function plannedContractOverlay(a, min, barLeft, barRight) {
     const person = getPerson(a.personId);
     if (!person || !validDateString(person.contractEnd) || !validDateString(a.end) || a.end <= person.contractEnd) return '';
@@ -1062,6 +1180,7 @@
     return `<span class="assignment-planned-segment" style="left:${left}px;width:${width}px" title="Contract extension required"></span>`;
   }
 
+  // Render a single assignment bar element in the timeline
   function assignmentBar(a, mode, min, lane) {
     if (!validDateString(a.start) || !validDateString(a.end)) return '';
     const left = dateToX(a.start, min);
@@ -1092,6 +1211,7 @@
       `${planningLines ? `\n\n${planningLines}` : ''}` +
       `${noteText ? `\n\nNote: ${noteText}` : ''}`;
 
+    // Person-mode bars are read-only (no resize handles)
     if (mode === 'person') {
       return `<div class="assignment-bar assignment-bar-readonly"
         style="left:${left}px;width:${width}px;top:${top}px;background:${colorFor(key)}"
@@ -1100,6 +1220,7 @@
       </div>`;
     }
 
+    // Project-mode bars have left/right resize handles
     return `<div class="assignment-bar assignment-bar-resize-only"
       data-assignment-bar="${a.id}"
       data-mode="${mode}"
@@ -1112,11 +1233,13 @@
     </div>`;
   }
 
+  // Deterministic color assignment based on an entity's ID hash
   function colorFor(id) {
     let h = 0; for (const c of String(id || '')) h = ((h << 5) - h) + c.charCodeAt(0) | 0;
     return COLORS[Math.abs(h) % COLORS.length];
   }
 
+  // Convert a date string to a pixel X position on the timeline
   function dateToX(dateString, min) {
     const d = parseDate(dateString); if (!d) return 0;
     const months = (d.getUTCFullYear() - min.getUTCFullYear()) * 12 + (d.getUTCMonth() - min.getUTCMonth());
@@ -1124,6 +1247,8 @@
     return months * MONTH_WIDTH + ((d.getUTCDate() - 1) / dim) * MONTH_WIDTH;
   }
 
+  // Convert a pixel X position back to a date string; when dayPrecision is
+  // true (Alt key held), resolves to the nearest day; otherwise snaps to month start
   function xToDate(x, min, dayPrecision) {
     const monthIndex = Math.max(0, Math.floor(x / MONTH_WIDTH));
     const fraction = (x - monthIndex * MONTH_WIDTH) / MONTH_WIDTH;
@@ -1132,6 +1257,9 @@
     return formatDate(d);
   }
 
+  // ─── Timeline Scroll Sync ───
+
+  // Keep project and person timeline scroll positions in lock-step
   function bindTimelineScroll() {
     const timelines = [$('#projectTimeline'), $('#personTimeline')].filter(Boolean);
     if (!timelines.length) return;
@@ -1147,6 +1275,7 @@
 
     timelines.forEach(t => t.addEventListener('scroll', () => sync(t)));
 
+    // Enable click-and-drag panning on the timeline canvas
     const enablePan = source => {
       source.addEventListener('pointerdown', e => {
         if (e.button !== 0) return;
@@ -1175,6 +1304,9 @@
 
   function restoreScroll() { requestAnimationFrame(() => { const p = $('#projectTimeline'), q = $('#personTimeline'); if (p) p.scrollLeft = scrollMemory.project; if (q) q.scrollLeft = scrollMemory.person; }); }
 
+  // ─── Assignment Editor Modal ───
+
+  // Double-click an assignment bar to open a modal for editing FTE and notes
   function bindAssignmentEditor() {
     const modal = $('#assignmentEditorModal');
     const fteInput = $('#assignmentEditorFte');
@@ -1263,6 +1395,10 @@
     };
   }
 
+  // ─── Assignment Resize / Delete Drag ───
+
+  // Pointer-based drag: dragging left/right edges resizes the assignment;
+  // dragging the bar body off its project row deletes the assignment
   function bindAssignmentDrag(min) {
     $$('[data-assignment-bar]').forEach(bar => bar.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
@@ -1293,6 +1429,7 @@
       let changed = false;
       let deleteDragActivated = false;
 
+      // Earliest allowed start is the later of the person's contract start and project start
       const sourceStart = project.start || '';
       const validStart = [person.contractStart, sourceStart]
         .filter(validDateString)
@@ -1309,6 +1446,7 @@
       if (isDeleteDrag) bar.classList.add('delete-dragging');
       bar.setPointerCapture(e.pointerId);
 
+      // Floating tooltip showing current dates during resize
       const dragTip = document.createElement('div');
       dragTip.className = 'drag-date-tooltip';
       dragTip.hidden = true;
@@ -1342,6 +1480,7 @@
         const dx = ev.clientX - startX;
         const dy = ev.clientY - startY;
 
+        // Delete drag: move the bar visually, show delete hint
         if (isDeleteDrag) {
           if (!deleteDragActivated && Math.hypot(dx, dy) < 6) return;
           deleteDragActivated = true;
@@ -1350,6 +1489,7 @@
           return;
         }
 
+        // Resize: convert mouse delta to date, clamped to valid bounds
         const dayPrecision = ev.altKey;
         if (edge === 'left') {
           let nextStart = xToDate(dateToX(oldStart, min) + dx, min, dayPrecision);
@@ -1432,6 +1572,10 @@
     }));
   }
 
+  // ─── Person Drag-and-Drop onto Timeline ───
+
+  // Handles dragging person chips from the palette onto project timeline
+  // rows to create new assignments, with contract/project preview overlays
   function bindPersonDrop(min) {
     let draggedPersonId = '';
     let dragPreviewTip = null;
@@ -1452,6 +1596,7 @@
       return dragPreviewTip;
     };
 
+    // Show contract and valid-drop preview strips on every project row
     const addPreviewToRows = personId => {
       const person = getPerson(personId);
       if (!person || !validDateString(person.contractStart) || !validDateString(person.contractEnd)) return;
@@ -1499,6 +1644,7 @@
         e.preventDefault();
         row.classList.add('drop-hover');
 
+        // Show contextual tooltip with contract/project dates
         const personId = draggedPersonId || e.dataTransfer.getData('text/person-id');
         const person = getPerson(personId);
         const project = getProject(row.dataset.dropProject);
@@ -1517,6 +1663,8 @@
         if (!row.contains(e.relatedTarget)) row.classList.remove('drop-hover');
       });
 
+      // On drop: compute start/end from the drop X position, clamp to
+      // contract and project bounds, then create the assignment
       row.addEventListener('drop', e => {
         e.preventDefault();
         row.classList.remove('drop-hover');
@@ -1545,13 +1693,17 @@
     });
   }
 
-    function renderAll() {
+  // ─── Top-Level Render & Tab Switching ───
+
+  function renderAll() {
     renderPersons(); renderProjects(); renderExpenses(); renderTimeline(); renderDashboard(); switchTab(activeTab); updateUndoButtons();
   }
 
   function switchTab(name) {
     activeTab = name; $$('.header-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name)); $$('.tab').forEach(t => t.classList.toggle('active', t.id === `tab-${name}`)); if (name === 'timeline') renderTimeline();
   }
+
+  // ─── Dirty State & File Status ───
 
   function confirmDiscardChanges(actionText = 'continue') {
     if (!isDirty) return true;
@@ -1573,6 +1725,10 @@
     $('#fileStatus').textContent = 'Unsaved project';
   }
 
+  // ─── File I/O ───
+
+  // Open a JSON project file using the File System Access API when available,
+  // falling back to a hidden <input type="file"> element
   async function openFile() {
     if (!confirmDiscardChanges('open another project')) return;
     try {
@@ -1586,10 +1742,13 @@
     } catch (err) { if (err?.name !== 'AbortError') alert(`Could not open file: ${err.message}`); }
   }
 
+  // Fallback file picker for browsers without File System Access API
   function pickJsonFallback() {
     return new Promise((resolve, reject) => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json'; inp.onchange = async () => { try { const file = inp.files[0]; if (!file) return reject(new DOMException('Cancelled', 'AbortError')); resolve({ data: JSON.parse(await file.text()), name: file.name }); } catch (e) { reject(e); } }; inp.click(); });
   }
 
+  // Save to the existing file handle, or prompt for a new location.
+  // Falls back to a download blob in unsupported browsers.
   async function saveFile(saveAs = false) {
     const text = JSON.stringify(serializableState(), null, 2);
     try {
@@ -1603,6 +1762,7 @@
     } catch (err) { if (err?.name !== 'AbortError') alert(`Could not save file: ${err.message}`); }
   }
 
+  // Load sample data from a bundled JSON file
   async function loadTestData() {
     const hasCurrentData =
       Boolean(currentFileName) ||
@@ -1648,7 +1808,8 @@
     state = emptyState(); fileHandle = null; currentFileName = ''; history = []; future = []; pendingEditSnapshot = null; pendingEditElement = null; renderAll(); markUnsaved();
   }
 
-  
+  // ─── Resizable Table Columns ───
+
   const COLUMN_WIDTH_STORAGE_KEY = 'research-group-planner-column-widths-v1';
 
   function loadColumnWidths() {
@@ -1661,6 +1822,8 @@
     catch (_) {}
   }
 
+  // Attach resize handles to every <th> in resizable tables; persist
+  // widths to localStorage keyed by table ID and column index
   function bindResizableTables(root = document) {
     const stored = loadColumnWidths();
     root.querySelectorAll('table.resizable-table').forEach(table => {
@@ -1713,9 +1876,12 @@
     });
   }
 
-function bindGlobal() {
+  // ─── Global Event Binding ───
+
+  function bindGlobal() {
     $('#newBtn').onclick = newProject; $('#openBtn').onclick = openFile; $('#loadTestDataBtn').onclick = loadTestData; $('#saveBtn').onclick = () => saveFile(false); $('#saveAsBtn').onclick = () => saveFile(true); $('#undoBtn').onclick = undo; $('#redoBtn').onclick = redo;
     $$('.header-tabs button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+    // Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+Z to undo, Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y to redo
     document.addEventListener('keydown', e => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFile(false); }
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
@@ -1723,12 +1889,13 @@ function bindGlobal() {
     });
   }
 
-  
+  // Warn before the browser unloads the page if there are unsaved changes
   window.addEventListener('beforeunload', event => {
     if (!isDirty) return;
     event.preventDefault();
     event.returnValue = '';
   });
 
-bindGlobal(); renderAll(); markUnsaved();
+  // ─── Bootstrap ───
+  bindGlobal(); renderAll(); markUnsaved();
 })();
