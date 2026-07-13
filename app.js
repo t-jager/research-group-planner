@@ -17,7 +17,7 @@
   let activeTab = 'persons';
   let sortSpec = { key: 'lastName', dir: 1 };
   let projectSortSpec = { key: 'name', dir: 1 };
-  let assignmentSortSpec = { key: 'person', dir: 1 };
+
   let showPast = false;
   let history = [];
   let future = [];
@@ -163,12 +163,6 @@
     if (!d) return s;
     d.setUTCDate(d.getUTCDate() + n);
     return formatDate(d);
-  }
-
-  function daysInclusive(start, end) {
-    const a = parseDate(start), b = parseDate(end);
-    if (!a || !b || a > b) return 0;
-    return Math.floor((b - a) / DAY_MS) + 1;
   }
 
   function numberValue(value) {
@@ -550,78 +544,11 @@
     renderProjects();
   }
 
-  function personOptions(selected) {
-    const persons = visiblePersons();
-    const selectedPerson = getPerson(selected);
-    if (selectedPerson && !selectedPerson.hidden && !persons.some(p => p.id === selectedPerson.id)) persons.push(selectedPerson);
-    return `<option value="">Select person</option>` + [...persons].sort((a, b) => comparePersons(a, b, 'lastName')).map(p => `<option value="${p.id}" ${p.id === selected ? 'selected' : ''}>${esc(personName(p))}</option>`).join('');
-  }
   function projectOptions(selected) {
     const projects = visibleProjects().filter(p => numberValue(p.travelBudget) > 0 || numberValue(p.materialBudget) > 0);
     const selectedProject = getProject(selected);
     if (selectedProject && !selectedProject.hidden && !projects.some(p => p.id === selectedProject.id)) projects.push(selectedProject);
     return `<option value="">Select project</option>` + projects.map(p => `<option value="${p.id}" ${p.id === selected ? 'selected' : ''}>${esc(p.name || '(unnamed project)')}</option>`).join('');
-  }
-
-  function groupedProjectOptions(selected) {
-    const projects = visibleProjects();
-    const selectedProject = getProject(selected);
-    if (selectedProject && !selectedProject.hidden && !projects.some(p => p.id === selectedProject.id)) projects.push(selectedProject);
-    return `<option value="">Select project</option>` + projectsGroupedByType(projects).map(([type, items]) =>
-      `<optgroup label="${esc(type)}">${items.map(p => `<option value="${p.id}" ${p.id === selected ? 'selected' : ''}>${esc(p.name || '(unnamed project)')}</option>`).join('')}</optgroup>`
-    ).join('');
-  }
-
-  function renderAssignments() {
-    const rows = [...visibleAssignments()].sort((a, b) => compareAssignments(a, b, assignmentSortSpec.key) * assignmentSortSpec.dir);
-    $('#tab-assignments').innerHTML = `
-      <div class="section-head"><h2>Assignments</h2><div class="section-actions">${pastToggleHtml()}<button class="primary" id="addAssignmentBtn">Add assignment</button></div></div>
-      <div class="table-wrap"><table><thead><tr>${assignmentHeader('person', 'Person')}${assignmentHeader('project', 'Project')}${assignmentHeader('start', 'Start')}${assignmentHeader('end', 'End')}${assignmentHeader('ftePercent', 'FTE %')}${assignmentHeader('notes', 'Notes')}${assignmentHeader('cost', 'Assigned budget')}<th></th></tr></thead><tbody>
-      ${rows.map(a => `<tr data-assignment-id="${a.id}">
-        <td><select ${fieldAttrs('assignment', a.id, 'personId')}>${personOptions(a.personId)}</select></td>
-        <td><select ${fieldAttrs('assignment', a.id, 'projectId')}>${groupedProjectOptions(a.projectId)}</select></td>
-        <td>${input('date', a.start, fieldAttrs('assignment', a.id, 'start'))}</td>
-        <td>${input('date', a.end, fieldAttrs('assignment', a.id, 'end'))}</td>
-        <td>${input('percent', a.ftePercent, fieldAttrs('assignment', a.id, 'ftePercent'))}</td>
-        <td><textarea ${fieldAttrs('assignment', a.id, 'notes')}>${esc(a.notes)}</textarea></td>
-        <td class="computed money" data-assignment-cost="${a.id}">${formatMoney(assignmentCost(a))}</td>
-        <td><button class="danger delete-assignment" data-id="${a.id}">Delete</button></td>
-      </tr>`).join('')}
-      </tbody></table></div>`;
-    $('#addAssignmentBtn').onclick = () => addAssignment();
-    $$('.delete-assignment', $('#tab-assignments')).forEach(b => b.onclick = () => deleteAssignment(b.dataset.id));
-    $$('th.sortable', $('#tab-assignments')).forEach(th => th.onclick = () => sortAssignments(th.dataset.sort));
-    bindEditorFields($('#tab-assignments'));
-    bindPastToggle($('#tab-assignments'));
-  }
-
-  function assignmentHeader(key, label) {
-    const c = assignmentSortSpec.key === key ? (assignmentSortSpec.dir === 1 ? ' asc' : ' desc') : '';
-    return `<th class="sortable${c}" data-sort="${key}">${label}</th>`;
-  }
-
-  function compareAssignments(a, b, key) {
-    if (key === 'person') {
-      const pa = getPerson(a.personId), pb = getPerson(b.personId);
-      const la = `${pa?.lastName || ''} ${pa?.firstName || ''}`;
-      const lb = `${pb?.lastName || ''} ${pb?.firstName || ''}`;
-      return la.localeCompare(lb, undefined, { numeric: true, sensitivity: 'base' });
-    }
-    if (key === 'project') {
-      const pa = getProject(a.projectId), pb = getProject(b.projectId);
-      const la = `${pa?.type || ''} ${pa?.name || ''}`;
-      const lb = `${pb?.type || ''} ${pb?.name || ''}`;
-      return la.localeCompare(lb, undefined, { numeric: true, sensitivity: 'base' });
-    }
-    if (key === 'ftePercent') return numberValue(a.ftePercent) - numberValue(b.ftePercent);
-    if (key === 'cost') return assignmentCost(a) - assignmentCost(b);
-    return String(a[key] ?? '').localeCompare(String(b[key] ?? ''), undefined, { numeric: true, sensitivity: 'base' });
-  }
-
-  function sortAssignments(key) {
-    if (assignmentSortSpec.key === key) assignmentSortSpec.dir *= -1;
-    else assignmentSortSpec = { key, dir: 1 };
-    renderAssignments();
   }
 
   function renderExpenses() {
@@ -776,7 +703,6 @@
     if (!confirm('Delete this project, its assignments, and expenses?')) return;
     snapshot(); state.projects = state.projects.filter(p => p.id !== id); state.assignments = state.assignments.filter(a => a.projectId !== id); state.expenses = state.expenses.filter(e => e.projectId !== id); renderAll();
   }
-  function deleteAssignment(id) { snapshot(); state.assignments = state.assignments.filter(a => a.id !== id); renderDerived(); }
   function deleteExpense(id) { snapshot(); state.expenses = state.expenses.filter(e => e.id !== id); renderExpenses(); renderDerived(); }
 
   function focusFirst(selector) {
@@ -1249,16 +1175,6 @@
 
   function restoreScroll() { requestAnimationFrame(() => { const p = $('#projectTimeline'), q = $('#personTimeline'); if (p) p.scrollLeft = scrollMemory.project; if (q) q.scrollLeft = scrollMemory.person; }); }
 
-  function assignmentDropRange(assignment, targetProjectId = '', targetPersonId = '') {
-    const person = getPerson(targetPersonId || assignment.personId);
-    const project = getProject(targetProjectId || assignment.projectId);
-    const starts = [assignment.start, person?.contractStart, project?.start].filter(validDateString).sort();
-    const ends = [assignment.end, person?.contractEnd, project?.end].filter(validDateString).sort();
-    const start = starts.at(-1) || '';
-    const end = ends[0] || '';
-    return { start, end, valid: Boolean(start && end && start <= end) };
-  }
-
   function bindAssignmentEditor() {
     const modal = $('#assignmentEditorModal');
     const fteInput = $('#assignmentEditorFte');
@@ -1378,40 +1294,17 @@
       let deleteDragActivated = false;
 
       const sourceStart = project.start || '';
-      const sourceEnd = project.end || '';
       const validStart = [person.contractStart, sourceStart]
         .filter(validDateString)
         .sort()
         .at(-1) || '';
-      const validEnd = '';
 
       const clearPreview = () => {
         currentRow?.querySelectorAll('.contract-preview, .valid-drop-preview').forEach(el => el.remove());
       };
 
-      const addPreview = () => {
-        clearPreview();
-        if (!isResize || !currentRow || !validStart || !validEnd || validStart > validEnd) return;
-
-        const contractLeft = dateToX(person.contractStart, min);
-        const contractRight = dateToX(addDays(person.contractEnd, 1), min);
-        const contract = document.createElement('div');
-        contract.className = 'contract-preview';
-        contract.style.left = `${contractLeft}px`;
-        contract.style.width = `${Math.max(1, contractRight - contractLeft)}px`;
-        currentRow.appendChild(contract);
-
-        const overlapLeft = dateToX(sourceStart, min);
-        const overlapRight = dateToX(addDays(sourceEnd, 1), min);
-        const overlap = document.createElement('div');
-        overlap.className = 'valid-drop-preview';
-        overlap.style.left = `${overlapLeft}px`;
-        overlap.style.width = `${Math.max(1, overlapRight - overlapLeft)}px`;
-        currentRow.appendChild(overlap);
-      };
-
       snapshot();
-      addPreview();
+      clearPreview();
       bar.classList.add('dragging');
       if (isDeleteDrag) bar.classList.add('delete-dragging');
       bar.setPointerCapture(e.pointerId);

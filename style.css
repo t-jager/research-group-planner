@@ -292,14 +292,6 @@ td textarea {
   color: #16794b;
 }
 
-.timeline-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
 .person-palette {
   display: flex;
   gap: 6px;
@@ -640,19 +632,6 @@ td textarea {
   padding: 5px 0;
 }
 
-.budget-group+.budget-group {
-  margin-top: 0.85rem;
-}
-
-.budget-group-title {
-  font-weight: 700;
-  margin-bottom: 0.2rem;
-}
-
-.budget-line-indented {
-  padding-left: 1rem;
-}
-
 
 .drag-date-tooltip {
   position: fixed;
@@ -876,10 +855,6 @@ td textarea {
 }
 
 
-.timeline-row.drop-invalid {
-  background: #fff0f0 !important;
-  box-shadow: inset 0 0 0 2px rgba(180, 35, 24, .55);
-}
 
 
 .assignment-bar-readonly {
@@ -909,62 +884,6 @@ td textarea {
 
 .drag-date-tooltip.delete-ready {
   background: rgba(180, 35, 24, .96);
-}
-
-
-.assignment-note-icon {
-  display: inline-block;
-  margin-left: 5px;
-  font-size: 11px;
-  line-height: 1;
-  vertical-align: middle;
-}
-
-.assignment-editor-dialog {
-  width: min(520px, calc(100vw - 32px));
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, .28);
-}
-
-.assignment-editor-dialog::backdrop {
-  background: rgba(20, 24, 32, .35);
-}
-
-.assignment-editor-dialog form {
-  padding: 18px;
-}
-
-.assignment-editor-dialog h3 {
-  margin: 0 0 10px;
-}
-
-.assignment-editor-context {
-  margin-bottom: 14px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.assignment-editor-dialog label {
-  display: grid;
-  gap: 5px;
-  margin: 12px 0;
-}
-
-.assignment-editor-dialog input,
-.assignment-editor-dialog textarea {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 8px;
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
 }
 
 
