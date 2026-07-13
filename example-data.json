@@ -88,8 +88,15 @@
         {
           "id": "s5",
           "start": "2026-01-01",
-          "end": "2028-12-31",
+          "end": "2027-12-31",
           "monthlyCost": 6637.29,
+          "employmentPercent": 100
+        },
+        {
+          "id": "salary_mrjm89mb_021ydt",
+          "start": "2028-01-01",
+          "end": "2028-12-31",
+          "monthlyCost": 6845.11,
           "employmentPercent": 100
         }
       ],
