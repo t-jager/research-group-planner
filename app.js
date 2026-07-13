@@ -1451,7 +1451,7 @@
       return `<div class="assignment-bar assignment-bar-readonly"
         style="left:${left}px;width:${width}px;top:${top}px;background:${colorFor(key)}"
         title="${esc(tooltip)}">
-        ${plannedOverlay}${plannedProject}${planningBadge}<span class="assignment-label-text">${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>
+        <span class="assignment-label-text">${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${planningBadge}${plannedOverlay}${plannedProject}
       </div>`;
     }
 
@@ -1461,9 +1461,8 @@
       data-mode="${mode}"
       style="left:${left}px;width:${width}px;top:${top}px;background:${colorFor(key)}"
       title="${esc(tooltip)}">
-      ${plannedOverlay}${plannedProject}${planningBadge}
       <span class="assignment-handle left" data-edge="left"></span>
-      <span class="assignment-label-text">${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>
+      <span class="assignment-label-text">${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${planningBadge}${plannedOverlay}${plannedProject}
       <span class="assignment-handle right" data-edge="right"></span>
     </div>`;
   }

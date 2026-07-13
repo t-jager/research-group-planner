@@ -1320,6 +1320,7 @@ body.modal-open {
 .assignment-label-text {
   position: relative;
   z-index: 2;
+  background: inherit;
 }
 
 .assignment-handle {
