@@ -1235,3 +1235,20 @@ body.resizing-column * {
   cursor: col-resize !important;
   user-select: none !important;
 }
+
+.site-footer {
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+.site-footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}

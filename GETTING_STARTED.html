@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Getting Started – Research Group Planner</title>
+  <link rel="stylesheet" href="style.css?v=0.1">
+  <style>
+    .manual { max-width: 720px; margin: 32px auto; padding: 0 20px; line-height: 1.6; }
+    .manual h1 { margin-top: 0; }
+    .manual h2 { margin-top: 28px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+    .manual h3 { margin-top: 20px; }
+    .manual ul { padding-left: 24px; }
+    .manual li { margin-bottom: 6px; }
+    .manual code { background: #eef1f5; padding: 2px 5px; border-radius: 3px; font-size: 92%; }
+    .manual .back { display: inline-block; margin-top: 24px; color: var(--accent); text-decoration: none; }
+    .manual .back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="manual">
+    <h1>Getting Started with the Research Group Planner</h1>
+
+    <h2>Opening the Tool</h2>
+    <p>Open <code>index.html</code> in your web browser. No server or installation is needed.</p>
+
+    <h2>Recommended Workflow</h2>
+
+    <h3>1. Set Up Personnel</h3>
+    <p>Go to the <strong>Persons</strong> tab and add your group members. For each person, fill in:</p>
+    <ul>
+      <li><strong>Name and role</strong> (e.g. Professor, Postdoc, PhD student)</li>
+      <li><strong>Contract start and end dates</strong></li>
+      <li><strong>Salary intervals</strong>: Click <em>Add interval</em> to define periods with different monthly employer costs. Intervals must cover the full contract without gaps or overlaps. If a salary changes mid-contract, create two intervals (e.g. one for 2024–2025 and another for 2026-onwards).</li>
+    </ul>
+
+    <h3>2. Set Up Projects</h3>
+    <p>Switch to the <strong>Projects</strong> tab and add your research projects. For each project, fill in:</p>
+    <ul>
+      <li><strong>Type and name</strong> (e.g. DFG, ERC, Faculty)</li>
+      <li><strong>Start and end dates</strong></li>
+      <li><strong>Budgets</strong>: Personnel, travel, and material budgets in euros</li>
+    </ul>
+
+    <h3>3. Create Assignments</h3>
+    <p>Go to the <strong>Assignments</strong> tab to assign people to projects:</p>
+    <ul>
+      <li>Select a person and a project from the dropdowns</li>
+      <li>Set the assignment period (must fall within the project dates)</li>
+      <li>Set the <strong>FTE percentage</strong> (e.g. 50 for half-time)</li>
+    </ul>
+    <p>The tool automatically calculates personnel costs based on the person's salary intervals and the overlap with the assignment period.</p>
+    <p>Alternatively, use the <strong>Timeline</strong> view: drag a person chip from the palette onto a project row. Click an existing assignment bar to edit its FTE or notes. Drag the left or right edge of an assignment bar to resize it. Hold <strong>Alt</strong> for day-level precision.</p>
+
+    <h3>4. Track Expenses</h3>
+    <p>In the <strong>Expenses</strong> tab, log travel and material costs against projects. Only projects with non-zero travel or material budgets appear in the project dropdown. The overview table at the top shows remaining budgets at a glance.</p>
+
+    <h2>Dashboard</h2>
+    <p>The dashboard at the top of the page shows:</p>
+    <ul>
+      <li><strong>Free personnel funding</strong> per project (remaining budget after assignments)</li>
+      <li><strong>Warnings</strong> for issues like budget overruns, overlapping salary intervals, FTE over/under-allocation, and date conflicts</li>
+    </ul>
+    <p>Check the warnings regularly to catch problems early.</p>
+
+    <h2>Showing Past Items</h2>
+    <p>Each tab has a <strong>Show past projects and contracts</strong> checkbox. When unchecked, expired contracts and finished projects are hidden from view.</p>
+
+    <h2>Saving and Loading</h2>
+    <ul>
+      <li><strong>New</strong>: Start with an empty project</li>
+      <li><strong>Open...</strong>: Load a previously saved <code>.json</code> file</li>
+      <li><strong>Save / Save As...</strong>: Save your work to a <code>.json</code> file</li>
+      <li><strong>Load test data</strong>: Load bundled sample data (only works when hosted on a server)</li>
+      <li><strong>Undo / Revert</strong>: Step back and forward through your edit history</li>
+    </ul>
+    <p>All changes are reflected immediately in the tables and calculations. There is no separate "save changes" step for edits within a session.</p>
+
+    <h2>Tips</h2>
+    <ul>
+      <li><strong>Table columns</strong> can be resized by dragging the column borders</li>
+      <li><strong>Tables are sortable</strong> — click any column header to sort by that column</li>
+      <li><strong>Hidden persons and projects</strong> (ticked under <em>Hide</em>) are excluded from calculations and the timeline but remain in the data</li>
+      <li>The <strong>Extension</strong> column in the Persons and Projects tables shows how many additional months a contract or project would need to cover all assigned work</li>
+    </ul>
+
+    <a class="back" href="index.html">&larr; Back to Research Group Planner</a>
+  </div>
+</body>
+</html>
