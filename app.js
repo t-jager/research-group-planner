@@ -454,6 +454,17 @@
           overAllocationReported = true;
         }
       }
+      // Gaps between assignments for the same person
+      const sorted = personAssignments
+        .filter(a => validDateString(a.start) && validDateString(a.end))
+        .sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
+      for (let i = 0; i < sorted.length - 1; i++) {
+        const gapStart = addDays(sorted[i].end, 1);
+        const gapEnd = addDays(sorted[i + 1].start, -1);
+        if (parseDate(gapStart) <= parseDate(gapEnd)) {
+          out.push({ level: 'warning', text: `${personName(person)} has a gap between ${sorted[i].end} and ${sorted[i + 1].start} with no assignment.` });
+        }
+      }
     }
     // Validate expenses: date within project duration
     for (const e of state.expenses) {
