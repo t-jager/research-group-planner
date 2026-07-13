@@ -360,7 +360,7 @@ td textarea {
 .timeline-header {
   height: 84px;
   border-bottom: 1px solid var(--line);
-  background: #fafbfc;
+  background: #e8ecf1;
 }
 
 .timeline-year-row {
@@ -406,9 +406,10 @@ td textarea {
 }
 
 .timeline-label-spacer {
-  min-height: 84px;
+  height: 84px;
   border-bottom: 1px solid var(--line);
   background: #fafbfc;
+  overflow-y: auto;
 }
 
 .group-label {
