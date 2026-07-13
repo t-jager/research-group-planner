@@ -455,6 +455,13 @@
         }
       }
     }
+    // Validate expenses: date within project duration
+    for (const e of state.expenses) {
+      const project = getProject(e.projectId);
+      if (!project || !validDateString(e.date)) continue;
+      if (validDateString(project.start) && parseDate(e.date) < parseDate(project.start)) out.push({ level: 'warning', text: `Expense on ${e.date}: date is before the start of project ${project.name || '(unnamed project)'}.` });
+      if (validDateString(project.end) && parseDate(e.date) > parseDate(project.end)) out.push({ level: 'warning', text: `Expense on ${e.date}: date is after the end of project ${project.name || '(unnamed project)'}.` });
+    }
     return out;
   }
 
