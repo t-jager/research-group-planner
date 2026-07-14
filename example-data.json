@@ -164,10 +164,10 @@
   "accounts": [
     {
       "id": "a1",
-      "name": "Faculty 2026",
-      "balance": 147832.46,
+      "name": "Permanent positions 2024-2030",
+      "balance": "627,832.46",
       "balanceDate": "2024-01-01",
-      "notes": "University seed money for lab equipment",
+      "notes": "University funding",
       "hidden": false
     }
   ],
