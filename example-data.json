@@ -186,7 +186,7 @@
       "personId": "p4",
       "projectId": "pr3",
       "start": "2025-05-01",
-      "end": "2028-08-31",
+      "end": "2028-06-30",
       "ftePercent": 100,
       "notes": ""
     },
@@ -204,7 +204,7 @@
       "personId": "p6",
       "projectId": "pr2",
       "start": "2026-02-01",
-      "end": "2029-05-31",
+      "end": "2028-07-31",
       "ftePercent": 50,
       "notes": ""
     },
@@ -213,7 +213,16 @@
       "personId": "p3",
       "projectId": "pr2",
       "start": "2026-06-01",
-      "end": "2028-11-30",
+      "end": "2028-08-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "assignment_mrkh8nio_2hca0t",
+      "personId": "p5",
+      "projectId": "pr3",
+      "start": "2026-01-01",
+      "end": "2028-12-31",
       "ftePercent": 100,
       "notes": ""
     }
