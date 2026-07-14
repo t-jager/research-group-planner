@@ -77,18 +77,23 @@
       id: safeId(p.id) || uid('person'),
       firstName: String(p.firstName ?? ''),
       lastName: String(p.lastName ?? ''),
-      role: String(p.role ?? ''),
       contractStart: validDateString(p.contractStart) ? p.contractStart : '',
       contractEnd: validDateString(p.contractEnd) ? p.contractEnd : '',
       salaryIntervals: Array.isArray(p.salaryIntervals)
         ? p.salaryIntervals.map(si => ({
           id: safeId(si.id) || uid('salary'),
+          role: String(si.role ?? p.role ?? ''),
           start: validDateString(si.start) ? si.start : '',
           end: validDateString(si.end) ? si.end : '',
           monthlyCost: numberValue(si.monthlyCost),
-          employmentPercent: Math.min(100, Math.max(0, numberValue(si.employmentPercent) || 100))
+          employmentPercent: (() => {
+            const role = String(si.role ?? p.role ?? '');
+            const raw = numberValue(si.employmentPercent);
+            if (role === 'Student assistant') return raw > 0 ? raw : 9;
+            return Math.min(100, Math.max(0, raw || 100));
+          })()
         }))
-        // Migrate legacy flat monthlyCost into a single salary interval
+        // Migrate legacy flat monthlyCost into a single salary period
         : [{
           id: uid('salary'),
           start: validDateString(p.contractStart) ? p.contractStart : '',
@@ -108,6 +113,7 @@
       personnelBudget: numberValue(p.personnelBudget),
       travelBudget: numberValue(p.travelBudget),
       materialBudget: numberValue(p.materialBudget),
+      studentAssistantBudget: numberValue(p.studentAssistantBudget),
       notes: String(p.notes ?? ''),
       hidden: Boolean(p.hidden)
     })) : [];
@@ -317,8 +323,8 @@
 
   // Calculate the total personnel cost for an assignment.
   // Iterates month-by-month from assignment start to end, prorating each
-  // salary interval that overlaps the current month by the FTE percentage.
-  // Beyond the last defined salary interval, the latest known monthly rate
+  // salary period that overlaps the current month by the FTE percentage.
+  // Beyond the last defined salary period, the latest known monthly rate
   // is used as a "planned employment" projection.
   function assignmentCost(a) {
     const person = getPerson(a.personId);
@@ -342,16 +348,18 @@
       const monthEnd = formatDate(monthEndDate);
       const daysInMonth = monthEndDate.getUTCDate();
 
-      // Sum cost contributions from each overlapping salary interval
+      // Sum cost contributions from each overlapping salary period
       for (const interval of intervals) {
         const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, interval.start, interval.end);
-        total += numberValue(interval.monthlyCost) * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
+        const divisor = interval.role === 'Student assistant' ? (numberValue(interval.employmentPercent) || 9) : 100;
+        total += numberValue(interval.monthlyCost) * (numberValue(a.ftePercent) / divisor) * (days / daysInMonth);
       }
 
-      // Planned employment beyond the last defined salary interval uses the latest known rate.
+      // Planned employment beyond the last defined salary period uses the latest known rate.
       if (lastInterval && validDateString(plannedStart)) {
         const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, plannedStart, a.end);
-        total += numberValue(lastInterval.monthlyCost) * (numberValue(a.ftePercent) / 100) * (days / daysInMonth);
+        const divisor = lastInterval.role === 'Student assistant' ? (numberValue(lastInterval.employmentPercent) || 9) : 100;
+        total += numberValue(lastInterval.monthlyCost) * (numberValue(a.ftePercent) / divisor) * (days / daysInMonth);
       }
 
       cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
@@ -359,9 +367,78 @@
     return total;
   }
 
-  function projectAssigned(projectId) {
-    return state.assignments.filter(a => a.projectId === projectId).reduce((sum, a) => sum + assignmentCost(a), 0);
+  function isStudentAssistant(person) {
+    const intervals = (person?.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end));
+    if (!intervals.length) return false;
+    const latest = intervals.sort((a, b) => b.start.localeCompare(a.start))[0];
+    return latest.role === 'Student assistant';
   }
+
+  function personRole(person) {
+    const intervals = (person?.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end) && si.role);
+    if (!intervals.length) return '';
+    return intervals.sort((a, b) => b.start.localeCompare(a.start))[0].role;
+  }
+
+  function activeRole(person, assignment) {
+    if (!person || !assignment) return '';
+    const intervals = (person.salaryIntervals || [])
+      .filter(si => validDateString(si.start) && validDateString(si.end) && si.role)
+      .filter(si => parseDate(si.start) <= parseDate(assignment.end) && parseDate(si.end) >= parseDate(assignment.start))
+      .sort((a, b) => a.start.localeCompare(b.start));
+    return intervals.length ? intervals[0].role : '';
+  }
+
+  function projectAssigned(projectId) {
+    return state.assignments.filter(a => a.projectId === projectId).reduce((sum, a) => sum + assignmentCost(a) - assignmentStudentAssistantCost(a), 0);
+  }
+
+  // Like assignmentCost but only counts months where the active salary period has role "Student assistant"
+  function assignmentStudentAssistantCost(a) {
+    const person = getPerson(a.personId);
+    if (!person || !validDateString(a.start) || !validDateString(a.end) || parseDate(a.start) > parseDate(a.end)) return 0;
+    const account = getAccount(a.projectId);
+    const effectiveStart = account && validDateString(account.balanceDate) && account.balanceDate > a.start ? account.balanceDate : a.start;
+    if (parseDate(effectiveStart) > parseDate(a.end)) return 0;
+    let cursor = monthStartFor(parseDate(effectiveStart));
+    const finish = parseDate(a.end);
+    let total = 0;
+    const intervals = (Array.isArray(person.salaryIntervals) ? person.salaryIntervals : [])
+      .filter(interval => validDateString(interval.start) && validDateString(interval.end))
+      .sort((x, y) => x.start.localeCompare(y.start));
+    const lastInterval = intervals.length ? intervals[intervals.length - 1] : null;
+    const plannedStart = lastInterval ? addDays(lastInterval.end, 1) : '';
+
+    while (cursor <= finish) {
+      const monthStartDate = monthStartFor(cursor);
+      const monthEndDate = monthEndFor(cursor);
+      const monthStart = formatDate(monthStartDate);
+      const monthEnd = formatDate(monthEndDate);
+      const daysInMonth = monthEndDate.getUTCDate();
+
+      for (const interval of intervals) {
+        if (interval.role !== 'Student assistant') continue;
+        const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, interval.start, interval.end);
+        const divisor = numberValue(interval.employmentPercent) || 9;
+        total += numberValue(interval.monthlyCost) * (numberValue(a.ftePercent) / divisor) * (days / daysInMonth);
+      }
+
+      if (lastInterval && lastInterval.role === 'Student assistant' && validDateString(plannedStart)) {
+        const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, plannedStart, a.end);
+        const divisor = numberValue(lastInterval.employmentPercent) || 9;
+        total += numberValue(lastInterval.monthlyCost) * (numberValue(a.ftePercent) / divisor) * (days / daysInMonth);
+      }
+
+      cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
+    }
+    return total;
+  }
+
+  function projectStudentAssistantAssigned(projectId) {
+    return state.assignments.filter(a => a.projectId === projectId).reduce((sum, a) => sum + assignmentStudentAssistantCost(a), 0);
+  }
+
+  function projectFreeStudentAssistant(p) { return numberValue(p.studentAssistantBudget) - projectStudentAssistantAssigned(p.id); }
 
   // Check if a person already has an overlapping assignment on the same project/account.
   // excludeId lets us skip the assignment being resized.
@@ -387,25 +464,25 @@
   // budget overruns, FTE over/under-allocation, salary gaps, etc.
   function warnings() {
     const out = [];
-    // Validate persons: contract dates, salary intervals, gaps and overlaps
+    // Validate persons: contract dates, salary periods, gaps and overlaps
     for (const p of state.persons.filter(x => !x.hidden)) {
       if (p.contractStart && p.contractEnd && parseDate(p.contractStart) > parseDate(p.contractEnd)) out.push({ level: 'error', text: `${personName(p)}: contract start is after contract end.` });
       const intervals = [...(p.salaryIntervals || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
       for (const si of p.salaryIntervals || []) {
-        if (!validDateString(si.start) || !validDateString(si.end) || parseDate(si.start) > parseDate(si.end)) out.push({ level: 'error', text: `${personName(p)}: invalid salary interval.` });
-        else if (validDateString(p.contractStart) && validDateString(p.contractEnd) && (si.start < p.contractStart || si.end > p.contractEnd)) out.push({ level: 'warning', text: `${personName(p)}: salary interval ${si.start} – ${si.end} lies outside the contract.` });
+        if (!validDateString(si.start) || !validDateString(si.end) || parseDate(si.start) > parseDate(si.end)) out.push({ level: 'error', text: `${personName(p)}: invalid salary period.` });
+        else if (validDateString(p.contractStart) && validDateString(p.contractEnd) && (si.start < p.contractStart || si.end > p.contractEnd)) out.push({ level: 'warning', text: `${personName(p)}: salary period ${si.start} – ${si.end} lies outside the contract.` });
       }
-      // Check for overlapping salary intervals
-      for (let i = 1; i < intervals.length; i++) if (intervals[i].start <= intervals[i - 1].end) out.push({ level: 'error', text: `${personName(p)}: salary intervals overlap.` });
-      // Walk the contract range to detect gaps between salary intervals
+      // Check for overlapping salary periods
+      for (let i = 1; i < intervals.length; i++) if (intervals[i].start <= intervals[i - 1].end) out.push({ level: 'error', text: `${personName(p)}: salary periods overlap.` });
+      // Walk the contract range to detect gaps between salary periods
       if (validDateString(p.contractStart) && validDateString(p.contractEnd)) {
         let cursor = p.contractStart;
         for (const si of intervals) {
           if (si.end < cursor) continue;
-          if (si.start > cursor) out.push({ level: 'error', text: `${personName(p)}: salary interval gap from ${cursor} to ${addDays(si.start, -1)}.` });
+          if (si.start > cursor) out.push({ level: 'error', text: `${personName(p)}: salary period gap from ${cursor} to ${addDays(si.start, -1)}.` });
           if (si.end >= cursor) cursor = addDays(si.end, 1);
         }
-        if (cursor <= p.contractEnd) out.push({ level: 'error', text: `${personName(p)}: salary intervals end before contract (${cursor}).` });
+        if (cursor <= p.contractEnd) out.push({ level: 'error', text: `${personName(p)}: salary periods end before contract (${cursor}).` });
       }
     }
     // Validate projects: dates
@@ -445,7 +522,7 @@
         numberValue(a.ftePercent) > 0
       );
 
-      // Collect all segment boundary dates (contract start/end + assignment + salary interval boundaries)
+      // Collect all segment boundary dates (contract start/end + assignment + salary period boundaries)
       const events = new Set([person.contractStart, addDays(person.contractEnd, 1)]);
       for (const a of personAssignments) {
         const clippedStart = a.start < person.contractStart ? person.contractStart : a.start;
@@ -473,16 +550,19 @@
           .filter(a => a.start <= segmentStart && a.end >= segmentStart)
           .reduce((sum, a) => sum + numberValue(a.ftePercent), 0);
 
-        // Find the matching salary interval for this segment and get its employment %
+        // Find the matching salary period for this segment and get its employment %
         const matchingInterval = validSalaryIntervals.find(si => si.start <= segmentStart && si.end >= segmentStart);
         const targetPercent = matchingInterval ? (numberValue(matchingInterval.employmentPercent) || 100) : 100;
+        const isSA = matchingInterval?.role === 'Student assistant';
+        const unit = isSA ? 'hrs/week' : 'FTE';
+        const suffix = isSA ? '' : '%';
 
         const period = segmentStart === segmentEnd ? segmentStart : `${segmentStart} to ${segmentEnd}`;
         if (Math.abs(total - targetPercent) > 0.0001) {
-          out.push({ level: 'error', text: `${personName(person)}: assigned FTE is ${formatNumber(total, 1)}% from ${period}; expected ${formatNumber(targetPercent, 1)}%.` });
+          out.push({ level: 'error', text: `${personName(person)}: assigned ${unit} is ${formatNumber(total, 1)}${suffix} from ${period}; expected ${formatNumber(targetPercent, 1)}${suffix}.` });
         }
         if (!overAllocationReported && total > targetPercent + 0.0001) {
-          out.push({ level: 'error', text: `${personName(person)} exceeds ${formatNumber(targetPercent, 1)}% FTE from ${segmentStart} (${formatNumber(total, 1)}%).` });
+          out.push({ level: 'error', text: `${personName(person)} exceeds ${formatNumber(targetPercent, 1)}${suffix} ${unit} from ${segmentStart} (${formatNumber(total, 1)}${suffix}).` });
           overAllocationReported = true;
         }
       }
@@ -519,7 +599,7 @@
           ${(visibleProjects().length || visibleAccounts().length) ? groupedFreePersonnelHtml() : '<div class="muted">No visible projects or accounts</div>'}
         </div>
         <div class="dashboard-card">
-          <h2>Warnings</h2>
+          <h2>Warnings and errors</h2>
           ${w.length ? `<ul class="warning-list">${w.map(x => `<li class="${x.level}"><span class="warning-icon">${x.level === 'error' ? '⛔' : x.level === 'info' ? '🔷' : '⚠️'}</span>${esc(x.text)}</li>`).join('')}</ul>` : '<div class="ok">Everything looks good.</div>'}
         </div>
       </div>`;
@@ -589,7 +669,8 @@
           ? 'iso-date-input'
           : '';
     const display = kind === 'money' ? formatNumber(value, 2) : esc(value);
-    return `<input type="${type}" class="${cls}" value="${display}" ${attrs}>`;
+    const inputHtml = `<input type="${type}" class="${cls}" value="${display}" ${attrs}>`;
+    return kind === 'money' ? `<span class="money-field">${inputHtml}</span>` : inputHtml;
   }
 
   // ─── Persons Tab ───
@@ -599,13 +680,12 @@
     $('#tab-persons').innerHTML = `
       <div class="section-head"><h2>Personnel</h2><div class="section-actions">${pastToggleHtml()}<button class="primary" id="addPersonBtn">Add person</button></div></div>
       <div class="table-wrap"><table id="personnelTable" class="resizable-table"><thead><tr>
-        ${personHeader('lastName', 'Last name', true)}${personHeader('firstName', 'First name')}${personHeader('role', 'Role')}${personHeader('contractStart', 'Contract start')}${personHeader('contractEnd', 'Contract end')}
-        <th>Salary intervals</th><th>Notes</th>${personHeader('hidden', 'Hide')}<th></th>
+        ${personHeader('lastName', 'Last name', true)}${personHeader('firstName', 'First name')}${personHeader('contractStart', 'Contract start')}${personHeader('contractEnd', 'Contract end')}
+        <th>Salary periods</th><th>Notes</th>${personHeader('hidden', 'Hide')}<th></th>
       </tr></thead><tbody>
       ${rows.map(p => `<tr data-person-id="${p.id}" class="${p.hidden ? 'hidden-row' : ''}">
         <td class="sticky-col">${input('text', p.lastName, fieldAttrs('person', p.id, 'lastName'))}</td>
         <td>${input('text', p.firstName, fieldAttrs('person', p.id, 'firstName'))}</td>
-        <td>${input('text', p.role, fieldAttrs('person', p.id, 'role'))}</td>
         <td>${input('date', p.contractStart, fieldAttrs('person', p.id, 'contractStart'))}</td>
         <td>${input('date', p.contractEnd, fieldAttrs('person', p.id, 'contractEnd'))}</td>
         <td class="salary-summary">${(p.salaryIntervals || []).length} interval${(p.salaryIntervals || []).length === 1 ? '' : 's'} <button class="add-salary" data-id="${p.id}">Add interval</button></td>
@@ -627,23 +707,49 @@
       if (!row) return;
       const costInput = row.querySelector('[data-field="monthlyCost"]');
       const pctInput = row.querySelector('[data-field="employmentPercent"]');
-      const update = () => { td.textContent = formatMoney(numberValue(costInput?.value) * (numberValue(pctInput?.value) || 100) / 100); };
+      const roleSelect = row.querySelector('[data-field="role"]');
+      const update = () => {
+        const isSA = roleSelect?.value === 'Student assistant';
+        const empVal = numberValue(pctInput?.value) || (isSA ? 9 : 100);
+        td.textContent = formatMoney(isSA ? numberValue(costInput?.value) : numberValue(costInput?.value) * empVal / 100);
+      };
       costInput?.addEventListener('input', update);
       pctInput?.addEventListener('input', update);
+      roleSelect?.addEventListener('change', () => {
+        update();
+        // Update salary table headers based on whether any interval is now SA
+        const editor = row.closest('.salary-editor');
+        if (!editor) return;
+        const anySA = [...editor.querySelectorAll('[data-field="role"]')].some(s => s.value === 'Student assistant');
+        const costH = editor.querySelector('[data-salary-header="cost"]');
+        const empH = editor.querySelector('[data-salary-header="emp"]');
+        if (costH) costH.textContent = anySA ? 'Monthly employer cost' : 'Monthly employer cost 100%';
+        if (empH) empH.textContent = 'Employment % or hrs/week';
+        // Also toggle the blur-clamping class for the employment field
+        const empInput = row.querySelector('[data-field="employmentPercent"]');
+        if (empInput) empInput.classList.toggle('percent-input', roleSelect.value !== 'Student assistant');
+      });
     });
     bindPastToggle($('#tab-persons'));
     bindResizableTables($('#tab-persons'));
     bindTablePan($('#tab-persons'));
   }
 
-  // Render the expandable salary interval sub-table for a person
+  // Render the expandable salary period sub-table for a person
   function salaryIntervalsEditor(person) {
     const intervals = [...(person.salaryIntervals || [])].sort((a, b) => String(a.start).localeCompare(String(b.start)));
-    if (!intervals.length) return '<div class="salary-empty">No salary intervals defined.</div>';
-    return `<div class="salary-editor"><table><thead><tr><th>Salary start</th><th>Salary end</th><th>Monthly employer cost 100%</th><th>Employment %</th><th>Monthly cost</th><th></th></tr></thead><tbody>${intervals.map(si => {
-      const empPct = numberValue(si.employmentPercent) || 100;
-      const monthlyActual = numberValue(si.monthlyCost) * empPct / 100;
-      return `<tr data-salary-id="${si.id}"><td>${input('date', si.start, salaryFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, salaryFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, salaryFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td>${input('percent', si.employmentPercent ?? 100, salaryFieldAttrs(person.id, si.id, 'employmentPercent'))}</td><td class="computed money" data-salary-cost="${si.id}">${formatMoney(monthlyActual)}</td><td><button class="danger delete-salary" data-person-id="${person.id}" data-salary-id="${si.id}">Delete</button></td></tr>`;
+    if (!intervals.length) return '<div class="salary-empty">No salary periods defined.</div>';
+    const roleOptions = ['Professor','Postdoc','PhD student','Student assistant','Other'];
+    const isSA = intervals.some(si => si.role === 'Student assistant');
+    const costHeader = isSA ? 'Monthly employer cost' : 'Monthly employer cost 100%';
+    const empHeader = 'Employment % or hrs/week';
+    return `<div class="salary-editor"><table><thead><tr><th>Role</th><th>Period start</th><th>Period end</th><th data-salary-header="cost">${costHeader}</th><th data-salary-header="emp">${empHeader}</th><th>Monthly cost</th><th></th></tr></thead><tbody>${intervals.map(si => {
+      const isSI_SA = si.role === 'Student assistant';
+      const empVal = numberValue(si.employmentPercent) || (isSI_SA ? 9 : 100);
+      const monthlyActual = isSI_SA ? numberValue(si.monthlyCost) : numberValue(si.monthlyCost) * empVal / 100;
+      const empInput = isSI_SA ? input('text', si.employmentPercent ?? 9, salaryFieldAttrs(person.id, si.id, 'employmentPercent')) : input('percent', si.employmentPercent ?? 100, salaryFieldAttrs(person.id, si.id, 'employmentPercent'));
+      const roleSelect = `<select ${salaryFieldAttrs(person.id, si.id, 'role')}><option value="">—</option>${roleOptions.map(r => `<option value="${r}"${si.role === r ? ' selected' : ''}>${r}</option>`).join('')}</select>`;
+      return `<tr data-salary-id="${si.id}"><td>${roleSelect}</td><td>${input('date', si.start, salaryFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, salaryFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, salaryFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td>${empInput}</td><td class="computed money" data-salary-cost="${si.id}">${formatMoney(monthlyActual)}</td><td><button class="danger delete-salary" data-person-id="${person.id}" data-salary-id="${si.id}">Delete</button></td></tr>`;
     }).join('')}</tbody></table></div>`;
   }
 
@@ -672,7 +778,7 @@
     const rows = [...tableProjects()].sort((a, b) => compareProjects(a, b, projectSortSpec.key) * projectSortSpec.dir);
     $('#tab-projects').innerHTML = `
       <div class="section-head"><h2>Projects</h2><div class="section-actions">${pastToggleHtml()}<button class="primary" id="addProjectBtn">Add project</button></div></div>
-      <div class="table-wrap"><table id="projectsTable" class="resizable-table"><thead><tr>${projectHeader('name', 'Name', true)}${projectHeader('type', 'Type')}${projectHeader('start', 'Start')}${projectHeader('end', 'End')}${projectHeader('personnelBudget', 'Personnel budget')}${projectHeader('travelBudget', 'Travel budget')}${projectHeader('materialBudget', 'Material budget')}${projectHeader('assigned', 'Assigned personnel')}${projectHeader('free', 'Free personnel')}<th>Notes</th>${projectHeader('hidden', 'Hide')}<th></th></tr></thead><tbody>
+      <div class="table-wrap"><table id="projectsTable" class="resizable-table"><thead><tr>${projectHeader('name', 'Name', true)}${projectHeader('type', 'Type')}${projectHeader('start', 'Start')}${projectHeader('end', 'End')}${projectHeader('personnelBudget', 'Personnel budget')}${projectHeader('travelBudget', 'Travel budget')}${projectHeader('materialBudget', 'Material budget')}${projectHeader('studentAssistantBudget', 'Student asst. budget')}<th>Notes</th>${projectHeader('hidden', 'Hide')}<th></th></tr></thead><tbody>
       ${rows.map(p => `<tr data-project-id="${p.id}" class="${p.hidden ? 'hidden-row' : ''}">
         <td class="sticky-col">${input('text', p.name, fieldAttrs('project', p.id, 'name'))}</td>
         <td>${input('text', p.type, fieldAttrs('project', p.id, 'type'))}</td>
@@ -681,8 +787,7 @@
         <td>${input('money', p.personnelBudget, fieldAttrs('project', p.id, 'personnelBudget'))}</td>
         <td>${input('money', p.travelBudget, fieldAttrs('project', p.id, 'travelBudget'))}</td>
         <td>${input('money', p.materialBudget, fieldAttrs('project', p.id, 'materialBudget'))}</td>
-        <td class="computed money" data-project-assigned="${p.id}">${formatMoney(projectAssigned(p.id))}</td>
-        <td class="computed money ${projectFreePersonnel(p) < 0 ? 'negative-funding' : ''}" data-project-free="${p.id}">${formatMoney(projectFreePersonnel(p))}</td>
+        <td>${input('money', p.studentAssistantBudget, fieldAttrs('project', p.id, 'studentAssistantBudget'))}</td>
         <td><textarea ${fieldAttrs('project', p.id, 'notes')}>${esc(p.notes)}</textarea></td>
         <td class="center"><input type="checkbox" ${fieldAttrs('project', p.id, 'hidden')} ${p.hidden ? 'checked' : ''}></td>
         <td><button class="danger delete-project" data-id="${p.id}">Delete</button></td>
@@ -704,9 +809,9 @@
 
   function compareProjects(a, b, key) {
     if (key === 'hidden') return Number(Boolean(a.hidden)) - Number(Boolean(b.hidden));
-    if (key === 'assigned') return projectAssigned(a.id) - projectAssigned(b.id);
-    if (key === 'free') return projectFreePersonnel(a) - projectFreePersonnel(b);
-    if (['personnelBudget', 'travelBudget', 'materialBudget'].includes(key)) return numberValue(a[key]) - numberValue(b[key]);
+    if (key === 'assigned') return 0;
+    if (key === 'free') return 0;
+    if (['personnelBudget', 'travelBudget', 'materialBudget', 'studentAssistantBudget'].includes(key)) return numberValue(a[key]) - numberValue(b[key]);
     return String(a[key] ?? '').localeCompare(String(b[key] ?? ''), undefined, { numeric: true, sensitivity: 'base' });
   }
 
@@ -718,7 +823,7 @@
   // ─── Accounts Tab ───
 
   function accountAssigned(accountId) {
-    return state.assignments.filter(a => a.projectId === accountId).reduce((sum, a) => sum + assignmentCost(a), 0);
+    return state.assignments.filter(a => a.projectId === accountId).reduce((sum, a) => sum + assignmentCost(a) - assignmentStudentAssistantCost(a), 0);
   }
 
   function accountFreeBalance(account) {
@@ -960,7 +1065,11 @@
       if (el.classList.contains('money-input')) {
         el.addEventListener('blur', () => { el.value = formatNumber(numberValue(el.value), 2); endFieldEdit(el); });
       } else if (el.classList.contains('percent-input')) {
-        el.addEventListener('blur', () => { el.value = Math.min(100, Math.max(0, numberValue(el.value))); endFieldEdit(el); });
+        el.addEventListener('blur', () => {
+          const isSA = el.dataset.entity === 'salary' && getPerson(el.dataset.personId)?.salaryIntervals?.find(x => x.id === el.dataset.id)?.role === 'Student assistant';
+          el.value = isSA ? Math.max(0, numberValue(el.value)) : Math.min(100, Math.max(0, numberValue(el.value)));
+          endFieldEdit(el);
+        });
       } else {
         el.addEventListener('blur', () => endFieldEdit(el));
       }
@@ -982,9 +1091,20 @@
     const field = el.dataset.field;
     const numeric = ['monthlyCost', 'personnelBudget', 'travelBudget', 'materialBudget', 'ftePercent', 'amount', 'employmentPercent'].includes(field);
     let val = el.type === 'checkbox' ? el.checked : (numeric ? numberValue(el.value) : el.value);
-    if (field === 'employmentPercent' && numeric) val = Math.min(100, Math.max(0, val));
+    if (field === 'employmentPercent' && numeric) {
+      const isSA = el.dataset.entity === 'salary' && obj.role === 'Student assistant';
+      val = isSA ? Math.max(0, val) : Math.min(100, Math.max(0, val));
+    }
     obj[field] = val;
     markDirty();
+    if (el.dataset.entity === 'salary' && (field === 'start' || field === 'end')) {
+      const personId = el.dataset.personId;
+      const person = getPerson(personId);
+      if (person) {
+        const toSplit = state.assignments.filter(a => a.personId === personId && validDateString(a.start) && validDateString(a.end));
+        for (const a of toSplit) splitAssignmentAtPeriods(a);
+      }
+    }
     if (field === 'hidden' && refreshDerived) { renderAll(); return; }
     if (refreshDerived) renderDerived();
   }
@@ -993,17 +1113,19 @@
 
   function addPerson() {
     snapshot();
-    const p = { id: uid('person'), firstName: '', lastName: '', role: '', contractStart: '', contractEnd: '', salaryIntervals: [], notes: '', hidden: false };
+    const p = { id: uid('person'), firstName: '', lastName: '', contractStart: '', contractEnd: '', salaryIntervals: [], notes: '', hidden: false };
     state.persons.push(p); renderPersons(); renderDerived(); focusFirst(`[data-person-id="${p.id}"]`);
   }
 
-  // Auto-populate the start date of a new salary interval based on the previous one
+  // Auto-populate the start date of a new salary period based on the previous one
   function addSalaryInterval(personId) {
     const person = getPerson(personId); if (!person) return;
     snapshot();
     const validIntervals = (person.salaryIntervals || []).filter(si => validDateString(si.end)).sort((a, b) => a.end.localeCompare(b.end));
     const previous = validIntervals.length ? validIntervals[validIntervals.length - 1] : null;
-    const interval = { id: uid('salary'), start: previous ? addDays(previous.end, 1) : (person.contractStart || ''), end: person.contractEnd || '', monthlyCost: 0, employmentPercent: 100 };
+    const lastRole = (person.salaryIntervals || []).length ? (person.salaryIntervals[person.salaryIntervals.length - 1].role || '') : '';
+    const isSA = lastRole === 'Student assistant';
+    const interval = { id: uid('salary'), role: lastRole, start: previous ? addDays(previous.end, 1) : (person.contractStart || ''), end: person.contractEnd || '', monthlyCost: 0, employmentPercent: isSA ? 9 : 100 };
     person.salaryIntervals.push(interval);
     renderPersons(); renderDerived();
     requestAnimationFrame(() => $(`[data-salary-id="${interval.id}"] input`)?.focus());
@@ -1017,13 +1139,43 @@
   }
 
   function addProject() {
-    snapshot(); const p = { id: uid('project'), name: '', type: '', start: '', end: '', personnelBudget: 0, travelBudget: 0, materialBudget: 0, notes: '', hidden: false };
+    snapshot(); const p = { id: uid('project'), name: '', type: '', start: '', end: '', personnelBudget: 0, travelBudget: 0, materialBudget: 0, studentAssistantBudget: 0, notes: '', hidden: false };
     state.projects.push(p); renderProjects(); renderDerived(); focusFirst(`[data-project-id="${p.id}"]`);
   }
 
   function addAssignment(defaults = {}) {
     snapshot(); const a = { id: uid('assignment'), personId: defaults.personId || '', projectId: defaults.projectId || '', start: defaults.start || '', end: defaults.end || '', ftePercent: defaults.ftePercent ?? 100, notes: '' };
-    state.assignments.push(a); renderDerived(); return a;
+    state.assignments.push(a);
+    splitAssignmentAtPeriods(a);
+    renderDerived(); return a;
+  }
+
+  // Split an assignment into pieces at salary period boundaries
+  function splitAssignmentAtPeriods(a) {
+    const person = getPerson(a.personId);
+    if (!person || !validDateString(a.start) || !validDateString(a.end)) return;
+    const intervals = (person.salaryIntervals || [])
+      .filter(si => validDateString(si.start) && validDateString(si.end))
+      .sort((x, y) => x.start.localeCompare(y.start));
+    if (!intervals.length) return;
+    const boundaries = intervals
+      .map(si => si.start)
+      .filter(d => d > a.start && d <= a.end);
+    if (!boundaries.length) return;
+    boundaries.sort();
+    const parts = [];
+    let cur = a.start;
+    for (const b of boundaries) {
+      const segEnd = addDays(b, -1);
+      if (segEnd >= cur) parts.push({ start: cur, end: segEnd });
+      cur = b;
+    }
+    if (cur <= a.end) parts.push({ start: cur, end: a.end });
+    if (parts.length < 2) return;
+    state.assignments = state.assignments.filter(x => x.id !== a.id);
+    for (const p of parts) {
+      state.assignments.push({ id: uid('assignment'), personId: a.personId, projectId: a.projectId, start: p.start, end: p.end, ftePercent: a.ftePercent, notes: a.notes });
+    }
   }
 
   function addExpense() {
@@ -1066,8 +1218,6 @@
   function renderDerived() {
     renderDashboard();
     $$('[data-assignment-cost]').forEach(td => { const a = state.assignments.find(x => x.id === td.dataset.assignmentCost); td.textContent = formatMoney(assignmentCost(a)); });
-    $$('[data-project-assigned]').forEach(td => td.textContent = formatMoney(projectAssigned(td.dataset.projectAssigned)));
-    $$('[data-project-free]').forEach(td => { const p = getProject(td.dataset.projectFree); td.textContent = formatMoney(projectFreePersonnel(p)); td.classList.toggle('negative-funding', projectFreePersonnel(p) < 0); });
     $$('[data-account-assigned]').forEach(td => td.textContent = formatMoney(accountAssigned(td.dataset.accountAssigned)));
     $$('[data-account-free]').forEach(td => { const a = getAccount(td.dataset.accountFree); td.textContent = formatMoney(accountFreeBalance(a)); td.classList.toggle('negative-funding', accountFreeBalance(a) < 0); });
     $$('[data-expense-summary]').forEach(td => {
@@ -1139,10 +1289,10 @@
           <div class="assignment-modal-body">
             <div id="assignmentEditorPlanning" class="assignment-editor-planning" hidden></div>
             <label class="assignment-field">
-              <span>FTE percentage <abbr class="info-abbr" title="FTE = Full-Time Equivalent. 100% means full-time, 50% means half-time, etc. All percentages in this tool are expressed as a fraction of full-time equivalent." onclick="alert(this.title)">?</abbr></span>
+              <span id="assignmentEditorLabel">FTE percentage <abbr class="info-abbr" title="FTE = Full-Time Equivalent. 100% means full-time, 50% means half-time, etc. All percentages in this tool are expressed as a fraction of full-time equivalent." onclick="alert(this.title)">?</abbr></span>
               <div class="fte-input-wrap">
                 <input id="assignmentEditorFte" type="text" inputmode="decimal" autocomplete="off">
-                <span>%</span>
+                <span id="assignmentEditorUnit">%</span>
               </div>
             </label>
 
@@ -1160,7 +1310,7 @@
       </div>
     `;
     const palette = $('#person-palette');
-    palette.innerHTML = visiblePersons().map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}" title="Drag a person chip onto a project to create an assignment. Existing assignments can only be resized using their left or right edge. They may extend beyond the current contract or project end; planned extensions are striped and still count toward the budget. Hold Alt for day precision.">${esc(personName(p))}</span>`).join('');
+    palette.innerHTML = [...visiblePersons()].sort((a, b) => (a.lastName || '').localeCompare(b.lastName || '', undefined, { numeric: true, sensitivity: 'base' }) || (a.firstName || '').localeCompare(b.firstName || '', undefined, { numeric: true, sensitivity: 'base' })).map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}" title="Drag a person chip onto a project to create an assignment. Existing assignments can only be resized using their left or right edge. They may extend beyond the current contract or project end; planned extensions are striped and still count toward the budget. Hold Alt for day precision.">${esc(personName(p))}</span>`).join('');
     palette.hidden = activeTab !== 'timeline';
     bindPastToggle($('#tab-timeline')); bindTimelineScroll(); bindAssignmentDrag(min); bindAssignmentEditor(); bindPersonDrop(min); restoreScroll();
   }
@@ -1242,7 +1392,7 @@
           <div class="meta">
             ${isAccount
               ? `<span>Balance</span><span class="money">${formatMoney(p.balance)}</span><span>From</span><span>${esc(p.balanceDate)}</span><span>Free</span><span class="money ${accountFreeBalance(p) < 0 ? 'negative-funding' : ''}">${formatMoney(accountFreeBalance(p))}</span>`
-              : `<span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span><span>Budget</span><span>${formatMoney(p.personnelBudget)}</span><span>Free</span><span class="money ${projectFreePersonnel(p) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(p))}</span>`
+              : `<span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span><span>Personnel budget</span><span>${formatMoney(p.personnelBudget)} (<span class="${projectFreePersonnel(p) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(p))} free</span>)</span>${numberValue(p.studentAssistantBudget) ? `<span>Student budget</span><span>${formatMoney(p.studentAssistantBudget)} (<span class="${projectFreeStudentAssistant(p) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreeStudentAssistant(p))} free</span>)</span>` : ''}`
             }
           </div>
         </div>`;
@@ -1356,7 +1506,7 @@
   }
 
   // Render a single timeline row: the background grid, assignment bars, and
-  // optional salary interval bands (for person-mode rows)
+  // optional salary period bands (for person-mode rows)
   function timelineRow(mode, entityId, start, end, assignments, min, months, width, person = null) {
     const now = new Date();
     const grid = `<div class="timeline-row-grid">${months.map(month => {
@@ -1377,7 +1527,7 @@
       assignmentBar(assignment, mode, min, lane)
     ).join('');
 
-    // Salary interval bands rendered below the assignment bars in person mode
+    // Salary period bands rendered below the assignment bars in person mode
     const salaryTop = TIMELINE_BAR_TOP + laneCount * TIMELINE_LANE_HEIGHT + 2;
     const salaryBands = includeSalaryBand && person
       ? [...(person.salaryIntervals || [])]
@@ -1457,9 +1607,16 @@
     const sourceName = project
       ? `${project._isAccount ? 'Accounts' : (project.type ? `${project.type}: ` : '')}${project.name || '(missing project)'}`
       : '(missing project)';
+    const role = activeRole(person, a);
+    const isSA = (person.salaryIntervals || []).some(si =>
+      si.role === 'Student assistant' &&
+      validDateString(si.start) && validDateString(si.end) &&
+      parseDate(si.start) <= parseDate(a.end) && parseDate(si.end) >= parseDate(a.start)
+    );
+    const unit = isSA ? 'h' : '%';
     const label = mode === 'project'
-      ? `${personName(person)} ${formatNumber(a.ftePercent, 1)}%`
-      : `${sourceName} ${formatNumber(a.ftePercent, 1)}%`;
+      ? `${personName(person)} ${formatNumber(a.ftePercent, 1)}${unit}`
+      : `${sourceName} ${formatNumber(a.ftePercent, 1)}${unit}`;
     const key = mode === 'project' ? a.personId : a.projectId;
     const top = TIMELINE_BAR_TOP + lane * TIMELINE_LANE_HEIGHT;
     const noteText = String(a.notes || '').trim();
@@ -1467,16 +1624,17 @@
       planning.contractExtension ? '⚠ Contract extension required' : '',
       planning.projectExtension ? '⚠ Project extension required' : ''
     ].filter(Boolean).join('\n');
-    const tooltip = `${label}\n${a.start} – ${a.end}\nCost: ${formatMoney(assignmentCost(a))}` +
+    const tooltip = `${label}\n${role ? role + '\n' : ''}${a.start} – ${a.end}\nCost: ${formatMoney(assignmentCost(a))}` +
       `${planningLines ? `\n\n${planningLines}` : ''}` +
       `${noteText ? `\n\nNote: ${noteText}` : ''}`;
 
     const barColor = colorFor(key);
     const labelBg = `style="background:${barColor}"`;
+    const studentClass = isSA ? ' assignment-bar-student' : '';
 
     // Person-mode bars are read-only (no resize handles)
     if (mode === 'person') {
-      return `<div class="assignment-bar assignment-bar-readonly"
+      return `<div class="assignment-bar assignment-bar-readonly${studentClass}"
         style="left:${left}px;width:${width}px;top:${top}px;background:${barColor}"
         title="${esc(tooltip)}">
         <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${planningBadge}${plannedOverlay}${plannedProject}
@@ -1484,7 +1642,7 @@
     }
 
     // Project-mode bars have left/right resize handles
-    return `<div class="assignment-bar assignment-bar-resize-only"
+    return `<div class="assignment-bar assignment-bar-resize-only${studentClass}"
       data-assignment-bar="${a.id}"
       data-mode="${mode}"
       style="left:${left}px;width:${width}px;top:${top}px;background:${barColor}"
@@ -1636,13 +1794,24 @@
         const project = getProjectOrAccount(assignment.projectId);
 
         modal.dataset.assignmentId = assignment.id;
+        const role = activeRole(person, assignment);
         context.innerHTML = `
           <strong>${esc(personName(person))}</strong>
-          <span>${esc(project?._isAccount ? 'Accounts' : (project?.type || 'Other'))}: ${esc(project?.name || '(missing project)')}</span>
+          <span>${esc(role || '—')}${role ? ' · ' : ''}${esc(project?._isAccount ? 'Accounts' : (project?.type || 'Other'))}: ${esc(project?.name || '(missing project)')}</span>
           <span>${assignment.start} to ${assignment.end}</span>
         `;
         fteInput.value = formatNumber(assignment.ftePercent, 1);
         notesInput.value = assignment.notes || '';
+        const isSA = role === 'Student assistant';
+        const labelEl = document.getElementById('assignmentEditorLabel');
+        const unitEl = document.getElementById('assignmentEditorUnit');
+        if (isSA) {
+          labelEl.innerHTML = 'Hours per week <abbr class="info-abbr" title="Hours per week the person is assigned to this project/account." onclick="alert(this.title)">?</abbr>';
+          unitEl.textContent = 'h';
+        } else {
+          labelEl.innerHTML = 'FTE percentage <abbr class="info-abbr" title="FTE = Full-Time Equivalent. 100% means full-time, 50% means half-time, etc. All percentages in this tool are expressed as a fraction of full-time equivalent." onclick="alert(this.title)">?</abbr>';
+          unitEl.textContent = '%';
+        }
         const planning = assignmentPlanningStatus(assignment);
         const planningItems = [
           planning.contractExtension ? '<div>🟡 Contract extension required</div>' : '',
@@ -1669,9 +1838,13 @@
 
       const nextFte = numberValue(fteInput.value);
       const nextNotes = notesInput.value;
+      const person = getPerson(assignment.personId);
+      const activeRoleVal = activeRole(person, assignment);
+      const isSA = activeRoleVal === 'Student assistant';
+      const maxVal = isSA ? 168 : 1000;
 
-      if (nextFte < 0 || nextFte > 1000) {
-        alert('Please enter a valid FTE percentage.');
+      if (nextFte < 0 || nextFte > maxVal) {
+        alert(`Please enter a valid value (0–${maxVal}).`);
         fteInput.focus();
         return;
       }
@@ -1880,6 +2053,7 @@
           history.pop();
           updateUndoButtons();
         } else {
+          splitAssignmentAtPeriods(assignment);
           markDirty();
         }
         renderAll();
@@ -2142,11 +2316,8 @@
       pendingEditElement = null;
       renderAll();
       markSaved();
-    } catch (err) {
-      alert(
-        'Could not load example data file.\n\n' +
-        'When running locally, please open example-data.json via Open....'
-      );
+    } catch {
+      state = emptyState(); fileHandle = null; currentFileName = ''; history = []; future = []; pendingEditSnapshot = null; pendingEditElement = null; renderAll(); markUnsaved();
     }
   }
 

@@ -5,12 +5,12 @@
       "id": "p1",
       "firstName": "Anna",
       "lastName": "Keller",
-      "role": "Professor",
       "contractStart": "2024-01-01",
       "contractEnd": "2030-12-31",
       "salaryIntervals": [
         {
           "id": "s1",
+          "role": "Professor",
           "start": "2024-01-01",
           "end": "2030-12-31",
           "monthlyCost": 11247.83,
@@ -24,12 +24,12 @@
       "id": "p2",
       "firstName": "Jonas",
       "lastName": "Weber",
-      "role": "Postdoc",
       "contractStart": "2024-01-01",
       "contractEnd": "2026-12-31",
       "salaryIntervals": [
         {
           "id": "s2",
+          "role": "Postdoc",
           "start": "2024-01-01",
           "end": "2026-12-31",
           "monthlyCost": 7123.11,
@@ -43,12 +43,12 @@
       "id": "p3",
       "firstName": "Mira",
       "lastName": "Scholz",
-      "role": "Postdoc",
       "contractStart": "2026-06-01",
       "contractEnd": "2028-12-17",
       "salaryIntervals": [
         {
           "id": "s3",
+          "role": "Postdoc",
           "start": "2026-06-01",
           "end": "2028-12-17",
           "monthlyCost": 7234.56,
@@ -62,12 +62,12 @@
       "id": "p4",
       "firstName": "David",
       "lastName": "Nguyen",
-      "role": "PhD student",
       "contractStart": "2025-05-01",
       "contractEnd": "2028-02-29",
       "salaryIntervals": [
         {
           "id": "s4",
+          "role": "PhD student",
           "start": "2025-05-01",
           "end": "2028-02-29",
           "monthlyCost": 5812.73,
@@ -81,20 +81,21 @@
       "id": "p5",
       "firstName": "Lena",
       "lastName": "Braunwald",
-      "role": "PhD student",
       "contractStart": "2026-01-01",
       "contractEnd": "2028-12-31",
       "salaryIntervals": [
         {
           "id": "s5",
+          "role": "Student assistant",
           "start": "2026-01-01",
-          "end": "2027-12-31",
-          "monthlyCost": 6637.29,
-          "employmentPercent": 100
+          "end": "2026-12-31",
+          "monthlyCost": 987.22,
+          "employmentPercent": 9
         },
         {
           "id": "salary_mrjm89mb_021ydt",
-          "start": "2028-01-01",
+          "role": "PhD student",
+          "start": "2027-01-01",
           "end": "2028-12-31",
           "monthlyCost": 6845.11,
           "employmentPercent": 100
@@ -107,15 +108,15 @@
       "id": "p6",
       "firstName": "Tom",
       "lastName": "Hoffmann",
-      "role": "Research assistant",
       "contractStart": "2026-02-01",
       "contractEnd": "2028-07-31",
       "salaryIntervals": [
         {
           "id": "s6",
+          "role": "Student assistant",
           "start": "2026-02-01",
           "end": "2028-07-31",
-          "monthlyCost": 5927.18,
+          "monthlyCost": 2123.22,
           "employmentPercent": 50
         }
       ],
@@ -133,6 +134,7 @@
       "personnelBudget": 347325.5,
       "travelBudget": 15432.75,
       "materialBudget": 21387.25,
+      "studentAssistantBudget": 4321.09,
       "notes": "Proving pizza quality without revealing the recipe",
       "hidden": false
     },
@@ -145,6 +147,7 @@
       "personnelBudget": 1487650.75,
       "travelBudget": 27843.5,
       "materialBudget": 12456.8,
+      "studentAssistantBudget": 10000,
       "notes": "Because even flux capacitors need encryption",
       "hidden": false
     },
@@ -157,6 +160,7 @@
       "personnelBudget": 471438.25,
       "travelBudget": 18765.4,
       "materialBudget": 9876.3,
+      "studentAssistantBudget": 16234.22,
       "notes": "Exploring the comedy potential of public-key infrastructure",
       "hidden": false
     }
@@ -165,7 +169,7 @@
     {
       "id": "a1",
       "name": "Permanent positions 2024-2030",
-      "balance": "627,832.46",
+      "balance": 627832.46,
       "balanceDate": "2024-01-01",
       "notes": "University funding",
       "hidden": false
@@ -218,20 +222,11 @@
       "notes": ""
     },
     {
-      "id": "assignment_mrkh8nio_2hca0t",
-      "personId": "p5",
-      "projectId": "pr3",
-      "start": "2026-01-01",
-      "end": "2028-12-31",
-      "ftePercent": 100,
-      "notes": ""
-    },
-    {
       "id": "assignment_mrkhebxx_8a0gms",
       "personId": "p1",
       "projectId": "pr2",
       "start": "2024-06-01",
-      "end": "2029-12-31",
+      "end": "2029-05-31",
       "ftePercent": 40,
       "notes": ""
     },
@@ -240,7 +235,7 @@
       "personId": "p1",
       "projectId": "a1",
       "start": "2024-06-01",
-      "end": "2029-12-31",
+      "end": "2029-05-31",
       "ftePercent": 60,
       "notes": ""
     },
@@ -248,8 +243,26 @@
       "id": "assignment_mrkhfonu_szqdb4",
       "personId": "p1",
       "projectId": "a1",
-      "start": "2030-01-01",
+      "start": "2029-06-01",
       "end": "2030-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "assignment_mrkuzy8q_263gv5",
+      "personId": "p5",
+      "projectId": "pr3",
+      "start": "2026-01-01",
+      "end": "2027-12-31",
+      "ftePercent": 9,
+      "notes": ""
+    },
+    {
+      "id": "assignment_mrkuzy8q_bz9pyo",
+      "personId": "p5",
+      "projectId": "pr3",
+      "start": "2028-01-01",
+      "end": "2028-12-31",
       "ftePercent": 100,
       "notes": ""
     }

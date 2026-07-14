@@ -30,7 +30,8 @@
     <ul>
       <li><strong>Name and role</strong> (e.g. Professor, Postdoc, PhD student)</li>
       <li><strong>Contract start and end dates</strong></li>
-      <li><strong>Salary intervals</strong>: Click <em>Add interval</em> to define periods with different monthly employer costs. Each interval has a <strong>Monthly employer cost 100%</strong> (the cost at full-time) and an <strong>Employment %</strong> (the person's actual employment level during that period; defaults to 100%). A computed <strong>Monthly cost</strong> column shows the actual cost at the given employment level. Intervals must cover the full contract without gaps or overlaps. If a salary or employment level changes mid-contract, create separate intervals.</li>
+      <li><strong>Salary periods</strong>: Click <em>Add interval</em> to define periods with different monthly employer costs. Each interval has a <strong>Monthly employer cost 100%</strong> (the cost at full-time) and an <strong>Employment %</strong> (the person's actual employment level during that period; defaults to 100%). A computed <strong>Monthly cost</strong> column shows the actual cost at the given employment level. Intervals must cover the full contract without gaps or overlaps. If a salary or employment level changes mid-contract, create separate intervals.</li>
+      <li><strong>Student assistants</strong> are a special role: they use <strong>hrs/week</strong> instead of employment %. Set the role to <em>Student assistant</em> in the salary period's Role dropdown. The <strong>Employment % or hrs/week</strong> column then expects hours per week (default 9). The <strong>Monthly employer cost</strong> column shows the total monthly cost at that employment level (no separate 100% column). Assignments for student assistants also use hrs/week instead of FTE %.</li>
     </ul>
 
     <h3>2. Set Up Projects</h3>
@@ -57,7 +58,8 @@
       <li>Double-click an assignment bar to open the editor and set the <strong>FTE percentage</strong> (Full-Time Equivalent, e.g. 50 for half-time). All percentages in this tool are expressed as a fraction of full-time equivalent.</li>
       <li>Drag the left or right edge of an assignment bar to resize it (hold <strong>Alt</strong> for day-level precision)</li>
     </ul>
-    <p>The tool automatically calculates personnel costs based on the person's salary intervals and the FTE percentage of the assignment. A 25% assignment means 25% of full-time equivalent, so the cost is 25% of the 100% monthly employer cost for the overlapping period.</p>
+    <p>The tool automatically calculates personnel costs based on the person's salary periods and the FTE percentage of the assignment. A 25% assignment means 25% of full-time equivalent, so the cost is 25% of the 100% monthly employer cost for the overlapping period.</p>
+    <p>For <strong>student assistants</strong>, assignments use <strong>hrs/week</strong> instead of FTE %. The assignment bar label shows the value with an "h" suffix. The cost is calculated as <code>monthlyCost × (assigned hrs / employment hrs)</code>. The total assigned hrs/week must match the employment hrs/week defined in the salary period.</p>
 
     <h3>5. Track Expenses</h3>
     <p>In the <strong>Expenses</strong> tab, log travel and material costs against projects. Only projects with non-zero travel or material budgets appear in the project dropdown. The overview table at the top shows remaining budgets at a glance.</p>
@@ -66,7 +68,7 @@
     <p>The dashboard at the top of the page shows:</p>
     <ul>
       <li><strong>Free personnel funding</strong> per project and per account (remaining budget after assignments, shown in red when exceeded)</li>
-      <li><strong>Warnings</strong> for issues like overlapping salary intervals, FTE (Full-Time Equivalent) under/over-allocation relative to the employment level, and date conflicts</li>
+      <li><strong>Warnings</strong> for issues like overlapping salary periods, FTE / hrs/week under/over-allocation relative to the employment level, and date conflicts</li>
     </ul>
     <p>Check the warnings regularly to catch problems early.</p>
 

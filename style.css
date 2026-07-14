@@ -291,6 +291,23 @@ td textarea {
   font-variant-numeric: tabular-nums;
 }
 
+.money-input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.money-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.money-field::after {
+  content: '€';
+  font: inherit;
+  flex-shrink: 0;
+}
+
 .computed {
   white-space: nowrap;
 }
@@ -610,6 +627,16 @@ td textarea {
 .assignment-bar.dragging {
   opacity: .72;
   cursor: grabbing;
+}
+
+.assignment-bar-student {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 14px,
+    rgba(255, 255, 255, .15) 14px,
+    rgba(255, 255, 255, .15) 28px
+  ) !important;
 }
 
 .assignment-handle {

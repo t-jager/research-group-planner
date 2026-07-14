@@ -5,13 +5,30 @@
       "id": "person_anna",
       "firstName": "Anna",
       "lastName": "Keller",
-      "role": "Professor",
       "contractStart": "2022-01-01",
       "contractEnd": "2032-12-31",
       "salaryIntervals": [
-        { "id": "sal_anna_1", "start": "2022-01-01", "end": "2025-12-31", "monthlyCost": 11500 },
-        { "id": "sal_anna_2", "start": "2026-01-01", "end": "2028-12-31", "monthlyCost": 12200 },
-        { "id": "sal_anna_3", "start": "2029-01-01", "end": "2032-12-31", "monthlyCost": 13000 }
+        {
+          "id": "sal_anna_1",
+          "start": "2022-01-01",
+          "end": "2025-12-31",
+          "monthlyCost": 11500,
+          "role": "Professor"
+        },
+        {
+          "id": "sal_anna_2",
+          "start": "2026-01-01",
+          "end": "2028-12-31",
+          "monthlyCost": 12200,
+          "role": "Professor"
+        },
+        {
+          "id": "sal_anna_3",
+          "start": "2029-01-01",
+          "end": "2032-12-31",
+          "monthlyCost": 13000,
+          "role": "Professor"
+        }
       ],
       "notes": "Group leader",
       "hidden": false
@@ -20,12 +37,23 @@
       "id": "person_jonas",
       "firstName": "Jonas",
       "lastName": "Weber",
-      "role": "Postdoc",
       "contractStart": "2024-04-01",
       "contractEnd": "2028-03-31",
       "salaryIntervals": [
-        { "id": "sal_jonas_1", "start": "2024-04-01", "end": "2025-12-31", "monthlyCost": 7200 },
-        { "id": "sal_jonas_2", "start": "2026-01-01", "end": "2028-03-31", "monthlyCost": 7600 }
+        {
+          "id": "sal_jonas_1",
+          "start": "2024-04-01",
+          "end": "2025-12-31",
+          "monthlyCost": 7200,
+          "role": "Postdoc"
+        },
+        {
+          "id": "sal_jonas_2",
+          "start": "2026-01-01",
+          "end": "2028-03-31",
+          "monthlyCost": 7600,
+          "role": "Postdoc"
+        }
       ],
       "notes": "",
       "hidden": false
@@ -34,12 +62,23 @@
       "id": "person_mira",
       "firstName": "Mira",
       "lastName": "Scholz",
-      "role": "Postdoc",
       "contractStart": "2025-01-01",
       "contractEnd": "2029-12-31",
       "salaryIntervals": [
-        { "id": "sal_mira_1", "start": "2025-01-01", "end": "2026-12-31", "monthlyCost": 7100 },
-        { "id": "sal_mira_2", "start": "2027-01-01", "end": "2029-12-31", "monthlyCost": 7800 }
+        {
+          "id": "sal_mira_1",
+          "start": "2025-01-01",
+          "end": "2026-12-31",
+          "monthlyCost": 7100,
+          "role": "Postdoc"
+        },
+        {
+          "id": "sal_mira_2",
+          "start": "2027-01-01",
+          "end": "2029-12-31",
+          "monthlyCost": 7800,
+          "role": "Postdoc"
+        }
       ],
       "notes": "",
       "hidden": false
@@ -48,12 +87,23 @@
       "id": "person_david",
       "firstName": "David",
       "lastName": "Nguyen",
-      "role": "PhD student",
       "contractStart": "2023-10-01",
       "contractEnd": "2027-09-30",
       "salaryIntervals": [
-        { "id": "sal_david_1", "start": "2023-10-01", "end": "2025-12-31", "monthlyCost": 5100 },
-        { "id": "sal_david_2", "start": "2026-01-01", "end": "2027-09-30", "monthlyCost": 5450 }
+        {
+          "id": "sal_david_1",
+          "start": "2023-10-01",
+          "end": "2025-12-31",
+          "monthlyCost": 5100,
+          "role": "PhD student"
+        },
+        {
+          "id": "sal_david_2",
+          "start": "2026-01-01",
+          "end": "2027-09-30",
+          "monthlyCost": 5450,
+          "role": "PhD student"
+        }
       ],
       "notes": "",
       "hidden": false
@@ -62,12 +112,23 @@
       "id": "person_lea",
       "firstName": "Lea",
       "lastName": "Fischer",
-      "role": "PhD student",
       "contractStart": "2025-04-01",
       "contractEnd": "2030-06-30",
       "salaryIntervals": [
-        { "id": "sal_lea_1", "start": "2025-04-01", "end": "2026-12-31", "monthlyCost": 5000 },
-        { "id": "sal_lea_2", "start": "2027-01-01", "end": "2030-06-30", "monthlyCost": 5400 }
+        {
+          "id": "sal_lea_1",
+          "start": "2025-04-01",
+          "end": "2026-12-31",
+          "monthlyCost": 5000,
+          "role": "PhD student"
+        },
+        {
+          "id": "sal_lea_2",
+          "start": "2027-01-01",
+          "end": "2030-06-30",
+          "monthlyCost": 5400,
+          "role": "PhD student"
+        }
       ],
       "notes": "",
       "hidden": false
@@ -76,12 +137,23 @@
       "id": "person_omar",
       "firstName": "Omar",
       "lastName": "Haddad",
-      "role": "PhD student",
       "contractStart": "2026-01-15",
       "contractEnd": "2030-01-14",
       "salaryIntervals": [
-        { "id": "sal_omar_1", "start": "2026-01-15", "end": "2027-12-31", "monthlyCost": 5150 },
-        { "id": "sal_omar_2", "start": "2028-01-01", "end": "2030-01-14", "monthlyCost": 5600 }
+        {
+          "id": "sal_omar_1",
+          "start": "2026-01-15",
+          "end": "2027-12-31",
+          "monthlyCost": 5150,
+          "role": "PhD student"
+        },
+        {
+          "id": "sal_omar_2",
+          "start": "2028-01-01",
+          "end": "2030-01-14",
+          "monthlyCost": 5600,
+          "role": "PhD student"
+        }
       ],
       "notes": "Mid-month start",
       "hidden": false
@@ -90,12 +162,23 @@
       "id": "person_sophie",
       "firstName": "Sophie",
       "lastName": "Brandt",
-      "role": "Research software engineer",
       "contractStart": "2024-01-01",
       "contractEnd": "2028-12-31",
       "salaryIntervals": [
-        { "id": "sal_sophie_1", "start": "2024-01-01", "end": "2026-06-30", "monthlyCost": 6800 },
-        { "id": "sal_sophie_2", "start": "2026-07-01", "end": "2028-12-31", "monthlyCost": 7350 }
+        {
+          "id": "sal_sophie_1",
+          "start": "2024-01-01",
+          "end": "2026-06-30",
+          "monthlyCost": 6800,
+          "role": "Research software engineer"
+        },
+        {
+          "id": "sal_sophie_2",
+          "start": "2026-07-01",
+          "end": "2028-12-31",
+          "monthlyCost": 7350,
+          "role": "Research software engineer"
+        }
       ],
       "notes": "",
       "hidden": false
@@ -104,11 +187,16 @@
       "id": "person_felix",
       "firstName": "Felix",
       "lastName": "Bauer",
-      "role": "PhD student",
       "contractStart": "2022-01-01",
       "contractEnd": "2024-12-31",
       "salaryIntervals": [
-        { "id": "sal_felix_1", "start": "2022-01-01", "end": "2024-12-31", "monthlyCost": 4900 }
+        {
+          "id": "sal_felix_1",
+          "start": "2022-01-01",
+          "end": "2024-12-31",
+          "monthlyCost": 4900,
+          "role": "PhD student"
+        }
       ],
       "notes": "Former member",
       "hidden": true
@@ -125,7 +213,8 @@
       "travelBudget": 20000,
       "materialBudget": 120000,
       "notes": "Starting Grant",
-      "hidden": false
+      "hidden": false,
+      "studentAssistantBudget": 0
     },
     {
       "id": "proj_spp",
@@ -137,7 +226,8 @@
       "travelBudget": 15000,
       "materialBudget": 18000,
       "notes": "",
-      "hidden": false
+      "hidden": false,
+      "studentAssistantBudget": 0
     },
     {
       "id": "proj_crc",
@@ -149,7 +239,8 @@
       "travelBudget": 18000,
       "materialBudget": 45000,
       "notes": "",
-      "hidden": false
+      "hidden": false,
+      "studentAssistantBudget": 0
     },
     {
       "id": "proj_bmbf",
@@ -161,7 +252,8 @@
       "travelBudget": 12000,
       "materialBudget": 90000,
       "notes": "",
-      "hidden": false
+      "hidden": false,
+      "studentAssistantBudget": 0
     },
     {
       "id": "proj_eu",
@@ -173,7 +265,8 @@
       "travelBudget": 20000,
       "materialBudget": 70000,
       "notes": "",
-      "hidden": false
+      "hidden": false,
+      "studentAssistantBudget": 0
     },
     {
       "id": "proj_legacy",
@@ -185,7 +278,8 @@
       "travelBudget": 0,
       "materialBudget": 25000,
       "notes": "Completed",
-      "hidden": true
+      "hidden": true,
+      "studentAssistantBudget": 0
     }
   ],
   "accounts": [
