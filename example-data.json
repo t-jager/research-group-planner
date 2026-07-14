@@ -130,7 +130,7 @@
       "type": "DFG Project",
       "start": "2024-01-01",
       "end": "2027-12-31",
-      "personnelBudget": 847325.5,
+      "personnelBudget": 347325.5,
       "travelBudget": 15432.75,
       "materialBudget": 21387.25,
       "notes": "Proving pizza quality without revealing the recipe",
@@ -154,7 +154,7 @@
       "type": "BMBF Project",
       "start": "2025-01-01",
       "end": "2028-06-30",
-      "personnelBudget": 621438.25,
+      "personnelBudget": 471438.25,
       "travelBudget": 18765.4,
       "materialBudget": 9876.3,
       "notes": "Exploring the comedy potential of public-key infrastructure",
@@ -177,7 +177,7 @@
       "personId": "p1",
       "projectId": "a1",
       "start": "2024-01-01",
-      "end": "2030-12-31",
+      "end": "2024-05-31",
       "ftePercent": 100,
       "notes": ""
     },
@@ -223,6 +223,33 @@
       "projectId": "pr3",
       "start": "2026-01-01",
       "end": "2028-12-31",
+      "ftePercent": 100,
+      "notes": ""
+    },
+    {
+      "id": "assignment_mrkhebxx_8a0gms",
+      "personId": "p1",
+      "projectId": "pr2",
+      "start": "2024-06-01",
+      "end": "2029-12-31",
+      "ftePercent": 40,
+      "notes": ""
+    },
+    {
+      "id": "assignment_mrkhf4kx_vjfwcl",
+      "personId": "p1",
+      "projectId": "a1",
+      "start": "2024-06-01",
+      "end": "2029-12-31",
+      "ftePercent": 60,
+      "notes": ""
+    },
+    {
+      "id": "assignment_mrkhfonu_szqdb4",
+      "personId": "p1",
+      "projectId": "a1",
+      "start": "2030-01-01",
+      "end": "2030-12-31",
       "ftePercent": 100,
       "notes": ""
     }
