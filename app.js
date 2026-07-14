@@ -29,7 +29,7 @@
   let state = emptyState();
   let fileHandle = null;       // File System Access API handle for the open file
   let currentFileName = '';
-  let activeTab = 'persons';
+  let activeTab = 'timeline';
   let sortSpec = { key: 'lastName', dir: 1 };
   let projectSortSpec = { key: 'name', dir: 1 };
 
