@@ -2248,7 +2248,7 @@
   // ─── Global Event Binding ───
 
   function bindGlobal() {
-    $('#newBtn').onclick = newProject; $('#openBtn').onclick = openFile; $('#loadTestDataBtn').onclick = loadTestData; $('#saveBtn').onclick = () => saveFile(false); $('#saveAsBtn').onclick = () => saveFile(true); $('#undoBtn').onclick = undo; $('#redoBtn').onclick = redo;
+    $('#newBtn').onclick = newProject; $('#openBtn').onclick = openFile; $('#saveBtn').onclick = () => saveFile(false); $('#saveAsBtn').onclick = () => saveFile(true); $('#undoBtn').onclick = undo; $('#redoBtn').onclick = redo;
     $$('.header-tabs button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
     // Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+Z to undo, Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y to redo
     document.addEventListener('keydown', e => {
@@ -2266,5 +2266,5 @@
   });
 
   // ─── Bootstrap ───
-  bindGlobal(); renderAll(); markUnsaved();
+  bindGlobal(); renderAll(); loadTestData();
 })();
