@@ -1514,6 +1514,36 @@
     return formatDate(d);
   }
 
+  const SNAP_THRESHOLD = 8; // pixels
+
+  // Collect mid-month dates (contract/project boundaries) that are candidates for snapping
+  function getSnapPoints(assignment, min, edge) {
+    const points = [];
+    const person = getPerson(assignment.personId);
+    const project = getProjectOrAccount(assignment.projectId);
+    const add = (dateStr) => {
+      if (!validDateString(dateStr)) return;
+      const d = parseDate(dateStr);
+      if (!d || d.getUTCDate() === 1) return; // month start is already handled by default snapping
+      const x = edge === 'left' ? dateToX(dateStr, min) : dateToX(addDays(dateStr, 1), min);
+      points.push({ x, date: dateStr });
+    };
+    if (person) { add(person.contractStart); add(person.contractEnd); }
+    if (project) { add(project.start); add(project.end); }
+    return points;
+  }
+
+  // Return the snap point's date if candidateX is within SNAP_THRESHOLD, else null
+  function findSnapDate(candidateX, snapPoints) {
+    let closestDate = null;
+    let closestDist = SNAP_THRESHOLD;
+    for (const { x, date } of snapPoints) {
+      const dist = Math.abs(candidateX - x);
+      if (dist < closestDist) { closestDist = dist; closestDate = date; }
+    }
+    return closestDate;
+  }
+
   // ─── Timeline Scroll Sync ───
 
   // Keep project and person timeline scroll positions in lock-step
@@ -1694,6 +1724,9 @@
         .sort()
         .at(-1) || '';
 
+      // Snap points: mid-month contract/project boundaries for edge snapping
+      const snapPoints = isResize ? getSnapPoints(assignment, min, edge) : [];
+
       const clearPreview = () => {
         currentRow?.querySelectorAll('.contract-preview, .valid-drop-preview').forEach(el => el.remove());
       };
@@ -1766,12 +1799,20 @@
         const dayPrecision = ev.altKey;
         if (edge === 'left') {
           let nextStart = xToDate(dateToX(oldStart, min) + dx, min, dayPrecision);
+          if (!dayPrecision) {
+            const snapped = findSnapDate(dateToX(oldStart, min) + dx, snapPoints);
+            if (snapped) nextStart = snapped;
+          }
           if (validStart && nextStart < validStart) nextStart = validStart;
           if (nextStart > assignment.end) nextStart = assignment.end;
           assignment.start = nextStart;
         } else {
           const oldEndX = dateToX(addDays(oldEnd, 1), min);
           let nextEnd = addDays(xToDate(oldEndX + dx, min, dayPrecision), -1);
+          if (!dayPrecision) {
+            const snapped = findSnapDate(oldEndX + dx, snapPoints);
+            if (snapped) nextEnd = snapped;
+          }
 
           if (nextEnd < assignment.start) nextEnd = assignment.start;
           assignment.end = nextEnd;
@@ -1955,6 +1996,18 @@
         const rect = row.getBoundingClientRect();
         const x = e.clientX - rect.left;
         let start = xToDate(x, min, e.altKey);
+        if (!e.altKey) {
+          const dropPerson = getPerson(personId), dropProject = getProjectOrAccount(projectId);
+          const dropSnaps = [];
+          if (dropPerson) { dropSnaps.push(dropPerson.contractStart, dropPerson.contractEnd); }
+          if (dropProject) { dropSnaps.push(dropProject.start, dropProject.end); }
+          for (const ds of dropSnaps) {
+            if (!validDateString(ds)) continue;
+            const d = parseDate(ds);
+            if (!d || d.getUTCDate() === 1) continue;
+            if (Math.abs(x - dateToX(ds, min)) < SNAP_THRESHOLD) { start = ds; break; }
+          }
+        }
         let end = e.altKey ? start : formatDate(monthEndFor(parseDate(start)));
         const person = getPerson(personId), project = getProjectOrAccount(projectId);
         if (person?.contractStart && start < person.contractStart) start = person.contractStart;
