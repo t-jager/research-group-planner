@@ -208,10 +208,33 @@
   // ─── Number Utilities ───
 
   // Coerce a value to a finite number, stripping commas
+  // Also detects German number format (1.000.000,12) and converts it
   function numberValue(value) {
     if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
-    const cleaned = String(value ?? '').replace(/,/g, '').trim();
-    const n = Number(cleaned);
+    let s = String(value ?? '').trim();
+    const lastDot = s.lastIndexOf('.');
+    const lastComma = s.lastIndexOf(',');
+    if (lastDot >= 0 && lastComma >= 0) {
+      // Both separators present
+      if (lastComma > lastDot) {
+        // German: 1.000.000,12
+        s = s.replace(/\./g, '').replace(',', '.');
+      } else {
+        // English: 1,000,000.12
+        s = s.replace(/,/g, '');
+      }
+    } else if (lastComma >= 0 && lastDot < 0) {
+      // Only comma: 1-2 trailing digits → German decimal; else English thousands
+      const after = s.slice(lastComma + 1);
+      if (after.length <= 2 && /^\d+$/.test(after)) {
+        s = s.replace(/,/g, '');
+        s = s.slice(0, -after.length) + '.' + after;
+      } else {
+        s = s.replace(/,/g, '');
+      }
+    }
+    // Only dot or no separators → parse as-is
+    const n = Number(s);
     return Number.isFinite(n) ? n : 0;
   }
 
