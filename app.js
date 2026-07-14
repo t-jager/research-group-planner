@@ -402,11 +402,11 @@
           out.push({ level: 'error', text: `${who} / ${what}: assignment starts before the contract.` });
         }
         if (parseDate(a.end) > parseDate(person.contractEnd)) {
-          out.push({ level: 'warning', text: `${who} / ${what}: assignment extends beyond the current contract and is treated as planned employment.` });
+          out.push({ level: 'warning', text: `${who}: assignment extends beyond the current contract and is treated as planned employment.` });
         }
       }
       if (project && validDateString(a.start) && validDateString(a.end) && validDateString(project.start) && validDateString(project.end)) {
-        if (parseDate(a.start) < parseDate(project.start) || parseDate(a.end) > parseDate(project.end)) out.push({ level: 'warning', text: `${who} / ${what}: assignment falls outside the project duration and is treated as planned project extension.` });
+        if (parseDate(a.start) < parseDate(project.start) || parseDate(a.end) > parseDate(project.end)) out.push({ level: 'warning', text: `${what}: assignment falls outside the project duration and is treated as planned project extension.` });
       }
       if (numberValue(a.ftePercent) <= 0) out.push({ level: 'warning', text: `${who} / ${what}: FTE is zero.` });
     }
@@ -456,7 +456,7 @@
 
         const period = segmentStart === segmentEnd ? segmentStart : `${segmentStart} to ${segmentEnd}`;
         if (Math.abs(total - targetPercent) > 0.0001) {
-          out.push({ level: 'error', text: `${personName(person)}: assigned FTE is ${formatNumber(total, 1)}% from ${period}; expected ${formatNumber(targetPercent, 1)}% (employment level).` });
+          out.push({ level: 'error', text: `${personName(person)}: assigned FTE is ${formatNumber(total, 1)}% from ${period}; expected ${formatNumber(targetPercent, 1)}%.` });
         }
         if (!overAllocationReported && total > targetPercent + 0.0001) {
           out.push({ level: 'error', text: `${personName(person)} exceeds ${formatNumber(targetPercent, 1)}% FTE from ${segmentStart} (${formatNumber(total, 1)}%).` });
@@ -474,23 +474,6 @@
           out.push({ level: 'warning', text: `${personName(person)} has a gap between ${sorted[i].end} and ${sorted[i + 1].start} with no assignment.` });
         }
       }
-    }
-    // Info-level: contract/project extension required (deduplicated per entity)
-    const contractExtensionsNeeded = new Set();
-    const projectExtensionsNeeded = new Set();
-    for (const a of state.assignments.filter(x => !getPerson(x.personId)?.hidden && !getProjectOrAccount(x.projectId)?.hidden)) {
-      const person = getPerson(a.personId);
-      const project = getProjectOrAccount(a.projectId);
-      if (person && validDateString(a.end) && validDateString(person.contractEnd) && a.end > person.contractEnd) contractExtensionsNeeded.add(person.id);
-      if (project && validDateString(a.end) && validDateString(project.end) && a.end > project.end) projectExtensionsNeeded.add(project.id);
-    }
-    for (const id of contractExtensionsNeeded) {
-      const p = getPerson(id);
-      if (p) out.push({ level: 'info', text: `Extension of contract for ${personName(p)} required.` });
-    }
-    for (const id of projectExtensionsNeeded) {
-      const p = getProjectOrAccount(id);
-      if (p) out.push({ level: 'info', text: `Extension of project ${p.name || '(unnamed project)'} required.` });
     }
     // Validate expenses: date within project duration
     for (const e of state.expenses) {
