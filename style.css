@@ -114,6 +114,12 @@ h1 {
   justify-content: flex-end;
 }
 
+#loadTestDataBtn {
+  color: var(--danger);
+  border-color: var(--danger);
+  margin-left: auto;
+}
+
 .muted {
   color: var(--muted);
   font-size: 12px;
