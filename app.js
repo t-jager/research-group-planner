@@ -541,13 +541,12 @@
             <strong class="${projectFreePersonnel(project) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(project))}</strong>
           </div>
         `).join('')}
-        ${accounts.length ? `<div class="budget-line compact-budget-line account-divider"><span><strong>Accounts</strong></span><span></span></div>
         ${accounts.map(account => `
           <div class="budget-line compact-budget-line">
-            <span>${esc(account.name || '(unnamed account)')}</span>
+            <span><strong>Account:</strong> ${esc(account.name || '(unnamed account)')}</span>
             <strong class="${accountFreeBalance(account) < 0 ? 'negative-funding' : ''}">${formatMoney(accountFreeBalance(account))}</strong>
           </div>
-        `).join('')}` : ''}
+        `).join('')}
         <div class="budget-line compact-budget-total">
           <span>Total free funds</span>
           <strong class="${totalFree < 0 ? 'negative-funding' : ''}">${formatMoney(totalFree)}</strong>
@@ -1100,7 +1099,7 @@
     const monthHeader = months.map(m => `<div class="month-cell ${m.getUTCFullYear() === currentYear && m.getUTCMonth() === currentMonth ? 'current-month' : ''}"><span>${m.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' })}</span></div>`).join('');
     const header = `<div class="timeline-year-row">${yearHeader}</div><div class="timeline-month-row">${monthHeader}</div>`;
     $('#tab-timeline').innerHTML = `
-      <div class="section-head"><h2>Assignments</h2><div class="section-actions">${pastToggleHtml()}<div class="help">Drag a person chip onto a project to create an assignment. Existing assignments can only be resized using their left or right edge. They may extend beyond the current contract or project end; planned extensions are striped and still count toward the budget. Hold Alt for day precision.</div></div></div>
+      <div class="section-head"><h2>Assignments</h2><div class="section-actions">${pastToggleHtml()}</div></div>
       ${timelineShell('Assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max)}
       ${timelineShell('Personnel view', 'personTimeline', personTimelineLabels(), personTimelineRows(min, months, width), header, width, min, max, 'View only — edit assignments in the table above')}
       <div id="assignmentEditorModal" class="assignment-modal" hidden>
@@ -1138,7 +1137,7 @@
       </div>
     `;
     const palette = $('#person-palette');
-    palette.innerHTML = visiblePersons().map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}">${esc(personName(p))}</span>`).join('');
+    palette.innerHTML = visiblePersons().map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}" title="Drag a person chip onto a project to create an assignment. Existing assignments can only be resized using their left or right edge. They may extend beyond the current contract or project end; planned extensions are striped and still count toward the budget. Hold Alt for day precision.">${esc(personName(p))}</span>`).join('');
     palette.hidden = activeTab !== 'timeline';
     bindPastToggle($('#tab-timeline')); bindTimelineScroll(); bindAssignmentDrag(min); bindAssignmentEditor(); bindPersonDrop(min); restoreScroll();
   }
