@@ -2226,7 +2226,6 @@
         scrollMemory.project = $('#projectTimeline')?.scrollLeft || 0;
         scrollMemory.person = $('#personTimeline')?.scrollLeft || 0;
         clearContractPreview();
-        const person = getPerson(personId);
         const latestSI = (person?.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => b.start.localeCompare(a.start))[0];
         const defaultFte = latestSI?.role === 'Student assistant' ? (numberValue(latestSI.employmentPercent) || 9) : 100;
         addAssignment({ personId, projectId, start, end, ftePercent: defaultFte });
