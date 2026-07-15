@@ -474,16 +474,6 @@
       }
       // Check for overlapping salary periods
       for (let i = 1; i < intervals.length; i++) if (intervals[i].start <= intervals[i - 1].end) out.push({ level: 'error', text: `${personName(p)}: salary periods overlap.` });
-      // Walk the contract range to detect gaps between salary periods
-      if (validDateString(p.contractStart) && validDateString(p.contractEnd)) {
-        let cursor = p.contractStart;
-        for (const si of intervals) {
-          if (si.end < cursor) continue;
-          if (si.start > cursor) out.push({ level: 'error', text: `${personName(p)}: salary period gap from ${cursor} to ${addDays(si.start, -1)}.` });
-          if (si.end >= cursor) cursor = addDays(si.end, 1);
-        }
-        if (cursor <= p.contractEnd) out.push({ level: 'error', text: `${personName(p)}: salary periods end before contract (${cursor}).` });
-      }
     }
     // Validate projects: dates
     for (const p of state.projects.filter(x => !x.hidden)) {
@@ -675,6 +665,20 @@
 
   // ─── Persons Tab ───
 
+  function computeSalaryGaps(p) {
+    if (!validDateString(p.contractStart) || !validDateString(p.contractEnd)) return [];
+    const intervals = [...(p.salaryIntervals || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
+    const gaps = [];
+    let cursor = p.contractStart;
+    for (const si of intervals) {
+      if (si.end < cursor) continue;
+      if (si.start > cursor) gaps.push({ from: cursor, to: addDays(si.start, -1) });
+      if (si.end >= cursor) cursor = addDays(si.end, 1);
+    }
+    if (cursor <= p.contractEnd) gaps.push({ from: cursor, to: p.contractEnd });
+    return gaps;
+  }
+
   function renderPersons() {
     const rows = [...tablePersons()].sort((a, b) => comparePersons(a, b, sortSpec.key) * sortSpec.dir);
     $('#tab-persons').innerHTML = `
@@ -692,7 +696,7 @@
         <td><textarea ${fieldAttrs('person', p.id, 'notes')}>${esc(p.notes)}</textarea></td>
         <td class="center"><input type="checkbox" ${fieldAttrs('person', p.id, 'hidden')} ${p.hidden ? 'checked' : ''}></td>
         <td><button class="danger delete-person" data-id="${p.id}">Delete</button></td>
-      </tr><tr class="salary-detail-row ${p.hidden ? 'hidden-row' : ''}"><td colspan="9">${salaryIntervalsEditor(p)}</td></tr>`).join('')}
+      </tr><tr class="salary-detail-row ${p.hidden ? 'hidden-row' : ''}"><td colspan="9">${computeSalaryGaps(p).map(g => `<div class="salary-gap-warning">⚠ There is a gap from ${g.from} to ${g.to}. Is this intentional?</div>`).join('')}${salaryIntervalsEditor(p)}</td></tr>`).join('')}
       </tbody></table></div>`;
     $('#addPersonBtn').onclick = () => addPerson();
     $$('.delete-person', $('#tab-persons')).forEach(b => b.onclick = () => deletePerson(b.dataset.id));
@@ -728,6 +732,15 @@
         // Also toggle the blur-clamping class for the employment field
         const empInput = row.querySelector('[data-field="employmentPercent"]');
         if (empInput) empInput.classList.toggle('percent-input', roleSelect.value !== 'Student assistant');
+        // Warn if any assignment exceeds 20 hrs/week when switching to Student assistant
+        if (roleSelect.value === 'Student assistant') {
+          const pid = roleSelect.dataset.personId;
+          const over = state.assignments.filter(a => a.personId === pid && numberValue(a.ftePercent) > 20);
+          if (over.length) {
+            const names = [...new Set(over.map(a => { const p = getProjectOrAccount(a.projectId); return p?.name || 'project'; }))];
+            alert(`${personName(getPerson(pid))} has assignment(s) exceeding 20 hrs/week on: ${names.join(', ')}.`);
+          }
+        }
       });
     });
     bindPastToggle($('#tab-persons'));
@@ -1103,6 +1116,7 @@
       if (person) {
         const toSplit = state.assignments.filter(a => a.personId === personId && validDateString(a.start) && validDateString(a.end));
         for (const a of toSplit) splitAssignmentAtPeriods(a);
+        if (refreshDerived) { renderPersons(); return; }
       }
     }
     if (field === 'hidden' && refreshDerived) { renderAll(); return; }
@@ -1854,6 +1868,10 @@
         assignment.ftePercent = nextFte;
         assignment.notes = nextNotes;
         markDirty();
+      }
+
+      if (isSA && nextFte > 20) {
+        alert(`${personName(person)}: assigned ${formatNumber(nextFte, 1)} hrs/week exceeds 20 hrs/week.`);
       }
 
       closeModal();

@@ -746,14 +746,13 @@ td textarea {
 }
 
 .salary-editor {
-  max-width: 960px;
   border: 1px solid var(--line);
   border-radius: 7px;
   overflow: auto;
 }
 
 .salary-editor table {
-  min-width: 820px;
+  min-width: 100%;
 }
 
 .salary-editor th {
@@ -764,6 +763,16 @@ td textarea {
   color: var(--muted);
   font-size: 12px;
   padding: 5px 0;
+}
+
+.salary-gap-warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
 }
 
 
