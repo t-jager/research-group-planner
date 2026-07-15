@@ -1554,11 +1554,13 @@
             const right = dateToX(addDays(si.end, 1), min);
             const bandWidth = Math.max(4, right - left);
             const shade = index % 3;
-            const empPct = numberValue(si.employmentPercent) || 100;
-            const actualCost = numberValue(si.monthlyCost) * empPct / 100;
+            const isSI_SA = si.role === 'Student assistant';
+            const empPct = numberValue(si.employmentPercent) || (isSI_SA ? 9 : 100);
+            const actualCost = isSI_SA ? numberValue(si.monthlyCost) : numberValue(si.monthlyCost) * empPct / 100;
+            const empUnit = isSI_SA ? ' hrs/wk' : '%';
             return `<div class="salary-interval-band salary-shade-${shade}"
               style="left:${left}px;width:${bandWidth}px;top:${salaryTop}px"
-              title="${si.start} – ${si.end}: ${formatMoney(actualCost)} / month (${empPct}%)">
+              title="${si.start} – ${si.end}: ${formatMoney(actualCost)} / month (${empPct}${empUnit})">
               <span>${formatMoney(actualCost)}</span>
             </div>`;
           }).join('')
@@ -2224,7 +2226,10 @@
         scrollMemory.project = $('#projectTimeline')?.scrollLeft || 0;
         scrollMemory.person = $('#personTimeline')?.scrollLeft || 0;
         clearContractPreview();
-        addAssignment({ personId, projectId, start, end, ftePercent: 100 });
+        const person = getPerson(personId);
+        const latestSI = (person?.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => b.start.localeCompare(a.start))[0];
+        const defaultFte = latestSI?.role === 'Student assistant' ? (numberValue(latestSI.employmentPercent) || 9) : 100;
+        addAssignment({ personId, projectId, start, end, ftePercent: defaultFte });
         markDirty();
         renderDerived();
       });
