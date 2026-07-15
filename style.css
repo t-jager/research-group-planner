@@ -7,7 +7,7 @@
   --accent: #2563eb;
   --danger: #b42318;
   --warning: #9a6700;
-  --label-width: 340px;
+  --label-width: 400px;
   --month-width: 28px;
 }
 
@@ -446,6 +446,33 @@ td textarea {
 .timeline-labels {
   background: #fff;
   border-right: 1px solid var(--line);
+  position: relative;
+}
+
+.timeline-label-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 5;
+}
+
+.timeline-label-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 20%;
+  bottom: 20%;
+  left: 3px;
+  width: 1px;
+  background: transparent;
+}
+
+.timeline-labels:hover .timeline-label-resize-handle::after,
+.timeline-label-resize-handle:hover::after {
+  background: #94a3b8;
 }
 
 .timeline-scroll {
@@ -673,7 +700,7 @@ td textarea {
   }
 
   :root {
-    --label-width: 280px;
+    --label-width: 340px;
     --month-width: 28px;
   }
 }

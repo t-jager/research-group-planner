@@ -1326,7 +1326,7 @@
     const palette = $('#person-palette');
     palette.innerHTML = [...visiblePersons()].sort((a, b) => (a.lastName || '').localeCompare(b.lastName || '', undefined, { numeric: true, sensitivity: 'base' }) || (a.firstName || '').localeCompare(b.firstName || '', undefined, { numeric: true, sensitivity: 'base' })).map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}" title="Drag a person chip onto a project to create an assignment. Existing assignments can only be resized using their left or right edge. They may extend beyond the current contract or project end; planned extensions are striped and still count toward the budget. Hold Alt for day precision.">${esc(personName(p))}</span>`).join('');
     palette.hidden = activeTab !== 'timeline';
-    bindPastToggle($('#tab-timeline')); bindTimelineScroll(); bindAssignmentDrag(min); bindAssignmentEditor(); bindPersonDrop(min); restoreScroll();
+    bindPastToggle($('#tab-timeline')); bindTimelineScroll(); bindAssignmentDrag(min); bindAssignmentEditor(); bindPersonDrop(min); bindTimelineLabelResize($('#tab-timeline')); restoreScroll();
   }
 
   // Wrap a timeline section (labels column + scrollable canvas) in a shell
@@ -1406,7 +1406,7 @@
           <div class="meta">
             ${isAccount
               ? `<span>Balance</span><span class="money">${formatMoney(p.balance)}</span><span>From</span><span>${esc(p.balanceDate)}</span><span>Free</span><span class="money ${accountFreeBalance(p) < 0 ? 'negative-funding' : ''}">${formatMoney(accountFreeBalance(p))}</span>`
-              : `<span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span><span>Personnel budget</span><span>${formatMoney(p.personnelBudget)} (<span class="${projectFreePersonnel(p) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(p))} free</span>)</span>${numberValue(p.studentAssistantBudget) ? `<span>Student budget</span><span>${formatMoney(p.studentAssistantBudget)} (<span class="${projectFreeStudentAssistant(p) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreeStudentAssistant(p))} free</span>)</span>` : ''}`
+              : `<span>Duration</span><span>${esc(p.start)} – ${esc(p.end)}</span><span>Free personnel budget</span><span class="${projectFreePersonnel(p) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(p))}</span>${numberValue(p.studentAssistantBudget) ? `<span>Free student budget</span><span class="${projectFreeStudentAssistant(p) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreeStudentAssistant(p))}</span>` : ''}`
             }
           </div>
         </div>`;
@@ -1467,10 +1467,12 @@
       .map(p => {
         const assignments = visibleAssignments().filter(a => a.personId === p.id);
         const height = timelineRowHeight(assignments, PERSON_TIMELINE_MIN_HEIGHT, true);
+        const totalCost = assignments.reduce((sum, a) => sum + assignmentCost(a), 0);
         return `<div class="timeline-label-row" style="height:${height}px">
           <strong>${esc(personName(p))}</strong>
           <div class="meta">
             <span>Contract</span><span>${esc(p.contractStart)} – ${esc(p.contractEnd)}</span>
+            <span>Total costs</span><span class="money">${formatMoney(totalCost)}</span>
           </div>
         </div>`;
       }).join('') || '<div class="timeline-label-row muted">No persons</div>';
@@ -2409,6 +2411,50 @@
           handle.addEventListener('pointerup', stop);
           handle.addEventListener('pointercancel', stop);
         });
+      });
+    });
+  }
+
+  const LABEL_WIDTH_STORAGE_KEY = 'research-group-planner-timeline-label-width-v1';
+
+  function bindTimelineLabelResize(root = document) {
+    // restore saved width once on :root so both timelines stay aligned
+    try {
+      const saved = JSON.parse(localStorage.getItem(LABEL_WIDTH_STORAGE_KEY));
+      if (Number.isFinite(saved) && saved >= 160) document.documentElement.style.setProperty('--label-width', `${saved}px`);
+    } catch (_) {}
+    root.querySelectorAll('.timeline-body').forEach(body => {
+      const labels = body.querySelector('.timeline-labels');
+      if (!labels || labels.dataset.resizeBound === 'true') return;
+      labels.dataset.resizeBound = 'true';
+      const handle = document.createElement('span');
+      handle.className = 'timeline-label-resize-handle';
+      handle.setAttribute('aria-hidden', 'true');
+      labels.appendChild(handle);
+      handle.addEventListener('pointerdown', event => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const startX = event.clientX;
+        const startWidth = labels.getBoundingClientRect().width;
+        handle.setPointerCapture(event.pointerId);
+        document.body.classList.add('resizing-column');
+        const move = moveEvent => {
+          const nextWidth = Math.max(160, Math.round(startWidth + moveEvent.clientX - startX));
+          document.documentElement.style.setProperty('--label-width', `${nextWidth}px`);
+        };
+        const stop = stopEvent => {
+          const finalWidth = Math.round(labels.getBoundingClientRect().width);
+          try { localStorage.setItem(LABEL_WIDTH_STORAGE_KEY, JSON.stringify(finalWidth)); } catch (_) {}
+          document.body.classList.remove('resizing-column');
+          try { handle.releasePointerCapture(stopEvent.pointerId); } catch (_) {}
+          handle.removeEventListener('pointermove', move);
+          handle.removeEventListener('pointerup', stop);
+          handle.removeEventListener('pointercancel', stop);
+        };
+        handle.addEventListener('pointermove', move);
+        handle.addEventListener('pointerup', stop);
+        handle.addEventListener('pointercancel', stop);
       });
     });
   }
