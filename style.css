@@ -7,8 +7,99 @@
   --accent: #2563eb;
   --danger: #b42318;
   --warning: #9a6700;
+  --hover-bg: #f1f4f8;
+  --row-hover: #edf2fb;
+  --row-computed-hover: #e4ebf5;
+  --input-bg: #fff;
+  --input-hover-bg: #fafbfc;
+  --input-hover-border: #d0d5dd;
+  --input-focus-border: #5c8df6;
+  --input-focus-ring: rgba(91, 131, 246, .16);
+  --header-bg: #fff;
+  --tab-bar-bg: #f1f4f8;
+  --tab-active-bg: #fff;
+  --sticky-shadow: #fff;
+  --modal-backdrop: rgba(15, 23, 42, .48);
+  --modal-shadow: rgba(15, 23, 42, .35);
+  --modal-border: rgba(148, 163, 184, .55);
+  --grid-line: #d8dce3;
+  --today-line: rgba(210, 45, 45, .8);
+  --year-band-text: #1e293b;
+  --year-band-border: #cfd5dc;
+  --year-band-bg: linear-gradient(#f8fafc 0%, #f1f5f9 100%);
+  --month-border: #d2d7df;
+  --group-label-bg: #eef2f7;
+  --warning-bg: #fff3cd;
+  --warning-text: #856404;
+  --warning-border: #ffc107;
+  --drop-hover-bg: #edf5ff;
+  --drop-hover-outline: #60a5fa;
+  --badge-student-bg: #f472b6;
+  --badge-student-text: #fff;
+  --planning-bg: #fefce8;
+  --planning-text: #713f12;
+  --planning-border: #facc15;
+  --negative-text: #b91c1c;
+  --ok-text: #16794b;
   --label-width: 400px;
   --month-width: 28px;
+  --expense-today-line: rgba(210, 45, 45, .7);
+  --shade-0: #eceff2;
+  --shade-1: #dfe3e7;
+  --shade-2: #f3f4f6;
+  --band-text: #3f4650;
+  --band-border: rgba(80, 87, 96, .22);
+  --detail-row-bg: #fafbfc;
+  --period-toggle: #2563eb;
+  --info-color: #2563eb;
+  --info-badge-bg: #2563eb;
+  --info-badge-text: #fff;
+  --balance-marker: #2563eb;
+  --balance-tooltip-bg: #1e293b;
+  --balance-label-bg: #dbeafe;
+  --balance-label-text: #1e40af;
+  --version-color: #6b7280;
+  --bar-shadow-light: rgba(0, 0, 0, .12);
+  --bar-shadow-dark: rgba(0, 0, 0, .20);
+  --bar-border: rgba(255, 255, 255, .25);
+  --bar-handle: rgba(255, 255, 255, .28);
+  --note-icon: rgba(255,255,255,.92);
+  --tooltip-bg: rgba(20, 24, 32, 0.94);
+  --tooltip-shadow: rgba(0, 0, 0, .25);
+  --delete-tooltip-bg: rgba(180, 35, 24, .96);
+  --zebra-overlay: rgba(0, 0, 0, .05);
+  --hidden-row-bg: #f7f8fa;
+  --hidden-row-text: #8a919c;
+  --header-row-bg: #f7f8fa;
+  --row-hover-computed: #e4ebf5;
+  --contract-band-bg: rgba(80, 87, 96, .22);
+  --active-period-overlay: rgba(100, 130, 180, 0.28);
+  --current-month-bg: #fff4d8;
+  --current-month-text: #4b3b00;
+  --current-month-overlay: rgba(234, 200, 91, 0.35);
+  --month-band-stripe: rgba(255, 193, 7, .08);
+  --expense-bar-bg: #f1f5f9;
+  --expense-bar-border: #d8dde5;
+  --expense-item-border: #eef1f4;
+  --expense-highlight-bg: #dbeafe;
+  --expense-month-text: #68707d;
+  --planning-badge-bg: #facc15;
+  --planning-badge-text: #3f3f46;
+  --assignment-planning-bg: #fefce8;
+  --assignment-planning-text: #713f12;
+  --assignment-planning-border: #facc15;
+  --drag-active-row-bg: #dbeafe;
+  --drag-active-row-outline: #60a5fa;
+  --expense-marker-ring: rgba(0, 0, 0, .12);
+  --stripe-light: rgba(255, 255, 255, .12);
+  --stripe-heavy: rgba(255, 255, 255, .40);
+  --planned-stripe-1: rgba(255,255,255,.12);
+  --planned-stripe-2: rgba(255,255,255,.40);
+  --planned-stripe-3: rgba(255,255,255,.72);
+  --planned-project-stripe-1: rgba(255, 255, 255, .08);
+  --planned-project-stripe-2: rgba(20,20,20,.28);
+  --planned-project-stripe-3: rgba(20, 20, 20, .35);
+  --today-month-stripe: rgba(255, 193, 7, .08);
 }
 
 * {
@@ -31,7 +122,7 @@ textarea {
 
 button {
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--panel);
   border-radius: 6px;
   padding: 7px 11px;
   cursor: pointer;
@@ -39,7 +130,7 @@ button {
 }
 
 button:hover {
-  background: #f1f4f8;
+  background: var(--hover-bg);
 }
 
 button.primary {
@@ -62,7 +153,7 @@ button.danger {
   align-items: center;
   gap: 8px 18px;
   padding: 10px 20px;
-  background: #fff;
+  background: var(--header-bg);
   border-bottom: 1px solid var(--line);
 }
 
@@ -82,7 +173,7 @@ button.danger {
   gap: 2px;
   padding: 3px;
   border-radius: 9px;
-  background: #f1f4f8;
+  background: var(--tab-bar-bg);
 }
 
 .header-tabs button {
@@ -95,14 +186,14 @@ button.danger {
 }
 
 .header-tabs button:hover {
-  background: #e8edf4;
+  background: var(--hover-bg);
   color: var(--text);
 }
 
 .header-tabs button.active {
-  background: #fff;
+  background: var(--tab-active-bg);
   color: var(--accent);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
+  box-shadow: 0 1px 3px var(--modal-shadow);
 }
 
 
@@ -202,7 +293,7 @@ th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #f7f8fa;
+  background: var(--header-row-bg);
   text-align: left;
   white-space: nowrap;
 }
@@ -217,20 +308,20 @@ td.sticky-col {
   position: sticky;
   left: 0;
   z-index: 1;
-  background: #fff;
+  background: var(--panel);
   box-shadow: 1px 0 0 var(--line);
 }
 
 .table-wrap tbody tr:hover td {
-  background: #edf2fb;
+  background: var(--row-hover);
 }
 
 .table-wrap tbody tr:hover td.computed {
-  background: #e4ebf5;
+  background: var(--row-computed-hover);
 }
 
 .table-wrap tbody tr.hidden-row:hover td {
-  background: #f0f2f5;
+  background: var(--row-hover);
 }
 
 th.sortable {
@@ -240,7 +331,7 @@ th.sortable {
 
 th.sortable::after {
   content: " ↕";
-  color: #9aa1ac;
+  color: var(--muted);
 }
 
 th.sortable.asc::after {
@@ -269,16 +360,16 @@ td textarea {
 td input:hover,
 td select:hover,
 td textarea:hover {
-  border-color: #d0d5dd;
-  background: #fafbfc;
+  border-color: var(--input-hover-border);
+  background: var(--input-hover-bg);
 }
 
 td input:focus,
 td select:focus,
 td textarea:focus {
-  outline: 2px solid #93b4ff;
-  border-color: #5c8df6;
-  background: #fff;
+  outline: 2px solid var(--input-focus-ring);
+  border-color: var(--input-focus-border);
+  background: var(--input-bg);
 }
 
 td textarea {
@@ -335,7 +426,7 @@ td textarea {
   justify-content: space-between;
   gap: 16px;
   padding: 6px 0;
-  border-bottom: 1px solid #eef1f4;
+  border-bottom: 1px solid var(--line);
 }
 
 .budget-line:last-child {
@@ -368,7 +459,7 @@ td textarea {
 }
 
 .info {
-  color: #2563eb;
+  color: var(--info-color);
 }
 
 .info-abbr {
@@ -378,8 +469,8 @@ td textarea {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #2563eb;
-  color: #fff;
+  background: var(--info-badge-bg);
+  color: var(--info-badge-text);
   font-size: 11px;
   font-weight: 700;
   font-style: normal;
@@ -390,7 +481,7 @@ td textarea {
 }
 
 .ok {
-  color: #16794b;
+  color: var(--ok-text);
 }
 
 .person-palette[hidden] {
@@ -404,14 +495,14 @@ td textarea {
   flex-wrap: wrap;
   align-content: flex-start;
   padding: 6px 0 0;
-  background: #fff;
+  background: var(--panel);
 }
 
 .person-chip {
   padding: 5px 9px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: #fff;
+  background: var(--panel);
   cursor: grab;
 }
 
@@ -425,7 +516,7 @@ td textarea {
 .timeline-title {
   padding: 10px 12px;
   font-weight: 700;
-  background: #f7f8fa;
+  background: var(--header-row-bg);
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: baseline;
@@ -444,7 +535,7 @@ td textarea {
 }
 
 .timeline-labels {
-  background: #fff;
+  background: var(--panel);
   border-right: 1px solid var(--line);
   position: relative;
 }
@@ -472,7 +563,7 @@ td textarea {
 
 .timeline-labels:hover .timeline-label-resize-handle::after,
 .timeline-label-resize-handle:hover::after {
-  background: #94a3b8;
+  background: var(--muted);
 }
 
 .timeline-scroll {
@@ -503,12 +594,12 @@ td textarea {
 .timeline-header {
   height: 84px;
   border-bottom: 2px solid var(--line);
-  background: #fff;
+  background: var(--panel);
 }
 
 .timeline-year-row {
   height: 28px;
-  border-bottom: 1px solid #b8c4d4;
+  border-bottom: 1px solid var(--year-band-border);
 }
 
 .year-band {
@@ -516,22 +607,22 @@ td textarea {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: #1e293b;
-  border-right: 1px solid #cfd5dc;
+  color: var(--year-band-text);
+  border-right: 1px solid var(--year-band-border);
   letter-spacing: .04em;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--year-band-bg);
 }
 
 .timeline-month-row {
   height: 56px;
-  background: #fff;
+  background: var(--panel);
 }
 
 .month-cell {
   display: flex;
   justify-content: center;
   align-items: center;
-  border-right: 1px solid #d2d7df;
+  border-right: 1px solid var(--month-border);
   font-size: 11px;
   color: var(--muted);
   overflow: hidden;
@@ -539,7 +630,7 @@ td textarea {
 
 .month-cell.q2,
 .month-cell.q4 {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--zebra-overlay);
 }
 
 .month-cell span {
@@ -550,15 +641,15 @@ td textarea {
 }
 
 .month-cell.current-month {
-  background: #fff4d8;
-  color: #4b3b00;
+  background: var(--current-month-bg);
+  color: var(--current-month-text);
   font-weight: 700;
 }
 
 .timeline-label-spacer {
   height: 84px;
   border-bottom: 2px solid var(--line);
-  background: #fff;
+  background: var(--panel);
 }
 
 .group-label {
@@ -567,7 +658,7 @@ td textarea {
   display: flex;
   align-items: center;
   font-weight: 700;
-  background: #eef2f7;
+  background: var(--group-label-bg);
   border-bottom: 1px solid var(--line);
   overflow: hidden;
 }
@@ -575,7 +666,7 @@ td textarea {
 .group-grid {
   height: 35px;
   border-bottom: 1px solid var(--line);
-  background: #eef2f7;
+  background: var(--group-label-bg);
 }
 
 .timeline-label-row {
@@ -606,7 +697,7 @@ td textarea {
 .timeline-row {
   position: relative;
   border-bottom: 1px solid var(--line);
-  background: #fff;
+  background: var(--panel);
 }
 
 .timeline-row-grid {
@@ -619,7 +710,7 @@ td textarea {
   position: absolute;
   top: 84px;
   bottom: 0;
-  background: rgba(255, 193, 7, .08);
+  background: var(--current-month-overlay);
   pointer-events: none;
   z-index: 1;
 }
@@ -629,18 +720,18 @@ td textarea {
   top: 84px;
   bottom: 0;
   width: 2px;
-  background: rgba(210, 45, 45, .8);
+  background: var(--today-line);
   pointer-events: none;
   z-index: 5;
 }
 
 .timeline-row-grid>div {
-  border-right: 1px solid #d8dce3;
+  border-right: 1px solid var(--grid-line);
 }
 
 .timeline-row-grid > div.q2,
 .timeline-row-grid > div.q4 {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--zebra-overlay);
 }
 
 .year-separator-line {
@@ -648,7 +739,7 @@ td textarea {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: #1e293b;
+  background: var(--year-band-text);
   z-index: 2;
   pointer-events: none;
 }
@@ -667,17 +758,17 @@ td textarea {
   text-overflow: ellipsis;
   cursor: grab;
   user-select: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, .20), 0 1px 2px rgba(0, 0, 0, .12);
-  border: 1px solid rgba(255, 255, 255, .25);
+  box-shadow: 0 1px 4px var(--bar-shadow-dark), 0 1px 2px var(--bar-shadow-light);
+  border: 1px solid var(--bar-border);
 }
 
 .assignment-bar.planned {
   background-image: repeating-linear-gradient(
     135deg,
-    rgba(255, 255, 255, .12) 0,
-    rgba(255, 255, 255, .12) 4px,
-    rgba(255, 255, 255, .40) 4px,
-    rgba(255, 255, 255, .40) 8px
+    var(--planned-stripe-1) 0,
+    var(--planned-stripe-1) 4px,
+    var(--planned-stripe-2) 4px,
+    var(--planned-stripe-2) 8px
   ) !important;
 }
 
@@ -686,14 +777,10 @@ td textarea {
   cursor: grabbing;
 }
 
-.assignment-bar-student {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 14px,
-    rgba(255, 255, 255, .15) 14px,
-    rgba(255, 255, 255, .15) 28px
-  ) !important;
+.assignment-student-badge {
+  position:absolute; z-index:7; top:2px; right:4px; height:14px; padding:0 4px;
+  border-radius:7px; background:var(--badge-student-bg); color:var(--badge-student-text); font-size:8px; font-weight:800;
+  line-height:14px; text-align:center; box-shadow:0 1px 2px var(--bar-shadow-light); pointer-events:none;
 }
 
 .assignment-handle {
@@ -702,7 +789,7 @@ td textarea {
   bottom: 0;
   width: 8px;
   cursor: ew-resize;
-  background: rgba(255, 255, 255, .28);
+  background: var(--bar-handle);
 }
 
 .assignment-handle.left {
@@ -715,7 +802,7 @@ td textarea {
 
 
 .drop-hover {
-  background: #edf5ff !important;
+  background: var(--drop-hover-bg) !important;
 }
 
 
@@ -761,7 +848,7 @@ td textarea {
 }
 
 .expense-summary-table tbody tr[data-overview-project]:hover {
-  background: #edf2fb;
+  background: var(--row-hover);
 }
 
 .expense-overview {
@@ -788,44 +875,58 @@ td textarea {
   font-weight: 600;
 }
 
-.salary-summary {
+.contract-period-summary {
   white-space: nowrap;
   min-width: 190px;
 }
 
-.salary-summary button {
+.contract-period-summary button {
   margin-left: 8px;
 }
 
-.salary-detail-row>td {
-  padding: 8px 12px 14px 34px;
-  background: #fafbfc;
+.contract-period-toggle {
+  cursor: pointer;
+  font-size: inherit;
+  margin-right: 4px;
+  color: var(--accent, #2563eb);
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  user-select: none;
 }
 
-.salary-editor {
+.contract-period-detail-row.folded {
+  display: none;
+}
+
+.contract-period-detail-row>td {
+  padding: 8px 12px 14px 34px;
+  background: var(--detail-row-bg);
+}
+
+.contract-period-editor {
   border: 1px solid var(--line);
   border-radius: 7px;
   overflow: auto;
 }
 
-.salary-editor table {
+.contract-period-editor table {
   min-width: 100%;
 }
 
-.salary-editor th {
+.contract-period-editor th {
   position: static;
 }
 
-.salary-empty {
+.contract-period-empty {
   color: var(--muted);
   font-size: 12px;
   padding: 5px 0;
 }
 
-.salary-gap-warning {
-  background: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffc107;
+.contract-period-gap-warning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
   border-radius: 4px;
   padding: 6px 10px;
   margin-bottom: 6px;
@@ -839,11 +940,11 @@ td textarea {
   pointer-events: none;
   padding: 6px 9px;
   border-radius: 6px;
-  background: rgba(20, 24, 32, 0.94);
+  background: var(--tooltip-bg);
   color: #fff;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, .25);
+  box-shadow: 0 3px 12px var(--tooltip-shadow);
   white-space: nowrap;
 }
 
@@ -864,11 +965,11 @@ td textarea {
 .hidden-row textarea,
 .hidden-row .computed,
 .hidden-row button {
-  color: #8a919c;
+  color: var(--hidden-row-text);
 }
 
 .hidden-row {
-  background: #f7f8fa;
+  background: var(--hidden-row-bg);
 }
 
 .hidden-row input:focus,
@@ -882,8 +983,8 @@ td textarea {
 }
 
 .assignment-drag-active .timeline-row.drop-hover {
-  background: #dbeafe !important;
-  outline: 2px solid #60a5fa;
+  background: var(--drag-active-row-bg) !important;
+  outline: 2px solid var(--drag-active-row-outline);
   outline-offset: -2px;
 }
 
@@ -891,7 +992,7 @@ td textarea {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: rgba(100, 130, 180, 0.28);
+  background: var(--active-period-overlay);
   pointer-events: none;
   z-index: 1;
 }
@@ -900,7 +1001,7 @@ td textarea {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: rgba(234, 200, 91, 0.35);
+  background: var(--current-month-overlay);
   pointer-events: none;
   z-index: 1;
 }
@@ -949,45 +1050,45 @@ td textarea {
 }
 
 
-.salary-interval-band {
+.contract-period-band {
   position: absolute;
   z-index: 3;
   height: 16px;
-  border: 1px solid rgba(80, 87, 96, .22);
+  border: 1px solid var(--band-border);
   border-radius: 3px;
   overflow: hidden;
   white-space: nowrap;
   pointer-events: none;
 }
 
-.salary-interval-band span {
+.contract-period-band span {
   display: block;
   padding: 1px 4px;
   font-size: 9px;
   line-height: 12px;
-  color: #3f4650;
+  color: var(--band-text);
   font-variant-numeric: tabular-nums;
   text-overflow: ellipsis;
   overflow: hidden;
 }
 
-.salary-shade-0 {
-  background: #eceff2;
+.contract-period-shade-0 {
+  background: var(--shade-0);
 }
 
-.salary-shade-1 {
-  background: #dfe3e7;
+.contract-period-shade-1 {
+  background: var(--shade-1);
 }
 
-.salary-shade-2 {
-  background: #f3f4f6;
+.contract-period-shade-2 {
+  background: var(--shade-2);
 }
 
 
 .version{
   font-size:0.55em;
   font-weight:500;
-  color:#6b7280;
+  color:var(--version-color);
   margin-left:.4em;
   vertical-align:middle;
 }
@@ -1031,6 +1132,7 @@ td textarea {
 
 
 .contract-preview,
+.contract-preview-planned,
 .valid-drop-preview {
   position: absolute;
   top: 0;
@@ -1054,6 +1156,19 @@ td textarea {
   border-right: 1px dashed hsla(var(--cp-hue), var(--cp-sat), var(--cp-lum), .75);
 }
 
+.contract-preview-planned {
+  z-index: 2;
+  background: repeating-linear-gradient(
+    135deg,
+    hsla(45, 90%, 55%, .10) 0,
+    hsla(45, 90%, 55%, .10) 6px,
+    hsla(45, 90%, 55%, .22) 6px,
+    hsla(45, 90%, 55%, .22) 10px
+  );
+  border-left: 1px dashed hsla(45, 90%, 55%, .75);
+  border-right: 1px dashed hsla(45, 90%, 55%, .75);
+}
+
 .valid-drop-preview {
   z-index: 3;
   background: rgba(37, 99, 235, .17);
@@ -1066,12 +1181,12 @@ td textarea {
   pointer-events: none;
   padding: 7px 10px;
   border-radius: 7px;
-  background: rgba(17, 24, 39, .96);
+  background: var(--tooltip-bg);
   color: #fff;
   font-size: 11px;
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .28);
+  box-shadow: 0 4px 16px var(--tooltip-shadow);
   white-space: nowrap;
 }
 
@@ -1104,7 +1219,7 @@ td textarea {
 }
 
 .drag-date-tooltip.delete-ready {
-  background: rgba(180, 35, 24, .96);
+  background: var(--delete-tooltip-bg);
 }
 
 
@@ -1128,17 +1243,17 @@ body.modal-open {
 .assignment-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, .48);
+  background: var(--modal-backdrop);
   backdrop-filter: blur(2px);
 }
 
 .assignment-modal-card {
   position: relative;
   width: min(560px, 100%);
-  border: 1px solid rgba(148, 163, 184, .55);
+  border: 1px solid var(--modal-border);
   border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, .35);
+  background: var(--panel);
+  box-shadow: 0 24px 80px var(--modal-shadow);
   overflow: hidden;
 }
 
@@ -1149,7 +1264,7 @@ body.modal-open {
   gap: 16px;
   padding: 18px 20px 14px;
   border-bottom: 1px solid var(--line);
-  background: #f8fafc;
+  background: var(--header-row-bg);
 }
 
 .assignment-modal-header h3 {
@@ -1196,13 +1311,13 @@ body.modal-open {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 10px 11px;
-  background: #fff;
+  background: var(--input-bg);
   color: var(--text);
 }
 
 .assignment-field input:focus,
 .assignment-field textarea:focus {
-  outline: 3px solid rgba(37, 99, 235, .16);
+  outline: 3px solid var(--input-focus-ring);
   border-color: var(--accent);
 }
 
@@ -1245,11 +1360,11 @@ body.modal-open {
   gap: 9px;
   padding: 14px 20px 18px;
   border-top: 1px solid var(--line);
-  background: #fafbfc;
+  background: var(--detail-row-bg);
 }
 
 .assignment-note-icon {
-  color: rgba(255,255,255,.92);
+  color: var(--note-icon);
   font-size: 8px;
   margin-left: 6px;
   vertical-align: 1px;
@@ -1271,17 +1386,17 @@ body.modal-open {
 .expense-timeline-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, .48);
+  background: var(--modal-backdrop);
   backdrop-filter: blur(2px);
 }
 
 .expense-timeline-card {
   position: relative;
   width: min(720px, 100%);
-  border: 1px solid rgba(148, 163, 184, .55);
+  border: 1px solid var(--modal-border);
   border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, .35);
+  background: var(--panel);
+  box-shadow: 0 24px 80px var(--modal-shadow);
   overflow: hidden;
 }
 
@@ -1292,7 +1407,7 @@ body.modal-open {
   gap: 16px;
   padding: 18px 20px 14px;
   border-bottom: 1px solid var(--line);
-  background: #f8fafc;
+  background: var(--header-row-bg);
 }
 
 .expense-timeline-header h3 {
@@ -1341,7 +1456,7 @@ body.modal-open {
 
 .expense-timeline-bar {
   position: relative;
-  background: #f1f5f9;
+  background: var(--expense-bar-bg);
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: visible;
@@ -1360,7 +1475,7 @@ body.modal-open {
 
 .expense-marker:hover {
   filter: brightness(1.15);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, .12);
+  box-shadow: 0 0 0 3px var(--expense-marker-ring);
 }
 
 .expense-today-line {
@@ -1368,7 +1483,7 @@ body.modal-open {
   top: -2px;
   bottom: -2px;
   width: 2px;
-  background: rgba(210, 45, 45, .7);
+  background: var(--expense-today-line);
   z-index: 1;
 }
 
@@ -1405,12 +1520,12 @@ body.modal-open {
   gap: 8px;
   padding: 5px 0;
   font-size: 13px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--line);
   transition: background .15s;
 }
 
 .expense-timeline-list-item.highlighted {
-  background: #dbeafe;
+  background: var(--expense-highlight-bg);
   border-radius: 4px;
   margin: 0 -6px;
   padding: 5px 6px;
@@ -1458,12 +1573,12 @@ body.modal-open {
   pointer-events: none;
   background: repeating-linear-gradient(
     135deg,
-    rgba(255, 255, 255, .08) 0,
-    rgba(255, 255, 255, .08) 4px,
-    rgba(255, 255, 255, .48) 4px,
-    rgba(255, 255, 255, .48) 8px
+    var(--planned-project-stripe-1) 0,
+    var(--planned-project-stripe-1) 4px,
+    var(--planned-project-stripe-2) 4px,
+    var(--planned-project-stripe-2) 8px
   );
-  border-left: 1px solid rgba(255, 255, 255, .72);
+  border-left: 1px solid var(--planned-project-stripe-3);
 }
 
 .assignment-label-text {
@@ -1479,7 +1594,7 @@ body.modal-open {
   position: absolute;
   top: 0;
   width: 2px;
-  background: #2563eb;
+  background: var(--balance-marker);
   z-index: 2;
   pointer-events: none;
 }
@@ -1488,7 +1603,7 @@ body.modal-open {
   position: absolute;
   bottom: 4px;
   left: 6px;
-  background: #1e293b;
+  background: var(--balance-tooltip-bg);
   color: #f8fafc;
   font-size: 10px;
   padding: 2px 6px;
@@ -1505,8 +1620,8 @@ body.modal-open {
   position: absolute;
   bottom: 2px;
   left: 6px;
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--balance-label-bg);
+  color: var(--balance-label-text);
   font-size: 10px;
   font-weight: 600;
   padding: 1px 5px;
@@ -1524,36 +1639,36 @@ body.modal-open {
   background:
     repeating-linear-gradient(
       135deg,
-      rgba(255, 255, 255, .08) 0,
-      rgba(255, 255, 255, .08) 4px,
-      rgba(20, 20, 20, .28) 4px,
-      rgba(20, 20, 20, .28) 7px
+      var(--planned-project-stripe-1) 0,
+      var(--planned-project-stripe-1) 4px,
+      var(--planned-project-stripe-2) 4px,
+      var(--planned-project-stripe-2) 7px
     );
-  border-left: 1px solid rgba(20, 20, 20, .35);
+  border-left: 1px solid var(--planned-project-stripe-3);
 }
 
 .assignment-planned-segment {
-  background: repeating-linear-gradient(135deg, rgba(255,255,255,.10) 0, rgba(255,255,255,.10) 4px, rgba(20,20,20,.28) 4px, rgba(20,20,20,.28) 7px);
+  background: repeating-linear-gradient(135deg, var(--planned-stripe-1) 0, var(--planned-stripe-1) 4px, var(--planned-stripe-2) 4px, var(--planned-stripe-2) 7px);
 }
 .assignment-planned-project-segment {
-  background: repeating-linear-gradient(45deg, rgba(255,255,255,.10) 0, rgba(255,255,255,.10) 4px, rgba(20,20,20,.28) 4px, rgba(20,20,20,.28) 7px);
+  background: repeating-linear-gradient(45deg, var(--planned-project-stripe-1) 0, var(--planned-project-stripe-1) 4px, var(--planned-project-stripe-2) 4px, var(--planned-project-stripe-2) 7px);
 }
 .assignment-planning-badge {
   position:absolute; z-index:7; top:2px; right:4px; min-width:16px; height:14px; padding:0 3px;
-  border-radius:7px; background:#facc15; color:#3f3f46; font-size:9px; font-weight:800;
-  line-height:14px; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,.18); pointer-events:none;
+  border-radius:7px; background:var(--planning-badge-bg); color:var(--planning-badge-text); font-size:9px; font-weight:800;
+  line-height:14px; text-align:center; box-shadow:0 1px 2px var(--bar-shadow-light); pointer-events:none;
 }
 .assignment-editor-planning[hidden] {
   display: none !important;
 }
 .assignment-editor-planning {
-  display:grid; gap:6px; padding:10px 12px; border:1px solid #facc15; border-radius:8px;
-  background:#fefce8; color:#713f12; font-size:12px; font-weight:600;
+  display:grid; gap:6px; padding:10px 12px; border:1px solid var(--planning-border); border-radius:8px;
+  background:var(--assignment-planning-bg); color:var(--assignment-planning-text); font-size:12px; font-weight:600;
 }
 
 
 .negative-funding {
-  color: #b91c1c;
+  color: var(--negative-text);
 }
 
 
@@ -1597,7 +1712,7 @@ body.modal-open {
 
 .resizable-column-header:hover .column-resize-handle::after,
 .column-resize-handle:hover::after {
-  background: #94a3b8;
+  background: var(--muted);
 }
 
 body.resizing-column,
@@ -1621,4 +1736,58 @@ body.resizing-column * {
 
 .site-footer a:hover {
   text-decoration: underline;
+}
+
+.confirm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  background: var(--modal-backdrop);
+  backdrop-filter: blur(2px);
+}
+
+.confirm-modal-card {
+  width: min(420px, 90%);
+  border: 1px solid var(--modal-border);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 24px 80px var(--modal-shadow);
+  padding: 24px;
+}
+
+.confirm-modal-body {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.confirm-modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.confirm-modal-footer button {
+  padding: 6px 18px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.confirm-yes {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+}
+
+.confirm-yes:hover {
+  opacity: .9;
+}
+
+.confirm-no:hover {
+  background: var(--hover-bg);
 }

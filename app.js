@@ -21,7 +21,7 @@
   const TIMELINE_BAR_TOP = 10;
   const TIMELINE_LANE_HEIGHT = 28;
   const TIMELINE_BOTTOM_PADDING = 10;
-  const TIMELINE_SALARY_HEIGHT = 20;
+  const TIMELINE_CONTRACT_PERIOD_HEIGHT = 20;
   const PROJECT_TIMELINE_MIN_HEIGHT = 92;
   const PERSON_TIMELINE_MIN_HEIGHT = 70;
 
@@ -35,6 +35,7 @@
   let projectSortSpec = { key: 'name', dir: 1 };
 
   let showPast = false;        // Whether to include past projects/contracts in views
+  const expandedPersons = new Set(); // Person IDs with expanded contract period rows
   let history = [];            // Undo stack (serialized snapshots)
   let future = [];             // Redo stack
   let pendingEditSnapshot = null;  // Snapshot taken when a field edit begins
@@ -78,13 +79,14 @@
       id: safeId(p.id) || uid('person'),
       firstName: String(p.firstName ?? ''),
       lastName: String(p.lastName ?? ''),
-      salaryIntervals: Array.isArray(p.salaryIntervals)
-        ? p.salaryIntervals.map(si => ({
-          id: safeId(si.id) || uid('salary'),
+      contractPeriods: (Array.isArray(p.contractPeriods) ? p.contractPeriods : Array.isArray(p.salaryIntervals) ? p.salaryIntervals : null)
+        ? (p.contractPeriods || p.salaryIntervals).map(si => ({
+          id: safeId(si.id) || uid('contract-period'),
           role: String(si.role ?? p.role ?? ''),
           start: validDateString(si.start) ? si.start : '',
           end: validDateString(si.end) ? si.end : '',
           monthlyCost: numberValue(si.monthlyCost),
+          planned: Boolean(si.planned),
           employmentPercent: (() => {
             const role = String(si.role ?? p.role ?? '');
             const raw = numberValue(si.employmentPercent);
@@ -92,9 +94,9 @@
             return Math.min(100, Math.max(0, raw || 100));
           })()
         }))
-        // Migrate legacy flat monthlyCost into a single salary period
+        // Migrate legacy flat monthlyCost into a single contract period
         : [{
-          id: uid('salary'),
+          id: uid('contract-period'),
           start: validDateString(p.contractStart) ? p.contractStart : '',
           end: validDateString(p.contractEnd) ? p.contractEnd : '',
           monthlyCost: numberValue(p.monthlyCost),
@@ -266,7 +268,7 @@
   }
 
   function isPastPerson(person) {
-    const intervals = (person?.salaryIntervals || []).filter(si => validDateString(si.end)).sort((a, b) => b.end.localeCompare(a.end));
+    const intervals = (person?.contractPeriods || []).filter(si => validDateString(si.end)).sort((a, b) => b.end.localeCompare(a.end));
     return intervals.length > 0 && intervals[0].end < todayString();
   }
 
@@ -324,8 +326,8 @@
 
   // Calculate the total personnel cost for an assignment.
   // Iterates month-by-month from assignment start to end, prorating each
-  // salary period that overlaps the current month by the FTE percentage.
-  // Beyond the last defined salary period, the latest known monthly rate
+  // contract period that overlaps the current month by the FTE percentage.
+  // Beyond the last defined contract period, the latest known monthly rate
   // is used as a "planned employment" projection.
   function assignmentCost(a) {
     const person = getPerson(a.personId);
@@ -336,7 +338,7 @@
     let cursor = monthStartFor(parseDate(effectiveStart));
     const finish = parseDate(a.end);
     let total = 0;
-    const intervals = (Array.isArray(person.salaryIntervals) ? person.salaryIntervals : [])
+    const intervals = (Array.isArray(person.contractPeriods) ? person.contractPeriods : [])
       .filter(interval => validDateString(interval.start) && validDateString(interval.end))
       .sort((x, y) => x.start.localeCompare(y.start));
     const lastInterval = intervals.length ? intervals[intervals.length - 1] : null;
@@ -349,14 +351,14 @@
       const monthEnd = formatDate(monthEndDate);
       const daysInMonth = monthEndDate.getUTCDate();
 
-      // Sum cost contributions from each overlapping salary period
+      // Sum cost contributions from each overlapping contract period
       for (const interval of intervals) {
         const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, interval.start, interval.end);
         const divisor = interval.role === 'Student assistant' ? (numberValue(interval.employmentPercent) || 9) : 100;
         total += numberValue(interval.monthlyCost) * (numberValue(a.ftePercent) / divisor) * (days / daysInMonth);
       }
 
-      // Planned employment beyond the last defined salary period uses the latest known rate.
+      // Planned employment beyond the last defined contract period uses the latest known rate.
       if (lastInterval && validDateString(plannedStart)) {
         const days = overlapDays(effectiveStart, a.end, monthStart, monthEnd, plannedStart, a.end);
         const divisor = lastInterval.role === 'Student assistant' ? (numberValue(lastInterval.employmentPercent) || 9) : 100;
@@ -369,21 +371,21 @@
   }
 
   function isStudentAssistant(person) {
-    const intervals = (person?.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end));
+    const intervals = (person?.contractPeriods || []).filter(si => validDateString(si.start) && validDateString(si.end));
     if (!intervals.length) return false;
     const latest = intervals.sort((a, b) => b.start.localeCompare(a.start))[0];
     return latest.role === 'Student assistant';
   }
 
   function personRole(person) {
-    const intervals = (person?.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end) && si.role);
+    const intervals = (person?.contractPeriods || []).filter(si => validDateString(si.start) && validDateString(si.end) && si.role);
     if (!intervals.length) return '';
     return intervals.sort((a, b) => b.start.localeCompare(a.start))[0].role;
   }
 
   function activeRole(person, assignment) {
     if (!person || !assignment) return '';
-    const intervals = (person.salaryIntervals || [])
+    const intervals = (person.contractPeriods || [])
       .filter(si => validDateString(si.start) && validDateString(si.end) && si.role)
       .filter(si => parseDate(si.start) <= parseDate(assignment.end) && parseDate(si.end) >= parseDate(assignment.start))
       .sort((a, b) => a.start.localeCompare(b.start));
@@ -391,10 +393,10 @@
   }
 
   function projectAssigned(projectId) {
-    return state.assignments.filter(a => a.projectId === projectId).reduce((sum, a) => sum + assignmentCost(a) - assignmentStudentAssistantCost(a), 0);
+    return state.assignments.filter(a => a.projectId === projectId && !getPerson(a.personId)?.hidden).reduce((sum, a) => sum + assignmentCost(a) - assignmentStudentAssistantCost(a), 0);
   }
 
-  // Like assignmentCost but only counts months where the active salary period has role "Student assistant"
+  // Like assignmentCost but only counts months where the active contract period has role "Student assistant"
   function assignmentStudentAssistantCost(a) {
     const person = getPerson(a.personId);
     if (!person || !validDateString(a.start) || !validDateString(a.end) || parseDate(a.start) > parseDate(a.end)) return 0;
@@ -404,7 +406,7 @@
     let cursor = monthStartFor(parseDate(effectiveStart));
     const finish = parseDate(a.end);
     let total = 0;
-    const intervals = (Array.isArray(person.salaryIntervals) ? person.salaryIntervals : [])
+    const intervals = (Array.isArray(person.contractPeriods) ? person.contractPeriods : [])
       .filter(interval => validDateString(interval.start) && validDateString(interval.end))
       .sort((x, y) => x.start.localeCompare(y.start));
     const lastInterval = intervals.length ? intervals[intervals.length - 1] : null;
@@ -462,16 +464,16 @@
   // ─── Validation & Warnings ───
 
   // Scan all entities for data integrity issues: date misalignments,
-  // budget overruns, FTE over/under-allocation, salary gaps, etc.
+  // budget overruns, FTE over/under-allocation, contract period gaps, etc.
   function warnings() {
     const out = [];
-    // Validate persons: contract dates, salary periods, gaps and overlaps
+    // Validate persons: contract dates, contract periods, gaps and overlaps
     for (const p of state.persons.filter(x => !x.hidden)) {
-      const personIntervals = [...(p.salaryIntervals || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
+      const personIntervals = [...(p.contractPeriods || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
       const cs = personIntervals.length ? personIntervals[0].start : '', ce = personIntervals.length ? personIntervals[personIntervals.length - 1].end : '';
       if (cs && ce && parseDate(cs) > parseDate(ce)) out.push({ level: 'error', text: `${personName(p)}: contract start is after contract end.` });
     const intervals = sortedIntervals(p);
-      for (const si of p.salaryIntervals || []) {
+      for (const si of p.contractPeriods || []) {
         if (!validDateString(si.start) || !validDateString(si.end) || parseDate(si.start) > parseDate(si.end)) out.push({ level: 'error', text: `${personName(p)}: invalid contract period.` });
         else if (validDateString(cs) && validDateString(ce) && (si.start < cs || si.end > ce)) out.push({ level: 'warning', text: `${personName(p)}: contract period ${si.start} – ${si.end} lies outside the contract.` });
       }
@@ -532,8 +534,8 @@
           events.add(addDays(clippedEnd, 1));
         }
       }
-      const validSalaryIntervals = sortedIntervals(person);
-      for (const si of validSalaryIntervals) {
+      const validContractPeriods = sortedIntervals(person);
+      for (const si of validContractPeriods) {
         events.add(si.start);
         events.add(addDays(si.end, 1));
       }
@@ -550,8 +552,8 @@
           .filter(a => a.start <= segmentStart && a.end >= segmentStart)
           .reduce((sum, a) => sum + numberValue(a.ftePercent), 0);
 
-        // Find the matching salary period for this segment and get its employment %
-        const matchingInterval = validSalaryIntervals.find(si => si.start <= segmentStart && si.end >= segmentStart);
+        // Find the matching contract period for this segment and get its employment %
+        const matchingInterval = validContractPeriods.find(si => si.start <= segmentStart && si.end >= segmentStart);
         const targetPercent = matchingInterval ? (numberValue(matchingInterval.employmentPercent) || 100) : 100;
         const isSA = matchingInterval?.role === 'Student assistant';
         const unit = isSA ? 'hrs/week' : 'FTE';
@@ -675,8 +677,24 @@
 
   // ─── Persons Tab ───
 
-  function computeSalaryGaps(p) {
-    const intervals = [...(p.salaryIntervals || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
+  // Validate a person's contract periods: reject end-before-start and overlaps.
+  // Returns null on success, or an error message string.
+  function validateContractPeriods(person) {
+    const periods = (person.contractPeriods || []).filter(si => validDateString(si.start) && validDateString(si.end));
+    for (const p of periods) {
+      if (p.end < p.start) return `Contract period "${p.start} to ${p.end}" ends before it starts.`;
+    }
+    const sorted = [...periods].sort((a, b) => a.start.localeCompare(b.start));
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i].start <= sorted[i - 1].end) {
+        return `Contract periods overlap: "${sorted[i - 1].start} to ${sorted[i - 1].end}" and "${sorted[i].start} to ${sorted[i].end}".`;
+      }
+    }
+    return null;
+  }
+
+  function computeContractPeriodGaps(p) {
+    const intervals = [...(p.contractPeriods || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
     if (!intervals.length) return [];
     const cs = intervals[0].start, ce = intervals[intervals.length - 1].end;
     const gaps = [];
@@ -701,22 +719,31 @@
       ${rows.map(p => `<tr data-person-id="${p.id}" class="${p.hidden ? 'hidden-row' : ''}">
         <td class="sticky-col">${input('text', p.lastName, fieldAttrs('person', p.id, 'lastName'))}</td>
         <td>${input('text', p.firstName, fieldAttrs('person', p.id, 'firstName'))}</td>
-        <td class="salary-summary">${(p.salaryIntervals || []).length} period${(p.salaryIntervals || []).length === 1 ? '' : 's'} <button class="add-salary" data-id="${p.id}">Add period</button></td>
+        <td class="contract-period-summary"><a class="contract-period-toggle" data-toggle-person="${p.id}" title="Expand/collapse contract periods">${(expandedPersons.has(p.id) ? '▾' : '▸')} ${(p.contractPeriods || []).length} period${(p.contractPeriods || []).length === 1 ? '' : 's'}</a></td>
         <td><textarea ${fieldAttrs('person', p.id, 'notes')}>${esc(p.notes)}</textarea></td>
         <td class="center"><input type="checkbox" ${fieldAttrs('person', p.id, 'hidden')} ${p.hidden ? 'checked' : ''}></td>
         <td><button class="danger delete-person" data-id="${p.id}">Delete</button></td>
-      </tr><tr class="salary-detail-row ${p.hidden ? 'hidden-row' : ''}"><td colspan="7">${computeSalaryGaps(p).map(g => `<div class="salary-gap-warning">⚠ There is a gap from ${g.from} to ${g.to}. Is this intentional?</div>`).join('')}${salaryIntervalsEditor(p)}</td></tr>`).join('')}
+      </tr><tr class="contract-period-detail-row ${expandedPersons.has(p.id) ? '' : 'folded'} ${p.hidden ? 'hidden-row' : ''}" data-person-detail="${p.id}"><td colspan="7">${computeContractPeriodGaps(p).map(g => `<div class="contract-period-gap-warning">⚠ There is a gap from ${g.from} to ${g.to}. Is this intentional?</div>`).join('')}${contractPeriodsEditor(p)}</td></tr>`).join('')}
       </tbody></table></div>`;
     $('#addPersonBtn').onclick = () => addPerson();
     $$('.delete-person', $('#tab-persons')).forEach(b => b.onclick = () => deletePerson(b.dataset.id));
-    $$('.add-salary', $('#tab-persons')).forEach(b => b.onclick = () => addSalaryInterval(b.dataset.id));
-    $$('.delete-salary', $('#tab-persons')).forEach(b => b.onclick = () => deleteSalaryInterval(b.dataset.personId, b.dataset.salaryId));
+    $$('.add-contract-period', $('#tab-persons')).forEach(b => b.onclick = () => addContractPeriod(b.dataset.id));
+    $$('.delete-contract-period', $('#tab-persons')).forEach(b => b.onclick = () => deleteContractPeriod(b.dataset.personId, b.dataset.contractPeriodId));
+    $$('.contract-period-toggle', $('#tab-persons')).forEach(el => {
+      el.onclick = (e) => {
+        e.preventDefault();
+        const pid = el.dataset.togglePerson;
+        const detail = $(`[data-person-detail="${pid}"]`);
+        if (expandedPersons.has(pid)) { expandedPersons.delete(pid); detail?.classList.add('folded'); el.innerHTML = el.innerHTML.replace('▾', '▸'); }
+        else { expandedPersons.add(pid); detail?.classList.remove('folded'); el.innerHTML = el.innerHTML.replace('▸', '▾'); }
+      };
+    });
     $$('th.sortable', $('#tab-persons')).forEach(th => th.onclick = () => sortPersons(th.dataset.sort));
     bindEditorFields($('#tab-persons'));
     // Update computed monthly cost cells when cost or employment % changes
-    $$('[data-salary-cost]').forEach(td => {
-      const siId = td.dataset.salaryCost;
-      const row = td.closest(`[data-salary-id="${siId}"]`);
+    $$('[data-contract-period-cost]').forEach(td => {
+      const siId = td.dataset.contractPeriodCost;
+      const row = td.closest(`[data-contract-period-id="${siId}"]`);
       if (!row) return;
       const costInput = row.querySelector('[data-field="monthlyCost"]');
       const pctInput = row.querySelector('[data-field="employmentPercent"]');
@@ -730,12 +757,12 @@
       pctInput?.addEventListener('input', update);
       roleSelect?.addEventListener('change', () => {
         update();
-        // Update salary table headers based on whether any interval is now SA
-        const editor = row.closest('.salary-editor');
+        // Update contract period table headers based on whether any interval is now SA
+        const editor = row.closest('.contract-period-editor');
         if (!editor) return;
         const anySA = [...editor.querySelectorAll('[data-field="role"]')].some(s => s.value === 'Student assistant');
-        const costH = editor.querySelector('[data-salary-header="cost"]');
-        const empH = editor.querySelector('[data-salary-header="emp"]');
+        const costH = editor.querySelector('[data-contract-period-header="cost"]');
+        const empH = editor.querySelector('[data-contract-period-header="emp"]');
         if (costH) costH.textContent = anySA ? 'Monthly employer cost' : 'Monthly employer cost 100%';
         if (empH) empH.textContent = 'Employment % or hrs/week';
         // Also toggle the blur-clamping class for the employment field
@@ -757,26 +784,26 @@
     bindTablePan($('#tab-persons'));
   }
 
-  // Render the expandable salary period sub-table for a person
-  function salaryIntervalsEditor(person) {
-    const intervals = [...(person.salaryIntervals || [])].sort((a, b) => String(a.start).localeCompare(String(b.start)));
-    if (!intervals.length) return '<div class="salary-empty">No contract periods defined.</div>';
+  // Render the expandable contract period sub-table for a person
+  function contractPeriodsEditor(person) {
+    const intervals = [...(person.contractPeriods || [])].sort((a, b) => String(a.start).localeCompare(String(b.start)));
+    if (!intervals.length) return '<div class="contract-period-empty">No contract periods defined.</div>';
     const roleOptions = ['Professor','Postdoc','PhD student','Student assistant','Other'];
     const isSA = intervals.some(si => si.role === 'Student assistant');
     const costHeader = isSA ? 'Monthly employer cost' : 'Monthly employer cost 100%';
     const empHeader = 'Employment % or hrs/week';
-    return `<div class="salary-editor"><table><thead><tr><th>Role</th><th>Period start</th><th>Period end</th><th data-salary-header="cost">${costHeader}</th><th data-salary-header="emp">${empHeader}</th><th>Monthly cost</th><th></th></tr></thead><tbody>${intervals.map(si => {
+    return `<div class="contract-period-editor"><table><thead><tr><th>Role</th><th>Period start</th><th>Period end</th><th data-contract-period-header="cost">${costHeader}</th><th data-contract-period-header="emp">${empHeader}</th><th>Monthly cost</th><th>Planned</th><th></th></tr></thead><tbody>${intervals.map(si => {
       const isSI_SA = si.role === 'Student assistant';
       const empVal = numberValue(si.employmentPercent) || (isSI_SA ? 9 : 100);
       const monthlyActual = isSI_SA ? numberValue(si.monthlyCost) : numberValue(si.monthlyCost) * empVal / 100;
-      const empInput = isSI_SA ? input('text', si.employmentPercent ?? 9, salaryFieldAttrs(person.id, si.id, 'employmentPercent')) : input('percent', si.employmentPercent ?? 100, salaryFieldAttrs(person.id, si.id, 'employmentPercent'));
-      const roleSelect = `<select ${salaryFieldAttrs(person.id, si.id, 'role')}><option value="">—</option>${roleOptions.map(r => `<option value="${r}"${si.role === r ? ' selected' : ''}>${r}</option>`).join('')}</select>`;
-      return `<tr data-salary-id="${si.id}"><td>${roleSelect}</td><td>${input('date', si.start, salaryFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, salaryFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, salaryFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td>${empInput}</td><td class="computed money" data-salary-cost="${si.id}">${formatMoney(monthlyActual)}</td><td><button class="danger delete-salary" data-person-id="${person.id}" data-salary-id="${si.id}">Delete</button></td></tr>`;
-    }).join('')}</tbody></table></div>`;
+      const empInput = isSI_SA ? input('text', si.employmentPercent ?? 9, contractPeriodFieldAttrs(person.id, si.id, 'employmentPercent')) : input('percent', si.employmentPercent ?? 100, contractPeriodFieldAttrs(person.id, si.id, 'employmentPercent'));
+      const roleSelect = `<select ${contractPeriodFieldAttrs(person.id, si.id, 'role')}><option value="">—</option>${roleOptions.map(r => `<option value="${r}"${si.role === r ? ' selected' : ''}>${r}</option>`).join('')}</select>`;
+      return `<tr data-contract-period-id="${si.id}"><td>${roleSelect}</td><td>${input('date', si.start, contractPeriodFieldAttrs(person.id, si.id, 'start'))}</td><td>${input('date', si.end, contractPeriodFieldAttrs(person.id, si.id, 'end'))}</td><td>${input('money', si.monthlyCost, contractPeriodFieldAttrs(person.id, si.id, 'monthlyCost'))}</td><td>${empInput}</td><td class="computed money" data-contract-period-cost="${si.id}">${formatMoney(monthlyActual)}</td><td class="center"><input type="checkbox" ${contractPeriodFieldAttrs(person.id, si.id, 'planned')} ${si.planned ? 'checked' : ''}></td><td><button class="danger delete-contract-period" data-person-id="${person.id}" data-contract-period-id="${si.id}">Delete</button></td></tr>`;
+    }).join('')}</tbody></table><button class="add-contract-period" data-id="${person.id}">Add contract period</button></div>`;
   }
 
-  function salaryFieldAttrs(personId, salaryId, field) {
-    return `data-entity="salary" data-person-id="${personId}" data-id="${salaryId}" data-field="${field}"`;
+  function contractPeriodFieldAttrs(personId, contractPeriodId, field) {
+    return `data-entity="contract-period" data-person-id="${personId}" data-id="${contractPeriodId}" data-field="${field}"`;
   }
 
   function personHeader(key, label, sticky) {
@@ -1085,17 +1112,24 @@
         if (document.activeElement !== el) beginFieldEdit(el);
       });
       if (el.classList.contains('money-input')) {
-        el.addEventListener('blur', () => { el.value = formatNumber(numberValue(el.value), 2); endFieldEdit(el); });
+        el.addEventListener('blur', () => { el.value = formatNumber(numberValue(el.value), 2); updateModelFromElement(el, false); endFieldEdit(el); });
       } else if (el.classList.contains('percent-input')) {
         el.addEventListener('blur', () => {
-          const isSA = el.dataset.entity === 'salary' && getPerson(el.dataset.personId)?.salaryIntervals?.find(x => x.id === el.dataset.id)?.role === 'Student assistant';
+          const isSA = el.dataset.entity === 'contract-period' && getPerson(el.dataset.personId)?.contractPeriods?.find(x => x.id === el.dataset.id)?.role === 'Student assistant';
           el.value = isSA ? Math.max(0, numberValue(el.value)) : Math.min(100, Math.max(0, numberValue(el.value)));
+          updateModelFromElement(el, false);
           endFieldEdit(el);
         });
       } else {
         el.addEventListener('blur', () => endFieldEdit(el));
       }
-      el.addEventListener('input', () => { recordFieldEdit(el); updateModelFromElement(el, el.type === 'date'); });
+      el.addEventListener('input', () => {
+        recordFieldEdit(el);
+        // Don't update the model during typing for numeric fields — only on blur/change
+        if (!el.classList.contains('money-input') && !el.classList.contains('percent-input')) {
+          updateModelFromElement(el, el.type === 'date');
+        }
+      });
       el.addEventListener('change', () => { recordFieldEdit(el); updateModelFromElement(el, true); });
     });
   }
@@ -1103,8 +1137,8 @@
   // Write the DOM element's current value back into the state model
   function updateModelFromElement(el, refreshDerived) {
     let obj;
-    if (el.dataset.entity === 'salary') {
-      obj = getPerson(el.dataset.personId)?.salaryIntervals?.find(x => x.id === el.dataset.id);
+    if (el.dataset.entity === 'contract-period') {
+      obj = getPerson(el.dataset.personId)?.contractPeriods?.find(x => x.id === el.dataset.id);
     } else {
       const collection = ({ person: 'persons', project: 'projects', account: 'accounts', assignment: 'assignments', expense: 'expenses' })[el.dataset.entity];
       obj = state[collection]?.find(x => x.id === el.dataset.id);
@@ -1114,18 +1148,40 @@
     const numeric = ['monthlyCost', 'personnelBudget', 'travelBudget', 'materialBudget', 'ftePercent', 'amount', 'employmentPercent'].includes(field);
     let val = el.type === 'checkbox' ? el.checked : (numeric ? numberValue(el.value) : el.value);
     if (field === 'employmentPercent' && numeric) {
-      const isSA = el.dataset.entity === 'salary' && obj.role === 'Student assistant';
+      const isSA = el.dataset.entity === 'contract-period' && obj.role === 'Student assistant';
       val = isSA ? Math.max(0, val) : Math.min(100, Math.max(0, val));
     }
+    const oldVal = obj[field];
     obj[field] = val;
     markDirty();
-    if (el.dataset.entity === 'salary' && (field === 'start' || field === 'end')) {
+    if (el.dataset.entity === 'contract-period' && (field === 'start' || field === 'end' || field === 'employmentPercent')) {
+      const personId = el.dataset.personId;
+      const person = getPerson(personId);
+      if (person) {
+        const err = validateContractPeriods(person);
+        if (err) {
+          obj[field] = oldVal;
+          renderPersons();
+          alert(err);
+          return;
+        }
+        const toSplit = state.assignments.filter(a => a.personId === personId && validDateString(a.start) && validDateString(a.end));
+        for (const a of toSplit) splitAssignmentAtPeriods(a);
+        // Re-merge consecutive same-FTE assignments that may now be adjacent
+        const projects = [...new Set(toSplit.map(a => a.projectId))];
+        for (const pid of projects) mergeConsecutiveAssignments(personId, pid);
+        if (refreshDerived) { renderPersons(); renderTimeline(); return; }
+      }
+    }
+    if (el.dataset.entity === 'contract-period' && field === 'planned') {
       const personId = el.dataset.personId;
       const person = getPerson(personId);
       if (person) {
         const toSplit = state.assignments.filter(a => a.personId === personId && validDateString(a.start) && validDateString(a.end));
         for (const a of toSplit) splitAssignmentAtPeriods(a);
-        if (refreshDerived) { renderPersons(); return; }
+        const projects = [...new Set(toSplit.map(a => a.projectId))];
+        for (const pid of projects) mergeConsecutiveAssignments(personId, pid);
+        if (refreshDerived) { renderPersons(); renderTimeline(); return; }
       }
     }
     if (field === 'hidden' && refreshDerived) { renderAll(); return; }
@@ -1136,34 +1192,104 @@
 
   function addPerson() {
     snapshot();
-    const p = { id: uid('person'), firstName: '', lastName: '', salaryIntervals: [], notes: '', hidden: false };
+    const p = { id: uid('person'), firstName: '', lastName: '', contractPeriods: [], notes: '', hidden: false };
     state.persons.push(p); renderPersons(); renderDerived(); focusFirst(`[data-person-id="${p.id}"]`);
   }
 
-  // Auto-populate the start date of a new salary period based on the previous one
-  function addSalaryInterval(personId) {
+  // Auto-populate the start date of a new contract period based on the previous one
+  function addContractPeriod(personId) {
     const person = getPerson(personId); if (!person) return;
     snapshot();
-    const validIntervals = (person.salaryIntervals || []).filter(si => validDateString(si.end)).sort((a, b) => a.end.localeCompare(b.end));
+    expandedPersons.add(personId);
+    const validIntervals = (person.contractPeriods || []).filter(si => validDateString(si.end)).sort((a, b) => a.end.localeCompare(b.end));
     const previous = validIntervals.length ? validIntervals[validIntervals.length - 1] : null;
-    const lastRole = (person.salaryIntervals || []).length ? (person.salaryIntervals[person.salaryIntervals.length - 1].role || '') : '';
+    const lastRole = (person.contractPeriods || []).length ? (person.contractPeriods[person.contractPeriods.length - 1].role || '') : '';
     const isSA = lastRole === 'Student assistant';
-    const personSi = (person.salaryIntervals || []).filter(si => validDateString(si.start)).sort((a, b) => a.start.localeCompare(b.start));
-    const interval = { id: uid('salary'), role: lastRole, start: previous ? addDays(previous.end, 1) : (personSi.length ? personSi[0].start : ''), end: personSi.length ? personSi[personSi.length - 1].end : '', monthlyCost: 0, employmentPercent: isSA ? 9 : 100 };
-    person.salaryIntervals.push(interval);
+    const personSi = (person.contractPeriods || []).filter(si => validDateString(si.start)).sort((a, b) => a.start.localeCompare(b.start));
+    const interval = { id: uid('contract-period'), role: lastRole, start: previous ? addDays(previous.end, 1) : (personSi.length ? personSi[0].start : ''), end: personSi.length ? personSi[personSi.length - 1].end : '', monthlyCost: 0, employmentPercent: isSA ? 9 : 100, planned: false };
+    person.contractPeriods.push(interval);
     renderPersons(); renderDerived();
-    requestAnimationFrame(() => $(`[data-salary-id="${interval.id}"] input`)?.focus());
+    requestAnimationFrame(() => $(`[data-contract-period-id="${interval.id}"] input`)?.focus());
   }
 
-  function deleteSalaryInterval(personId, salaryId) {
+  function deleteContractPeriod(personId, contractPeriodId) {
     const person = getPerson(personId); if (!person) return;
     snapshot();
-    person.salaryIntervals = (person.salaryIntervals || []).filter(si => si.id !== salaryId);
+    person.contractPeriods = (person.contractPeriods || []).filter(si => si.id !== contractPeriodId);
     // Re-split assignments so parts that no longer fall within any contract
     // period are marked as planned
     const toSplit = state.assignments.filter(a => a.personId === personId && validDateString(a.start) && validDateString(a.end));
     for (const a of toSplit) splitAssignmentAtPeriods(a);
     renderPersons(); renderTimeline(); renderDerived();
+  }
+
+  // If the person has no contract periods, add a planned one covering
+  // [startDate, endDate].  If the person has periods but `endDate` extends
+  // beyond the last one, add a planned extension from the day after the last
+  // period's end through `endDate`, copying role/salary/FTE from the last period.
+  // Returns true if a period was added.
+  function ensurePlannedContractExtension(person, startDate, endDate) {
+    if (!person || !validDateString(startDate) || !validDateString(endDate)) return false;
+    if (startDate > endDate) return false;
+    const intervals = sortedIntervals(person);
+    if (!intervals.length) {
+      person.contractPeriods.push({
+        id: uid('contract-period'),
+        role: '',
+        start: startDate,
+        end: endDate,
+        monthlyCost: 0,
+        employmentPercent: 100,
+        planned: true
+      });
+      return true;
+    }
+    let added = false;
+    let cur = startDate;
+    for (const si of intervals) {
+      if (si.start > cur) {
+        const gapEnd = addDays(si.start, -1);
+        const actualEnd = gapEnd < endDate ? gapEnd : endDate;
+        if (cur <= actualEnd) {
+          if (si.planned) {
+            si.start = cur;
+          } else {
+            const prev = [...intervals].reverse().find(x => x.end < cur);
+            const tmpl = prev || si;
+            person.contractPeriods.push({
+              id: uid('contract-period'),
+              role: tmpl.role || '',
+              start: cur,
+              end: actualEnd,
+              monthlyCost: tmpl.monthlyCost || 0,
+              employmentPercent: tmpl.employmentPercent || 100,
+              planned: true
+            });
+          }
+          added = true;
+        }
+      }
+      if (si.end >= cur) cur = addDays(si.end, 1);
+      if (cur > endDate) break;
+    }
+    if (cur <= endDate) {
+      const last = intervals.at(-1);
+      if (last.planned) {
+        last.end = endDate;
+      } else {
+        person.contractPeriods.push({
+          id: uid('contract-period'),
+          role: last.role || '',
+          start: cur,
+          end: endDate,
+          monthlyCost: last.monthlyCost,
+          employmentPercent: last.employmentPercent,
+          planned: true
+        });
+      }
+      added = true;
+    }
+    return added;
   }
 
   function addProject() {
@@ -1178,24 +1304,27 @@
     renderDerived(); return a;
   }
 
-  // Split an assignment at gaps between contract periods, marking gap pieces as planned
+  // Split an assignment at gaps between contract periods, marking gap pieces as
+  // planned.  Also splits at boundaries between contract periods with different
+  // FTE percentages, giving each segment the FTE of its contract period.
   function splitAssignmentAtPeriods(a) {
     const person = getPerson(a.personId);
     if (!person || !validDateString(a.start) || !validDateString(a.end)) return;
-    const intervals = sortedIntervals(person);
-    if (!intervals.length) return;
+    const intervals = sortedIntervals(person).filter(si => !si.planned);
+    if (!intervals.length) { a.planned = true; return; }
 
-    // Clip each interval to the assignment range, then merge consecutive/overlapping
+    // Clip each interval to the assignment range, preserving FTE
     const clipped = intervals
-      .map(si => ({ start: si.start > a.start ? si.start : a.start, end: si.end < a.end ? si.end : a.end }))
+      .map(si => ({ start: si.start > a.start ? si.start : a.start, end: si.end < a.end ? si.end : a.end, ftePercent: numberValue(si.employmentPercent) || a.ftePercent }))
       .filter(r => r.start <= r.end)
       .sort((x, y) => x.start.localeCompare(y.start));
     if (!clipped.length) { a.planned = true; return; }
 
+    // Merge consecutive/overlapping intervals only when they share the same FTE
     const merged = [clipped[0]];
     for (let i = 1; i < clipped.length; i++) {
       const last = merged[merged.length - 1];
-      if (clipped[i].start <= addDays(last.end, 1)) {
+      if (clipped[i].start <= addDays(last.end, 1) && clipped[i].ftePercent === last.ftePercent) {
         if (clipped[i].end > last.end) last.end = clipped[i].end;
       } else {
         merged.push(clipped[i]);
@@ -1206,24 +1335,25 @@
     const segments = [];
     let cur = a.start;
     for (const c of merged) {
-      if (cur < c.start) segments.push({ start: cur, end: addDays(c.start, -1), planned: true });
-      segments.push({ start: c.start, end: c.end, planned: false });
+      if (cur < c.start) segments.push({ start: cur, end: addDays(c.start, -1), planned: true, ftePercent: a.ftePercent });
+      segments.push({ start: c.start, end: c.end, planned: false, ftePercent: c.ftePercent });
       cur = addDays(c.end, 1);
     }
-    if (cur <= a.end) segments.push({ start: cur, end: a.end, planned: true });
+    if (cur <= a.end) segments.push({ start: cur, end: a.end, planned: true, ftePercent: a.ftePercent });
 
     if (segments.length < 2) { a.planned = false; return; }
 
     state.assignments = state.assignments.filter(x => x.id !== a.id);
     for (const seg of segments) {
-      state.assignments.push({ id: uid('assignment'), personId: a.personId, projectId: a.projectId, start: seg.start, end: seg.end, ftePercent: a.ftePercent, notes: a.notes, planned: seg.planned });
+      state.assignments.push({ id: uid('assignment'), personId: a.personId, projectId: a.projectId, start: seg.start, end: seg.end, ftePercent: seg.ftePercent, notes: a.notes, planned: seg.planned });
     }
   }
 
   // Merge consecutive assignments for the same person+project that share the
-  // same planned flag (both in-contract or both planned), collapsing gaps of
-  // exactly one day that arise from period-boundary splits.
+  // same planned flag, FTE percent, and role — collapsing gaps of exactly one
+  // day that arise from period-boundary splits.
   function mergeConsecutiveAssignments(personId, projectId) {
+    const person = getPerson(personId);
     const same = state.assignments
       .filter(a => a.personId === personId && a.projectId === projectId && validDateString(a.start) && validDateString(a.end))
       .sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end));
@@ -1234,7 +1364,8 @@
       for (let i = group.length - 2; i >= 0; i--) {
         const curr = group[i];
         const next = group[i + 1];
-        if (addDays(curr.end, 1) === next.start) {
+        const sameRole = activeRole(person, curr) === activeRole(person, next);
+        if (addDays(curr.end, 1) === next.start && curr.ftePercent === next.ftePercent && sameRole) {
           curr.end = next.end;
           state.assignments = state.assignments.filter(a => a.id !== next.id);
           group.splice(i + 1, 1);
@@ -1244,9 +1375,10 @@
   }
 
   // Merge overlapping or consecutive assignments for the same person+project
-  // that share the same planned flag. Unlike mergeConsecutiveAssignments, this
-  // also absorbs assignments whose date ranges overlap (not just touch).
+  // that share the same planned flag, FTE percent, and role. Also absorbs
+  // assignments whose date ranges overlap (not just touch).
   function mergeOverlappingAssignments(personId, projectId) {
+    const person = getPerson(personId);
     const same = state.assignments
       .filter(a => a.personId === personId && a.projectId === projectId && validDateString(a.start) && validDateString(a.end))
       .sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end));
@@ -1260,8 +1392,9 @@
         for (let i = 0; i < group.length - 1; i++) {
           const curr = group[i];
           const next = group[i + 1];
-          // Overlap or exactly consecutive
-          if (curr.end >= addDays(next.start, -1)) {
+          const sameRole = activeRole(person, curr) === activeRole(person, next);
+          // Overlap or exactly consecutive, same FTE and role
+          if (curr.end >= addDays(next.start, -1) && curr.ftePercent === next.ftePercent && sameRole) {
             if (next.end > curr.end) curr.end = next.end;
             state.assignments = state.assignments.filter(a => a.id !== next.id);
             group.splice(i + 1, 1);
@@ -1480,12 +1613,12 @@
   }
 
   // Compute the pixel height for a timeline row based on the number of lanes
-  function timelineRowHeight(assignments, minimumHeight, includeSalaryBand = false) {
+  function timelineRowHeight(assignments, minimumHeight, includeContractPeriodBand = false) {
     const { laneCount } = packAssignmentLanes(assignments);
     const contentHeight = TIMELINE_BAR_TOP +
       laneCount * TIMELINE_LANE_HEIGHT +
       TIMELINE_BOTTOM_PADDING +
-      (includeSalaryBand ? TIMELINE_SALARY_HEIGHT : 0);
+      (includeContractPeriodBand ? TIMELINE_CONTRACT_PERIOD_HEIGHT : 0);
     return Math.max(minimumHeight, contentHeight);
   }
 
@@ -1618,7 +1751,7 @@
   }
 
   // Render a single timeline row: the background grid, assignment bars, and
-  // optional salary period bands (for person-mode rows)
+  // optional contract period bands (for person-mode rows)
   function timelineRow(mode, entityId, start, end, assignments, min, months, width, person = null) {
     const now = new Date();
     const grid = `<div class="timeline-row-grid">${months.map(month => {
@@ -1646,17 +1779,17 @@
     const minimumHeight = mode === 'project'
       ? PROJECT_TIMELINE_MIN_HEIGHT
       : PERSON_TIMELINE_MIN_HEIGHT;
-    const includeSalaryBand = mode === 'person';
-    const rowHeight = timelineRowHeight(assignments, minimumHeight, includeSalaryBand);
+    const includeContractPeriodBand = mode === 'person';
+    const rowHeight = timelineRowHeight(assignments, minimumHeight, includeContractPeriodBand);
 
     const bars = packed.map(({ assignment, lane }) =>
       assignmentBar(assignment, mode, min, lane)
     ).join('');
 
-    // Salary period bands rendered below the assignment bars in person mode
-    const salaryTop = TIMELINE_BAR_TOP + laneCount * TIMELINE_LANE_HEIGHT + 2;
-    const salaryBands = includeSalaryBand && person
-      ? [...(person.salaryIntervals || [])]
+    // Contract period bands rendered below the assignment bars in person mode
+    const contractPeriodTop = TIMELINE_BAR_TOP + laneCount * TIMELINE_LANE_HEIGHT + 2;
+    const contractPeriodBands = includeContractPeriodBand && person
+      ? [...(person.contractPeriods || [])]
           .filter(si => validDateString(si.start) && validDateString(si.end))
           .sort((a, b) => a.start.localeCompare(b.start))
           .map((si, index) => {
@@ -1668,8 +1801,8 @@
             const empPct = numberValue(si.employmentPercent) || (isSI_SA ? 9 : 100);
             const actualCost = isSI_SA ? numberValue(si.monthlyCost) : numberValue(si.monthlyCost) * empPct / 100;
             const empUnit = isSI_SA ? ' hrs/wk' : '%';
-            return `<div class="salary-interval-band salary-shade-${shade}"
-              style="left:${left}px;width:${bandWidth}px;top:${salaryTop}px"
+            return `<div class="contract-period-band contract-period-shade-${shade}"
+              style="left:${left}px;width:${bandWidth}px;top:${contractPeriodTop}px"
               title="${si.start} – ${si.end}: ${formatMoney(actualCost)} / month (${empPct}${empUnit})">
               <span>${formatMoney(actualCost)}</span>
             </div>`;
@@ -1682,7 +1815,7 @@
 
     return `<div class="timeline-row" ${dropAttr}
       style="width:${width}px;height:${rowHeight}px">
-      ${grid}${activeBand}${bars}${salaryBands}
+      ${grid}${activeBand}${bars}${contractPeriodBands}
     </div>`;
   }
 
@@ -1741,7 +1874,7 @@
       ? `${project._isAccount ? 'Accounts' : (project.type ? `${project.type}: ` : '')}${project.name || '(missing project)'}`
       : '(missing project)';
     const role = activeRole(person, a);
-    const isSA = (person.salaryIntervals || []).some(si =>
+    const isSA = (person.contractPeriods || []).some(si =>
       si.role === 'Student assistant' &&
       validDateString(si.start) && validDateString(si.end) &&
       parseDate(si.start) <= parseDate(a.end) && parseDate(si.end) >= parseDate(a.start)
@@ -1763,26 +1896,28 @@
 
     const barColor = colorFor(key);
     const labelBg = `style="background:${barColor}"`;
-    const studentClass = isSA ? ' assignment-bar-student' : '';
     const plannedClass = a.planned ? ' planned' : '';
+    const studentBadge = isSA
+      ? `<span class="assignment-student-badge" title="Student assistant">student</span>`
+      : '';
 
     // Person-mode bars are read-only (no resize handles)
     if (mode === 'person') {
-      return `<div class="assignment-bar assignment-bar-readonly${studentClass}${plannedClass}"
+      return `<div class="assignment-bar assignment-bar-readonly${plannedClass}"
         style="left:${left}px;width:${width}px;top:${top}px;background:${barColor}"
         title="${esc(tooltip)}">
-        <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${plannedBadge}${planningBadge}${plannedOverlay}${plannedProject}
+        <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${studentBadge}${plannedBadge}${planningBadge}${plannedOverlay}${plannedProject}
       </div>`;
     }
 
     // Project-mode bars have left/right resize handles
-    return `<div class="assignment-bar assignment-bar-resize-only${studentClass}${plannedClass}"
+    return `<div class="assignment-bar assignment-bar-resize-only${plannedClass}"
       data-assignment-bar="${a.id}"
       data-mode="${mode}"
       style="left:${left}px;width:${width}px;top:${top}px;background:${barColor}"
       title="${esc(tooltip)}">
       <span class="assignment-handle left" data-edge="left"></span>
-      <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${plannedBadge}${planningBadge}${plannedOverlay}${plannedProject}
+      <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${studentBadge}${plannedBadge}${planningBadge}${plannedOverlay}${plannedProject}
       <span class="assignment-handle right" data-edge="right"></span>
     </div>`;
   }
@@ -1813,12 +1948,12 @@
 
   const SNAP_THRESHOLD = 8; // pixels
 
-  // Get valid, sorted salary intervals for a person
+  // Get valid, sorted contract periods for a person
   function sortedIntervals(person) {
-    return (person?.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
+    return (person?.contractPeriods || []).filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
   }
 
-  // Find the salary interval containing dateStr, or the nearest one
+  // Find the contract period containing dateStr, or the nearest one
   function findIntervalForDate(person, dateStr) {
     const si = sortedIntervals(person);
     if (!si.length) return null;
@@ -1845,7 +1980,7 @@
       const x = edge === 'left' ? dateToX(dateStr, min) : dateToX(addDays(dateStr, 1), min);
       points.push({ x, date: dateStr });
     };
-    if (person) { (person.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end)).forEach(si => { add(si.start); add(si.end); }); }
+    if (person) { (person.contractPeriods || []).filter(si => validDateString(si.start) && validDateString(si.end)).forEach(si => { add(si.start); add(si.end); }); }
     if (project) { add(project.start); add(project.end); }
     return points;
   }
@@ -2072,7 +2207,7 @@
       };
 
       const clearPreview = () => {
-        currentRow?.querySelectorAll('.contract-preview, .valid-drop-preview').forEach(el => el.remove());
+        currentRow?.querySelectorAll('.contract-preview, .contract-preview-planned, .valid-drop-preview').forEach(el => el.remove());
       };
 
       // Show contract period highlight strips during resize
@@ -2084,7 +2219,7 @@
           const left = dateToX(si.start, min);
           const right = dateToX(addDays(si.end, 1), min);
           const strip = document.createElement('div');
-          strip.className = 'contract-preview';
+          strip.className = si.planned ? 'contract-preview-planned' : 'contract-preview';
           strip.style.left = `${left}px`;
           strip.style.width = `${Math.max(1, right - left)}px`;
           currentRow.appendChild(strip);
@@ -2182,7 +2317,7 @@
         bar.removeEventListener('pointercancel', cancel);
       };
 
-      const finish = ev => {
+      const finish = async ev => {
         if (isDeleteDrag) {
           if (!deleteDragActivated) {
             cleanup();
@@ -2194,7 +2329,17 @@
           cleanup();
           const overOriginalRow = !isPointerOutsideRow(ev);
           if (!overOriginalRow) {
+            const delPerson = getPerson(assignment.personId);
+            const wasPlanned = assignment.planned;
             state.assignments = state.assignments.filter(a => a.id !== assignment.id);
+            if (wasPlanned && delPerson) {
+              const remaining = state.assignments.filter(a => a.personId === delPerson.id && validDateString(a.start) && validDateString(a.end));
+              const orphaned = (delPerson.contractPeriods || []).filter(cp => cp.planned && validDateString(cp.start) && validDateString(cp.end) && !remaining.some(a => a.start <= cp.end && a.end >= cp.start));
+              if (orphaned.length && await confirmAsync(`This was a planned assignment. Delete ${orphaned.length === 1 ? 'the' : 'the ' + orphaned.length} corresponding planned contract period${orphaned.length === 1 ? '' : 's'}?`)) {
+                const orphanIds = new Set(orphaned.map(cp => cp.id));
+                delPerson.contractPeriods = delPerson.contractPeriods.filter(cp => !orphanIds.has(cp.id));
+              }
+            }
             markDirty();
           } else {
             history.pop();
@@ -2211,7 +2356,18 @@
         } else {
           splitAssignmentAtPeriods(assignment);
           mergeOverlappingAssignments(assignment.personId, assignment.projectId);
+          const person = getPerson(assignment.personId);
+          let periodAdded = ensurePlannedContractExtension(person, assignment.start, assignment.end);
+          if (periodAdded) {
+            const toSplit = state.assignments.filter(a => a.personId === assignment.personId && validDateString(a.start) && validDateString(a.end));
+            for (const a of toSplit) splitAssignmentAtPeriods(a);
+            const projects = [...new Set(toSplit.map(a => a.projectId))];
+            for (const pid of projects) mergeConsecutiveAssignments(assignment.personId, pid);
+          }
           markDirty();
+          if (periodAdded) {
+            alertAsync('A planned contract period was auto-added. Please review it in the Personnel editor.');
+          }
         }
         renderAll();
       };
@@ -2240,7 +2396,7 @@
     let dragPreviewTip = null;
 
     const clearContractPreview = () => {
-      $$('.contract-preview, .valid-drop-preview').forEach(el => el.remove());
+      $$('.contract-preview, .contract-preview-planned, .valid-drop-preview').forEach(el => el.remove());
       $$('.timeline-row.drop-hover').forEach(row => row.classList.remove('drop-hover'));
       dragPreviewTip?.remove();
       dragPreviewTip = null;
@@ -2269,7 +2425,7 @@
           const left = dateToX(si.start, min);
           const right = dateToX(addDays(si.end, 1), min);
           const strip = document.createElement('div');
-          strip.className = 'contract-preview';
+          strip.className = si.planned ? 'contract-preview-planned' : 'contract-preview';
           strip.style.left = `${left}px`;
           strip.style.width = `${Math.max(1, right - left)}px`;
           row.appendChild(strip);
@@ -2375,17 +2531,29 @@
         scrollMemory.project = $('#projectTimeline')?.scrollLeft || 0;
         scrollMemory.person = $('#personTimeline')?.scrollLeft || 0;
         clearContractPreview();
+        let periodAdded = false;
         if (overlapping) {
           if (start < overlapping.start) overlapping.start = start;
           if (end > overlapping.end) overlapping.end = end;
           mergeOverlappingAssignments(personId, projectId);
+          periodAdded = ensurePlannedContractExtension(person, overlapping.start, overlapping.end);
         } else {
           const latestSI = personIntervals.at(-1);
           const defaultFte = latestSI?.role === 'Student assistant' ? (numberValue(latestSI.employmentPercent) || 9) : 100;
           addAssignment({ personId, projectId, start, end, ftePercent: defaultFte });
           mergeConsecutiveAssignments(personId, projectId);
+          periodAdded = ensurePlannedContractExtension(person, start, end);
+        }
+        if (periodAdded) {
+          const toSplit = state.assignments.filter(a => a.personId === personId && validDateString(a.start) && validDateString(a.end));
+          for (const a of toSplit) splitAssignmentAtPeriods(a);
+          const projects = [...new Set(toSplit.map(a => a.projectId))];
+          for (const pid of projects) mergeConsecutiveAssignments(personId, pid);
         }
         markDirty();
+        if (periodAdded) {
+          alertAsync('A planned contract period was auto-added. Please review it in the Personnel editor.');
+        }
         renderDerived();
       });
     });
@@ -2405,6 +2573,46 @@
   }
 
   // ─── Dirty State & File Status ───
+
+  function confirmAsync(message, { yesLabel = 'Yes', noLabel = 'No' } = {}) {
+    return new Promise(resolve => {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'confirm-modal-backdrop';
+      backdrop.innerHTML = `
+        <div class="confirm-modal-card" role="dialog" aria-modal="true">
+          <div class="confirm-modal-body">${esc(message)}</div>
+          <div class="confirm-modal-footer">
+            <button class="confirm-yes" type="button">${yesLabel}</button>
+            <button class="confirm-no" type="button">${noLabel}</button>
+          </div>
+        </div>`;
+      document.body.appendChild(backdrop);
+      const cleanup = (result) => { backdrop.remove(); resolve(result); };
+      backdrop.querySelector('.confirm-yes').onclick = () => cleanup(true);
+      backdrop.querySelector('.confirm-no').onclick = () => cleanup(false);
+      backdrop.addEventListener('keydown', e => { if (e.key === 'Escape') cleanup(false); });
+      backdrop.querySelector('.confirm-no').focus();
+    });
+  }
+
+  function alertAsync(message, { buttonLabel = 'OK' } = {}) {
+    return new Promise(resolve => {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'confirm-modal-backdrop';
+      backdrop.innerHTML = `
+        <div class="confirm-modal-card" role="dialog" aria-modal="true">
+          <div class="confirm-modal-body">${esc(message)}</div>
+          <div class="confirm-modal-footer">
+            <button class="confirm-yes" type="button">${buttonLabel}</button>
+          </div>
+        </div>`;
+      document.body.appendChild(backdrop);
+      const cleanup = () => { backdrop.remove(); resolve(); };
+      backdrop.querySelector('.confirm-yes').onclick = cleanup;
+      backdrop.addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'Enter') cleanup(); });
+      backdrop.querySelector('.confirm-yes').focus();
+    });
+  }
 
   function confirmDiscardChanges(actionText = 'continue') {
     if (!isDirty) return true;
@@ -2498,6 +2706,7 @@
       markSaved();
     } catch {
       state = emptyState(); fileHandle = null; currentFileName = ''; history = []; future = []; pendingEditSnapshot = null; pendingEditElement = null; renderAll(); markUnsaved();
+      alertAsync('Could not load example-data.json. When running locally via file://, use File → Open to manually open example-data.json.');
     }
   }
 
