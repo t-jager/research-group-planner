@@ -132,7 +132,8 @@
       start: validDateString(a.start) ? a.start : '',
       end: validDateString(a.end) ? a.end : '',
       ftePercent: numberValue(a.ftePercent),
-      notes: String(a.notes ?? '')
+      notes: String(a.notes ?? ''),
+      planned: Boolean(a.planned)
     })) : [];
     s.expenses = Array.isArray(raw?.expenses) ? raw.expenses.map(e => ({
       id: safeId(e.id) || uid('expense'),
@@ -1158,7 +1159,7 @@
   }
 
   function addAssignment(defaults = {}) {
-    snapshot(); const a = { id: uid('assignment'), personId: defaults.personId || '', projectId: defaults.projectId || '', start: defaults.start || '', end: defaults.end || '', ftePercent: defaults.ftePercent ?? 100, notes: '' };
+    snapshot(); const a = { id: uid('assignment'), personId: defaults.personId || '', projectId: defaults.projectId || '', start: defaults.start || '', end: defaults.end || '', ftePercent: defaults.ftePercent ?? 100, notes: '', planned: false };
     state.assignments.push(a);
     splitAssignmentAtPeriods(a);
     renderDerived(); return a;
@@ -1283,12 +1284,17 @@
       else yearGroups.push({ year, count: 1 });
     }
     const yearHeader = yearGroups.map(g => `<div class="year-band" style="grid-column:span ${g.count}">${g.year}</div>`).join('');
-    const monthHeader = months.map(m => `<div class="month-cell ${m.getUTCFullYear() === currentYear && m.getUTCMonth() === currentMonth ? 'current-month' : ''}"><span>${m.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' })}</span></div>`).join('');
+    const monthHeader = months.map(m => {
+      const q = Math.floor(m.getUTCMonth() / 3) + 1;
+      const cur = m.getUTCFullYear() === currentYear && m.getUTCMonth() === currentMonth;
+      return `<div class="month-cell q${q}${cur ? ' current-month' : ''}"><span>${m.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' })}</span></div>`;
+    }).join('');
     const header = `<div class="timeline-year-row">${yearHeader}</div><div class="timeline-month-row">${monthHeader}</div>`;
+    const yearLines = yearSeparatorLines(months);
     $('#tab-timeline').innerHTML = `
       <div class="section-head"><h2>Assignments</h2><div class="section-actions">${pastToggleHtml()}</div></div>
-      ${timelineShell('Assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max)}
-      ${timelineShell('Personnel view', 'personTimeline', personTimelineLabels(), personTimelineRows(min, months, width), header, width, min, max, 'View only — edit assignments in the table above')}
+      ${timelineShell('Assignments', 'projectTimeline', projectTimelineLabels(), projectTimelineRows(min, months, width), header, width, min, max, undefined, yearLines)}
+      ${timelineShell('Personnel view', 'personTimeline', personTimelineLabels(), personTimelineRows(min, months, width), header, width, min, max, 'View only — edit assignments in the table above', yearLines)}
       <div id="assignmentEditorModal" class="assignment-modal" hidden>
         <div class="assignment-modal-backdrop" data-assignment-editor-close></div>
         <div class="assignment-modal-card" role="dialog" aria-modal="true" aria-labelledby="assignmentEditorTitle">
@@ -1302,6 +1308,11 @@
 
           <div class="assignment-modal-body">
             <div id="assignmentEditorPlanning" class="assignment-editor-planning" hidden></div>
+            <label class="assignment-field assignment-field-checkbox">
+              <input id="assignmentEditorPlanned" type="checkbox">
+              <span>Planned</span>
+            </label>
+
             <label class="assignment-field">
               <span id="assignmentEditorLabel">FTE percentage <abbr class="info-abbr" title="FTE = Full-Time Equivalent. 100% means full-time, 50% means half-time, etc. All percentages in this tool are expressed as a fraction of full-time equivalent." onclick="alert(this.title)">?</abbr></span>
               <div class="fte-input-wrap">
@@ -1330,11 +1341,11 @@
   }
 
   // Wrap a timeline section (labels column + scrollable canvas) in a shell
-  function timelineShell(title, id, labels, rows, header, width, min, max, note) {
+  function timelineShell(title, id, labels, rows, header, width, min, max, note, yearLines) {
     const marker = currentMonthMarker(min, max);
     return `<div class="timeline-shell"><div class="timeline-title">${title}${note ? `<span class="timeline-note">${note}</span>` : ''}</div><div class="timeline-body">
       <div class="timeline-labels"><div class="timeline-label-spacer"></div>${labels}</div>
-      <div class="timeline-scroll" id="${id}"><div class="timeline-canvas" style="width:${width}px"><div class="timeline-header">${header}</div>${marker}${rows}</div></div>
+      <div class="timeline-scroll" id="${id}"><div class="timeline-canvas" style="width:${width}px"><div class="timeline-header">${header}</div>${marker}${yearLines}${rows}</div></div>
     </div></div>`;
   }
 
@@ -1349,6 +1360,16 @@
     const right = dateToX(formatDate(addDays(formatDate(monthEnd), 1)), min);
     const todayX = dateToX(formatDate(today), min);
     return `<div class="current-month-band" style="left:${left}px;width:${Math.max(1, right - left)}px"></div><div class="today-line" style="left:${todayX}px" title="Today"></div>`;
+  }
+
+  function yearSeparatorLines(months) {
+    let html = '';
+    for (let i = 1; i < months.length; i++) {
+      if (months[i].getUTCFullYear() !== months[i - 1].getUTCFullYear()) {
+        html += `<div class="year-separator-line" style="left:${i * MONTH_WIDTH}px"></div>`;
+      }
+    }
+    return html;
   }
 
   // Filter to assignments that have valid, non-contradictory dates
@@ -1430,8 +1451,9 @@
             : '';
           html += `<div class="timeline-row" data-drop-project="${p.id}" style="width:${width}px;height:${height}px">
             <div class="timeline-row-grid">${months.map(month => {
+              const q = Math.floor(month.getUTCMonth() / 3) + 1;
               const current = month.getUTCFullYear() === now.getFullYear() && month.getUTCMonth() === now.getMonth();
-              return `<div class="${current ? 'current-month-cell' : ''}"></div>`;
+              return `<div class="q${q}${current ? ' current-month-cell' : ''}"></div>`;
             }).join('')}</div>
             ${markerHtml}
             ${packAssignmentLanes(assignments).packed.map(({ assignment, lane }) => assignmentBar(assignment, 'project', min, lane)).join('')}
@@ -1526,11 +1548,25 @@
   function timelineRow(mode, entityId, start, end, assignments, min, months, width, person = null) {
     const now = new Date();
     const grid = `<div class="timeline-row-grid">${months.map(month => {
-      const active = monthOverlapsRange(month, start, end);
+      const q = Math.floor(month.getUTCMonth() / 3) + 1;
       const current = month.getUTCFullYear() === now.getFullYear() &&
         month.getUTCMonth() === now.getMonth();
-      return `<div class="${active ? 'active-period' : ''} ${active && current ? 'current-month-cell' : ''}"></div>`;
+      return `<div class="q${q}${current ? ' current-month-cell' : ''}"></div>`;
     }).join('')}</div>`;
+
+    let activeBand = '';
+    if (validDateString(start) && validDateString(end)) {
+      const aLeft = dateToX(start, min);
+      const aRight = dateToX(addDays(end, 1), min);
+      activeBand = `<div class="active-period-band" style="left:${aLeft}px;width:${Math.max(1, aRight - aLeft)}px"></div>`;
+      const cmStart = formatDate(new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1)));
+      const cmEnd = formatDate(new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0)));
+      if (cmStart <= end && cmEnd >= start) {
+        const cmLeft = dateToX(cmStart < start ? start : cmStart, min);
+        const cmRight = dateToX(addDays(cmEnd > end ? end : cmEnd, 1), min);
+        activeBand += `<div class="current-month-active-band" style="left:${cmLeft}px;width:${Math.max(1, cmRight - cmLeft)}px"></div>`;
+      }
+    }
 
     const { packed, laneCount } = packAssignmentLanes(assignments);
     const minimumHeight = mode === 'project'
@@ -1572,7 +1608,7 @@
 
     return `<div class="timeline-row" ${dropAttr}
       style="width:${width}px;height:${rowHeight}px">
-      ${grid}${bars}${salaryBands}
+      ${grid}${activeBand}${bars}${salaryBands}
     </div>`;
   }
 
@@ -1780,10 +1816,11 @@
     const modal = $('#assignmentEditorModal');
     const fteInput = $('#assignmentEditorFte');
     const notesInput = $('#assignmentEditorNotes');
+    const plannedInput = $('#assignmentEditorPlanned');
     const context = $('#assignmentEditorContext');
     const planningBox = $('#assignmentEditorPlanning');
     const saveButton = $('#assignmentEditorSave');
-    if (!modal || !fteInput || !notesInput || !context || !planningBox || !saveButton) return;
+    if (!modal || !fteInput || !notesInput || !plannedInput || !context || !planningBox || !saveButton) return;
 
     const closeModal = () => {
       modal.hidden = true;
@@ -1820,6 +1857,7 @@
         `;
         fteInput.value = formatNumber(assignment.ftePercent, 1);
         notesInput.value = assignment.notes || '';
+        plannedInput.checked = Boolean(assignment.planned);
         const isSA = role === 'Student assistant';
         const labelEl = document.getElementById('assignmentEditorLabel');
         const unitEl = document.getElementById('assignmentEditorUnit');
@@ -1856,6 +1894,7 @@
 
       const nextFte = numberValue(fteInput.value);
       const nextNotes = notesInput.value;
+      const nextPlanned = plannedInput.checked;
       const person = getPerson(assignment.personId);
       const activeRoleVal = activeRole(person, assignment);
       const isSA = activeRoleVal === 'Student assistant';
@@ -1867,10 +1906,11 @@
         return;
       }
 
-      if (nextFte !== numberValue(assignment.ftePercent) || nextNotes !== String(assignment.notes || '')) {
+      if (nextFte !== numberValue(assignment.ftePercent) || nextNotes !== String(assignment.notes || '') || nextPlanned !== Boolean(assignment.planned)) {
         snapshot();
         assignment.ftePercent = nextFte;
         assignment.notes = nextNotes;
+        assignment.planned = nextPlanned;
         markDirty();
       }
 
@@ -1927,6 +1967,12 @@
       // Snap points: mid-month contract/project boundaries for edge snapping
       const snapPoints = isResize ? getSnapPoints(assignment, min, edge) : [];
 
+      const isPointerOutsideRow = ev => {
+        const row = document.elementsFromPoint(ev.clientX, ev.clientY)
+          .find(el => el.matches?.('[data-drop-project]'));
+        return row?.dataset.dropProject !== assignment.projectId;
+      };
+
       const clearPreview = () => {
         currentRow?.querySelectorAll('.contract-preview, .valid-drop-preview').forEach(el => el.remove());
       };
@@ -1960,9 +2006,7 @@
 
       const updateTip = ev => {
         if (isDeleteDrag) {
-          const rowUnderPointer = document.elementsFromPoint(ev.clientX, ev.clientY)
-            .find(el => el.matches?.('[data-drop-project]'));
-          const overOriginalRow = rowUnderPointer?.dataset.dropProject === assignment.projectId;
+          const overOriginalRow = !isPointerOutsideRow(ev);
           dragTip.hidden = false;
           dragTip.textContent = overOriginalRow
             ? 'Release here to keep assignment'
@@ -2048,11 +2092,8 @@
             return;
           }
 
-          const rowUnderPointer = document.elementsFromPoint(ev.clientX, ev.clientY)
-            .find(el => el.matches?.('[data-drop-project]'));
-          const overOriginalRow = rowUnderPointer?.dataset.dropProject === assignment.projectId;
-
           cleanup();
+          const overOriginalRow = !isPointerOutsideRow(ev);
           if (!overOriginalRow) {
             state.assignments = state.assignments.filter(a => a.id !== assignment.id);
             markDirty();

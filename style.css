@@ -537,6 +537,11 @@ td textarea {
   overflow: hidden;
 }
 
+.month-cell.q2,
+.month-cell.q4 {
+  background: rgba(0, 0, 0, 0.03);
+}
+
 .month-cell span {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
@@ -631,6 +636,21 @@ td textarea {
 
 .timeline-row-grid>div {
   border-right: 1px solid #edf0f4;
+}
+
+.timeline-row-grid > div.q2,
+.timeline-row-grid > div.q4 {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.year-separator-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #1e293b;
+  z-index: 2;
+  pointer-events: none;
 }
 
 
@@ -857,12 +877,22 @@ td textarea {
   outline-offset: -2px;
 }
 
-.timeline-row-grid > div.active-period {
-  background: #dfe3e8;
+.active-period-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(223, 227, 232, 0.55);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.timeline-row-grid > div.active-period.current-month-cell {
-  background: #eadfbf;
+.current-month-active-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(234, 223, 191, 0.55);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .timeline-label-row,
@@ -1161,6 +1191,20 @@ body.modal-open {
 .assignment-field textarea:focus {
   outline: 3px solid rgba(37, 99, 235, .16);
   border-color: var(--accent);
+}
+
+.assignment-field-checkbox {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.assignment-field-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 
 .fte-input-wrap {
