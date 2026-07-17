@@ -5,8 +5,6 @@
       "id": "person_prof_keller",
       "firstName": "Eva",
       "lastName": "Keller",
-      "contractStart": "2022-01-01",
-      "contractEnd": "2031-12-31",
       "salaryIntervals": [
         {
           "id": "sal_prof_1",
@@ -30,8 +28,6 @@
       "id": "person_postdoc_weber",
       "firstName": "Jonas",
       "lastName": "Weber",
-      "contractStart": "2024-04-01",
-      "contractEnd": "2028-03-31",
       "salaryIntervals": [
         {
           "id": "sal_weber_1",
@@ -55,8 +51,6 @@
       "id": "person_postdoc_schmidt",
       "firstName": "Mira",
       "lastName": "Schmidt",
-      "contractStart": "2025-01-01",
-      "contractEnd": "2029-06-30",
       "salaryIntervals": [
         {
           "id": "sal_schmidt_1",
@@ -80,8 +74,6 @@
       "id": "person_postdoc_braun",
       "firstName": "Lukas",
       "lastName": "Braun",
-      "contractStart": "2026-01-01",
-      "contractEnd": "2030-12-31",
       "salaryIntervals": [
         {
           "id": "sal_braun_1",
@@ -105,8 +97,6 @@
       "id": "person_postdoc_wolf",
       "firstName": "Lena",
       "lastName": "Wolf",
-      "contractStart": "2024-10-01",
-      "contractEnd": "2028-09-30",
       "salaryIntervals": [
         {
           "id": "sal_wolf_1",
@@ -130,8 +120,6 @@
       "id": "person_phd_fischer",
       "firstName": "David",
       "lastName": "Fischer",
-      "contractStart": "2023-10-01",
-      "contractEnd": "2027-09-30",
       "salaryIntervals": [
         {
           "id": "sal_fischer_1",
@@ -155,8 +143,6 @@
       "id": "person_phd_hoffmann",
       "firstName": "Lea",
       "lastName": "Hoffmann",
-      "contractStart": "2025-04-01",
-      "contractEnd": "2029-03-31",
       "salaryIntervals": [
         {
           "id": "sal_hoffmann_1",
@@ -180,8 +166,6 @@
       "id": "person_phd_haddad",
       "firstName": "Omar",
       "lastName": "Haddad",
-      "contractStart": "2026-01-15",
-      "contractEnd": "2030-01-14",
       "salaryIntervals": [
         {
           "id": "sal_haddad_1",
@@ -205,8 +189,6 @@
       "id": "person_phd_brandt",
       "firstName": "Sophie",
       "lastName": "Brandt",
-      "contractStart": "2024-01-01",
-      "contractEnd": "2027-12-31",
       "salaryIntervals": [
         {
           "id": "sal_brandt_1",
@@ -230,8 +212,6 @@
       "id": "person_phd_bauer",
       "firstName": "Felix",
       "lastName": "Bauer",
-      "contractStart": "2024-07-01",
-      "contractEnd": "2028-06-30",
       "salaryIntervals": [
         {
           "id": "sal_bauer_1",
@@ -255,8 +235,6 @@
       "id": "person_phd_koch",
       "firstName": "Anna",
       "lastName": "Koch",
-      "contractStart": "2024-04-01",
-      "contractEnd": "2028-03-31",
       "salaryIntervals": [
         {
           "id": "sal_koch_1",
@@ -280,8 +258,6 @@
       "id": "person_phd_richter",
       "firstName": "Max",
       "lastName": "Richter",
-      "contractStart": "2025-04-01",
-      "contractEnd": "2029-03-31",
       "salaryIntervals": [
         {
           "id": "sal_richter_1",
@@ -305,8 +281,6 @@
       "id": "person_phd_schneider",
       "firstName": "Laura",
       "lastName": "Schneider",
-      "contractStart": "2025-10-01",
-      "contractEnd": "2029-09-30",
       "salaryIntervals": [
         {
           "id": "sal_schneider_1",
@@ -330,8 +304,6 @@
       "id": "person_phd_neumann",
       "firstName": "Tim",
       "lastName": "Neumann",
-      "contractStart": "2026-04-01",
-      "contractEnd": "2030-03-31",
       "salaryIntervals": [
         {
           "id": "sal_neumann_1",
@@ -355,8 +327,6 @@
       "id": "person_phd_meier",
       "firstName": "Julia",
       "lastName": "Meier",
-      "contractStart": "2023-07-01",
-      "contractEnd": "2027-06-30",
       "salaryIntervals": [
         {
           "id": "sal_meier_1",
@@ -380,8 +350,6 @@
       "id": "person_phd_schulz",
       "firstName": "Marc",
       "lastName": "Schulz",
-      "contractStart": "2024-10-01",
-      "contractEnd": "2028-09-30",
       "salaryIntervals": [
         {
           "id": "sal_schulz_1",
@@ -405,8 +373,6 @@
       "id": "person_phd_vogt",
       "firstName": "Clara",
       "lastName": "Vogt",
-      "contractStart": "2025-01-01",
-      "contractEnd": "2028-12-31",
       "salaryIntervals": [
         {
           "id": "sal_vogt_1",
@@ -430,8 +396,6 @@
       "id": "person_eng_keller",
       "firstName": "Sophie",
       "lastName": "Keller",
-      "contractStart": "2024-01-01",
-      "contractEnd": "2028-12-31",
       "salaryIntervals": [
         {
           "id": "sal_eng_keller_1",
@@ -455,8 +419,6 @@
       "id": "person_eng_lange",
       "firstName": "Martin",
       "lastName": "Lange",
-      "contractStart": "2025-01-01",
-      "contractEnd": "2029-12-31",
       "salaryIntervals": [
         {
           "id": "sal_eng_lange_1",
@@ -480,8 +442,6 @@
       "id": "person_eng_konig",
       "firstName": "Sarah",
       "lastName": "Konig",
-      "contractStart": "2026-01-01",
-      "contractEnd": "2030-12-31",
       "salaryIntervals": [
         {
           "id": "sal_eng_konig_1",
@@ -505,8 +465,6 @@
       "id": "person_sa_schulz",
       "firstName": "Kevin",
       "lastName": "Schulz",
-      "contractStart": "2024-10-01",
-      "contractEnd": "2026-09-30",
       "salaryIntervals": [
         {
           "id": "sal_sa_schulz_1",
@@ -530,8 +488,6 @@
       "id": "person_sa_braun",
       "firstName": "Lisa",
       "lastName": "Braun",
-      "contractStart": "2025-04-01",
-      "contractEnd": "2027-03-31",
       "salaryIntervals": [
         {
           "id": "sal_sa_braun_1",
@@ -555,8 +511,6 @@
       "id": "person_sa_hartmann",
       "firstName": "Nico",
       "lastName": "Hartmann",
-      "contractStart": "2026-01-01",
-      "contractEnd": "2027-12-31",
       "salaryIntervals": [
         {
           "id": "sal_sa_hartmann_1",
@@ -580,8 +534,6 @@
       "id": "person_admin_zimmermann",
       "firstName": "Claudia",
       "lastName": "Zimmermann",
-      "contractStart": "2023-01-01",
-      "contractEnd": "2027-12-31",
       "salaryIntervals": [
         {
           "id": "sal_admin_zim_1",
@@ -605,8 +557,6 @@
       "id": "person_admin_kruger",
       "firstName": "Peter",
       "lastName": "Kruger",
-      "contractStart": "2024-06-01",
-      "contractEnd": "2028-05-31",
       "salaryIntervals": [
         {
           "id": "sal_admin_kruger_1",
@@ -630,8 +580,6 @@
       "id": "person_hidden_bauer",
       "firstName": "Thomas",
       "lastName": "Bauer",
-      "contractStart": "2022-01-01",
-      "contractEnd": "2024-12-31",
       "salaryIntervals": [
         {
           "id": "sal_hidden_bauer_1",
@@ -648,8 +596,6 @@
       "id": "person_hidden_wolf",
       "firstName": "Maria",
       "lastName": "Wolf",
-      "contractStart": "2021-01-01",
-      "contractEnd": "2023-06-30",
       "salaryIntervals": [
         {
           "id": "sal_hidden_wolf_1",

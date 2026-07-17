@@ -531,7 +531,7 @@ td textarea {
   display: flex;
   justify-content: center;
   align-items: center;
-  border-right: 1px solid #e7eaf0;
+  border-right: 1px solid #d2d7df;
   font-size: 11px;
   color: var(--muted);
   overflow: hidden;
@@ -539,7 +539,7 @@ td textarea {
 
 .month-cell.q2,
 .month-cell.q4 {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .month-cell span {
@@ -635,12 +635,12 @@ td textarea {
 }
 
 .timeline-row-grid>div {
-  border-right: 1px solid #edf0f4;
+  border-right: 1px solid #d8dce3;
 }
 
 .timeline-row-grid > div.q2,
 .timeline-row-grid > div.q4 {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .year-separator-line {
@@ -667,8 +667,8 @@ td textarea {
   text-overflow: ellipsis;
   cursor: grab;
   user-select: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .08);
-  border: 1px solid rgba(255, 255, 255, .15);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .20), 0 1px 2px rgba(0, 0, 0, .12);
+  border: 1px solid rgba(255, 255, 255, .25);
 }
 
 .assignment-bar.dragging {
@@ -881,18 +881,18 @@ td textarea {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: rgba(223, 227, 232, 0.55);
+  background: rgba(100, 130, 180, 0.28);
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 .current-month-active-band {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: rgba(234, 223, 191, 0.55);
+  background: rgba(234, 200, 91, 0.35);
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 .timeline-label-row,
@@ -1030,15 +1030,18 @@ td textarea {
 
 .contract-preview {
   z-index: 2;
+  --cp-hue: 220;
+  --cp-sat: 80%;
+  --cp-lum: 55%;
   background: repeating-linear-gradient(
     135deg,
-    rgba(37, 99, 235, .08) 0,
-    rgba(37, 99, 235, .08) 6px,
-    rgba(37, 99, 235, .18) 6px,
-    rgba(37, 99, 235, .18) 10px
+    hsla(var(--cp-hue), var(--cp-sat), var(--cp-lum), .08) 0,
+    hsla(var(--cp-hue), var(--cp-sat), var(--cp-lum), .08) 6px,
+    hsla(var(--cp-hue), var(--cp-sat), var(--cp-lum), .18) 6px,
+    hsla(var(--cp-hue), var(--cp-sat), var(--cp-lum), .18) 10px
   );
-  border-left: 1px dashed rgba(37, 99, 235, .75);
-  border-right: 1px dashed rgba(37, 99, 235, .75);
+  border-left: 1px dashed hsla(var(--cp-hue), var(--cp-sat), var(--cp-lum), .75);
+  border-right: 1px dashed hsla(var(--cp-hue), var(--cp-sat), var(--cp-lum), .75);
 }
 
 .valid-drop-preview {

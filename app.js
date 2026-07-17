@@ -14,7 +14,8 @@
 
   const DAY_MS = 86400000;
   const MONTH_WIDTH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--month-width"));
-  const COLORS = ['#2563eb', '#0f766e', '#7c3aed', '#b45309', '#be123c', '#0369a1', '#4d7c0f', '#a21caf', '#c2410c', '#4338ca', '#047857', '#9f1239'];
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const COLORS = ['#1d4ed8', '#0d5e52', '#6d28d9', '#92400e', '#9f1239', '#03589a', '#3f620a', '#86198f', '#9a3412', '#3730a3', '#065f46', '#881337'];
 
   // Timeline layout constants (pixels)
   const TIMELINE_BAR_TOP = 10;
@@ -77,8 +78,6 @@
       id: safeId(p.id) || uid('person'),
       firstName: String(p.firstName ?? ''),
       lastName: String(p.lastName ?? ''),
-      contractStart: validDateString(p.contractStart) ? p.contractStart : '',
-      contractEnd: validDateString(p.contractEnd) ? p.contractEnd : '',
       salaryIntervals: Array.isArray(p.salaryIntervals)
         ? p.salaryIntervals.map(si => ({
           id: safeId(si.id) || uid('salary'),
@@ -267,7 +266,8 @@
   }
 
   function isPastPerson(person) {
-    return validDateString(person?.contractEnd) && person.contractEnd < todayString();
+    const intervals = (person?.salaryIntervals || []).filter(si => validDateString(si.end)).sort((a, b) => b.end.localeCompare(a.end));
+    return intervals.length > 0 && intervals[0].end < todayString();
   }
 
   function isPastProject(project) {
@@ -467,14 +467,16 @@
     const out = [];
     // Validate persons: contract dates, salary periods, gaps and overlaps
     for (const p of state.persons.filter(x => !x.hidden)) {
-      if (p.contractStart && p.contractEnd && parseDate(p.contractStart) > parseDate(p.contractEnd)) out.push({ level: 'error', text: `${personName(p)}: contract start is after contract end.` });
-      const intervals = [...(p.salaryIntervals || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
+      const personIntervals = [...(p.salaryIntervals || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
+      const cs = personIntervals.length ? personIntervals[0].start : '', ce = personIntervals.length ? personIntervals[personIntervals.length - 1].end : '';
+      if (cs && ce && parseDate(cs) > parseDate(ce)) out.push({ level: 'error', text: `${personName(p)}: contract start is after contract end.` });
+    const intervals = sortedIntervals(p);
       for (const si of p.salaryIntervals || []) {
-        if (!validDateString(si.start) || !validDateString(si.end) || parseDate(si.start) > parseDate(si.end)) out.push({ level: 'error', text: `${personName(p)}: invalid salary period.` });
-        else if (validDateString(p.contractStart) && validDateString(p.contractEnd) && (si.start < p.contractStart || si.end > p.contractEnd)) out.push({ level: 'warning', text: `${personName(p)}: salary period ${si.start} – ${si.end} lies outside the contract.` });
+        if (!validDateString(si.start) || !validDateString(si.end) || parseDate(si.start) > parseDate(si.end)) out.push({ level: 'error', text: `${personName(p)}: invalid contract period.` });
+        else if (validDateString(cs) && validDateString(ce) && (si.start < cs || si.end > ce)) out.push({ level: 'warning', text: `${personName(p)}: contract period ${si.start} – ${si.end} lies outside the contract.` });
       }
-      // Check for overlapping salary periods
-      for (let i = 1; i < intervals.length; i++) if (intervals[i].start <= intervals[i - 1].end) out.push({ level: 'error', text: `${personName(p)}: salary periods overlap.` });
+      // Check for overlapping contract periods
+      for (let i = 1; i < intervals.length; i++) if (intervals[i].start <= intervals[i - 1].end) out.push({ level: 'error', text: `${personName(p)}: contract periods overlap.` });
     }
     // Validate projects: dates
     for (const p of state.projects.filter(x => !x.hidden)) {
@@ -488,12 +490,16 @@
       if (!person) out.push({ level: 'error', text: `Assignment references a missing person.` });
       if (!project) out.push({ level: 'error', text: `Assignment for ${who} references a missing project.` });
       if (!validDateString(a.start) || !validDateString(a.end) || parseDate(a.start) > parseDate(a.end)) out.push({ level: 'error', text: `${who} / ${what}: invalid assignment dates.` });
-      if (person && validDateString(a.start) && validDateString(a.end) && validDateString(person.contractStart) && validDateString(person.contractEnd)) {
-        if (parseDate(a.start) < parseDate(person.contractStart)) {
-          out.push({ level: 'error', text: `${who} / ${what}: assignment starts before the contract.` });
-        }
-        if (parseDate(a.end) > parseDate(person.contractEnd)) {
-          out.push({ level: 'warning', text: `${who}: assignment extends beyond the current contract and is treated as planned employment.` });
+      if (person && validDateString(a.start) && validDateString(a.end)) {
+        const personSi = sortedIntervals(person);
+        if (personSi.length) {
+          const pStart = personSi[0].start, pEnd = personSi[personSi.length - 1].end;
+          if (parseDate(a.start) < parseDate(pStart)) {
+            out.push({ level: 'error', text: `${who} / ${what}: assignment starts before the contract.` });
+          }
+          if (parseDate(a.end) > parseDate(pEnd)) {
+            out.push({ level: 'warning', text: `${who}: assignment extends beyond the current contract and is treated as planned employment.` });
+          }
         }
       }
       if (project && validDateString(a.start) && validDateString(a.end) && validDateString(project.start) && validDateString(project.end)) {
@@ -503,7 +509,10 @@
     }
     // Per-person FTE under/over-allocation across timeline segments
     for (const person of state.persons.filter(x => !x.hidden)) {
-      if (!validDateString(person.contractStart) || !validDateString(person.contractEnd) || parseDate(person.contractStart) > parseDate(person.contractEnd)) continue;
+      const personIntervals = sortedIntervals(person);
+      if (!personIntervals.length) continue;
+      const personCs = personIntervals[0].start, personCe = personIntervals[personIntervals.length - 1].end;
+      if (parseDate(personCs) > parseDate(personCe)) continue;
 
       const personAssignments = state.assignments.filter(a =>
         a.personId === person.id &&
@@ -513,17 +522,17 @@
         numberValue(a.ftePercent) > 0
       );
 
-      // Collect all segment boundary dates (contract start/end + assignment + salary period boundaries)
-      const events = new Set([person.contractStart, addDays(person.contractEnd, 1)]);
+      // Collect all segment boundary dates (contract start/end + assignment + contract period boundaries)
+      const events = new Set([personCs, addDays(personCe, 1)]);
       for (const a of personAssignments) {
-        const clippedStart = a.start < person.contractStart ? person.contractStart : a.start;
-        const clippedEnd = a.end > person.contractEnd ? person.contractEnd : a.end;
+        const clippedStart = a.start < personCs ? personCs : a.start;
+        const clippedEnd = a.end > personCe ? personCe : a.end;
         if (clippedStart <= clippedEnd) {
           events.add(clippedStart);
           events.add(addDays(clippedEnd, 1));
         }
       }
-      const validSalaryIntervals = (person.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end));
+      const validSalaryIntervals = sortedIntervals(person);
       for (const si of validSalaryIntervals) {
         events.add(si.start);
         events.add(addDays(si.end, 1));
@@ -535,7 +544,7 @@
       for (let i = 0; i < points.length - 1; i++) {
         const segmentStart = points[i];
         const segmentEnd = addDays(points[i + 1], -1);
-        if (segmentStart > person.contractEnd || segmentEnd < person.contractStart) continue;
+        if (segmentStart > personCe || segmentEnd < personCs) continue;
 
         const total = personAssignments
           .filter(a => a.start <= segmentStart && a.end >= segmentStart)
@@ -667,16 +676,17 @@
   // ─── Persons Tab ───
 
   function computeSalaryGaps(p) {
-    if (!validDateString(p.contractStart) || !validDateString(p.contractEnd)) return [];
     const intervals = [...(p.salaryIntervals || [])].filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
+    if (!intervals.length) return [];
+    const cs = intervals[0].start, ce = intervals[intervals.length - 1].end;
     const gaps = [];
-    let cursor = p.contractStart;
+    let cursor = cs;
     for (const si of intervals) {
       if (si.end < cursor) continue;
       if (si.start > cursor) gaps.push({ from: cursor, to: addDays(si.start, -1) });
       if (si.end >= cursor) cursor = addDays(si.end, 1);
     }
-    if (cursor <= p.contractEnd) gaps.push({ from: cursor, to: p.contractEnd });
+    if (cursor <= ce) gaps.push({ from: cursor, to: ce });
     return gaps;
   }
 
@@ -685,19 +695,17 @@
     $('#tab-persons').innerHTML = `
       <div class="section-head"><h2>Personnel</h2><div class="section-actions">${pastToggleHtml()}<button class="primary" id="addPersonBtn">Add person</button></div></div>
       <div class="table-wrap"><table id="personnelTable" class="resizable-table"><thead><tr>
-        ${personHeader('lastName', 'Last name', true)}${personHeader('firstName', 'First name')}${personHeader('contractStart', 'Contract start')}${personHeader('contractEnd', 'Contract end')}
-        <th>Salary periods</th><th>Notes</th>${personHeader('hidden', 'Hide')}<th></th>
+        ${personHeader('lastName', 'Last name', true)}${personHeader('firstName', 'First name')}
+        <th>Contract periods</th><th>Notes</th>${personHeader('hidden', 'Hide')}<th></th>
       </tr></thead><tbody>
       ${rows.map(p => `<tr data-person-id="${p.id}" class="${p.hidden ? 'hidden-row' : ''}">
         <td class="sticky-col">${input('text', p.lastName, fieldAttrs('person', p.id, 'lastName'))}</td>
         <td>${input('text', p.firstName, fieldAttrs('person', p.id, 'firstName'))}</td>
-        <td>${input('date', p.contractStart, fieldAttrs('person', p.id, 'contractStart'))}</td>
-        <td>${input('date', p.contractEnd, fieldAttrs('person', p.id, 'contractEnd'))}</td>
-        <td class="salary-summary">${(p.salaryIntervals || []).length} interval${(p.salaryIntervals || []).length === 1 ? '' : 's'} <button class="add-salary" data-id="${p.id}">Add interval</button></td>
+        <td class="salary-summary">${(p.salaryIntervals || []).length} period${(p.salaryIntervals || []).length === 1 ? '' : 's'} <button class="add-salary" data-id="${p.id}">Add period</button></td>
         <td><textarea ${fieldAttrs('person', p.id, 'notes')}>${esc(p.notes)}</textarea></td>
         <td class="center"><input type="checkbox" ${fieldAttrs('person', p.id, 'hidden')} ${p.hidden ? 'checked' : ''}></td>
         <td><button class="danger delete-person" data-id="${p.id}">Delete</button></td>
-      </tr><tr class="salary-detail-row ${p.hidden ? 'hidden-row' : ''}"><td colspan="9">${computeSalaryGaps(p).map(g => `<div class="salary-gap-warning">⚠ There is a gap from ${g.from} to ${g.to}. Is this intentional?</div>`).join('')}${salaryIntervalsEditor(p)}</td></tr>`).join('')}
+      </tr><tr class="salary-detail-row ${p.hidden ? 'hidden-row' : ''}"><td colspan="7">${computeSalaryGaps(p).map(g => `<div class="salary-gap-warning">⚠ There is a gap from ${g.from} to ${g.to}. Is this intentional?</div>`).join('')}${salaryIntervalsEditor(p)}</td></tr>`).join('')}
       </tbody></table></div>`;
     $('#addPersonBtn').onclick = () => addPerson();
     $$('.delete-person', $('#tab-persons')).forEach(b => b.onclick = () => deletePerson(b.dataset.id));
@@ -752,7 +760,7 @@
   // Render the expandable salary period sub-table for a person
   function salaryIntervalsEditor(person) {
     const intervals = [...(person.salaryIntervals || [])].sort((a, b) => String(a.start).localeCompare(String(b.start)));
-    if (!intervals.length) return '<div class="salary-empty">No salary periods defined.</div>';
+    if (!intervals.length) return '<div class="salary-empty">No contract periods defined.</div>';
     const roleOptions = ['Professor','Postdoc','PhD student','Student assistant','Other'];
     const isSA = intervals.some(si => si.role === 'Student assistant');
     const costHeader = isSA ? 'Monthly employer cost' : 'Monthly employer cost 100%';
@@ -1128,7 +1136,7 @@
 
   function addPerson() {
     snapshot();
-    const p = { id: uid('person'), firstName: '', lastName: '', contractStart: '', contractEnd: '', salaryIntervals: [], notes: '', hidden: false };
+    const p = { id: uid('person'), firstName: '', lastName: '', salaryIntervals: [], notes: '', hidden: false };
     state.persons.push(p); renderPersons(); renderDerived(); focusFirst(`[data-person-id="${p.id}"]`);
   }
 
@@ -1140,7 +1148,8 @@
     const previous = validIntervals.length ? validIntervals[validIntervals.length - 1] : null;
     const lastRole = (person.salaryIntervals || []).length ? (person.salaryIntervals[person.salaryIntervals.length - 1].role || '') : '';
     const isSA = lastRole === 'Student assistant';
-    const interval = { id: uid('salary'), role: lastRole, start: previous ? addDays(previous.end, 1) : (person.contractStart || ''), end: person.contractEnd || '', monthlyCost: 0, employmentPercent: isSA ? 9 : 100 };
+    const personSi = (person.salaryIntervals || []).filter(si => validDateString(si.start)).sort((a, b) => a.start.localeCompare(b.start));
+    const interval = { id: uid('salary'), role: lastRole, start: previous ? addDays(previous.end, 1) : (personSi.length ? personSi[0].start : ''), end: personSi.length ? personSi[personSi.length - 1].end : '', monthlyCost: 0, employmentPercent: isSA ? 9 : 100 };
     person.salaryIntervals.push(interval);
     renderPersons(); renderDerived();
     requestAnimationFrame(() => $(`[data-salary-id="${interval.id}"] input`)?.focus());
@@ -1257,7 +1266,7 @@
   function timelineBounds() {
     const starts = [], ends = [];
     visibleProjects().forEach(p => { if (validDateString(p.start)) starts.push(parseDate(p.start)); if (validDateString(p.end)) ends.push(parseDate(p.end)); });
-    visiblePersons().forEach(p => { if (validDateString(p.contractStart)) starts.push(parseDate(p.contractStart)); if (validDateString(p.contractEnd)) ends.push(parseDate(p.contractEnd)); });
+    visiblePersons().forEach(p => { const si = sortedIntervals(p); if (si.length) { starts.push(parseDate(si[0].start)); ends.push(parseDate(si[si.length - 1].end)); } });
     visibleAssignments().forEach(a => { if (validDateString(a.start)) starts.push(parseDate(a.start)); if (validDateString(a.end)) ends.push(parseDate(a.end)); });
     if (!starts.length || !ends.length) { const now = new Date(); return [new Date(Date.UTC(now.getUTCFullYear(), 0, 1)), new Date(Date.UTC(now.getUTCFullYear() + 1, 11, 31))]; }
     const min = new Date(Math.min(...starts.map(d => d.getTime()))), max = new Date(Math.max(...ends.map(d => d.getTime())));
@@ -1337,7 +1346,7 @@
     const palette = $('#person-palette');
     palette.innerHTML = [...visiblePersons()].sort((a, b) => (a.lastName || '').localeCompare(b.lastName || '', undefined, { numeric: true, sensitivity: 'base' }) || (a.firstName || '').localeCompare(b.firstName || '', undefined, { numeric: true, sensitivity: 'base' })).map(p => `<span class="person-chip" draggable="true" data-drag-person="${p.id}" style="border-color:${colorFor(p.id)}" title="Drag a person chip onto a project to create an assignment. Existing assignments can only be resized using their left or right edge. They may extend beyond the current contract or project end; planned extensions are striped and still count toward the budget. Hold Alt for day precision.">${esc(personName(p))}</span>`).join('');
     palette.hidden = activeTab !== 'timeline';
-    bindPastToggle($('#tab-timeline')); bindTimelineScroll(); bindAssignmentDrag(min); bindAssignmentEditor(); bindPersonDrop(min); bindTimelineLabelResize($('#tab-timeline')); restoreScroll();
+    bindPastToggle($('#tab-timeline')); bindTimelineScroll(); bindAssignmentDrag(min); bindAssignmentEditor(); bindPersonDrop(min); bindTimelineLabelResize($('#tab-timeline')); bindGridMonthTooltips(); restoreScroll();
   }
 
   // Wrap a timeline section (labels column + scrollable canvas) in a shell
@@ -1453,7 +1462,7 @@
             <div class="timeline-row-grid">${months.map(month => {
               const q = Math.floor(month.getUTCMonth() / 3) + 1;
               const current = month.getUTCFullYear() === now.getFullYear() && month.getUTCMonth() === now.getMonth();
-              return `<div class="q${q}${current ? ' current-month-cell' : ''}"></div>`;
+              return `<div class="q${q}${current ? ' current-month-cell' : ''}" data-month-label="${MONTH_NAMES[month.getUTCMonth()]} ${month.getUTCFullYear()}"></div>`;
             }).join('')}</div>
             ${markerHtml}
             ${packAssignmentLanes(assignments).packed.map(({ assignment, lane }) => assignmentBar(assignment, 'project', min, lane)).join('')}
@@ -1475,10 +1484,11 @@
     return html || '';
   }
 
-  // Sort persons by contract start for the person timeline ordering
+  // Sort persons by earliest contract period start for the person timeline ordering
   function timelinePersonsByContractStart() {
+    const firstStart = p => sortedIntervals(p)[0]?.start || '9999-12-31';
     return [...visiblePersons()].sort((a, b) =>
-      String(a.contractStart || '9999-12-31').localeCompare(String(b.contractStart || '9999-12-31')) ||
+      String(firstStart(a)).localeCompare(firstStart(b)) ||
       String(a.lastName || '').localeCompare(String(b.lastName || ''), undefined, { numeric: true, sensitivity: 'base' }) ||
       String(a.firstName || '').localeCompare(String(b.firstName || ''), undefined, { numeric: true, sensitivity: 'base' })
     );
@@ -1493,7 +1503,7 @@
         return `<div class="timeline-label-row" style="height:${height}px">
           <strong>${esc(personName(p))}</strong>
           <div class="meta">
-            <span>Contract</span><span>${esc(p.contractStart)} – ${esc(p.contractEnd)}</span>
+            <span>Contract</span><span>${esc((() => { const si = sortedIntervals(p); return si.length ? `${si[0].start} – ${si[si.length - 1].end}` : ''; })())}</span>
             <span>Total costs</span><span class="money">${formatMoney(totalCost)}</span>
           </div>
         </div>`;
@@ -1502,17 +1512,14 @@
 
   function personTimelineRows(min, months, width) {
     return timelinePersonsByContractStart()
-      .map(p => timelineRow(
-        'person',
-        p.id,
-        p.contractStart,
-        p.contractEnd,
-        visibleAssignments().filter(a => a.personId === p.id),
-        min,
-        months,
-        width,
-        p
-      )).join('');
+      .map(p => {
+        const intervals = sortedIntervals(p);
+        const pStart = intervals.length ? intervals[0].start : '';
+        const pEnd = intervals.length ? intervals[intervals.length - 1].end : '';
+        return timelineRow('person', p.id, pStart, pEnd,
+          visibleAssignments().filter(a => a.personId === p.id), min, months, width, p
+        );
+      }).join('');
   }
 
   // Group visible projects by type, sorted alphabetically
@@ -1551,7 +1558,7 @@
       const q = Math.floor(month.getUTCMonth() / 3) + 1;
       const current = month.getUTCFullYear() === now.getFullYear() &&
         month.getUTCMonth() === now.getMonth();
-      return `<div class="q${q}${current ? ' current-month-cell' : ''}"></div>`;
+      return `<div class="q${q}${current ? ' current-month-cell' : ''}" data-month-label="${MONTH_NAMES[month.getUTCMonth()]} ${month.getUTCFullYear()}"></div>`;
     }).join('')}</div>`;
 
     let activeBand = '';
@@ -1617,7 +1624,8 @@
   function assignmentPlanningStatus(a) {
     const person = getPerson(a.personId);
     const project = getProjectOrAccount(a.projectId);
-    const contractExtension = Boolean(person && validDateString(person.contractEnd) && validDateString(a.end) && a.end > person.contractEnd);
+    const personEnd = sortedIntervals(person).at(-1)?.end || '';
+    const contractExtension = Boolean(person && validDateString(personEnd) && validDateString(a.end) && a.end > personEnd);
     const projectExtension = Boolean(project && validDateString(project.end) && validDateString(a.end) && a.end > project.end);
     return { contractExtension, projectExtension, badge: contractExtension && projectExtension ? 'CP' : contractExtension ? 'C' : projectExtension ? 'P' : '' };
   }
@@ -1636,8 +1644,9 @@
   // Striped overlay for the portion of an assignment that extends past the contract end
   function plannedContractOverlay(a, min, barLeft, barRight) {
     const person = getPerson(a.personId);
-    if (!person || !validDateString(person.contractEnd) || !validDateString(a.end) || a.end <= person.contractEnd) return '';
-    const plannedStart = a.start > person.contractEnd ? a.start : addDays(person.contractEnd, 1);
+    const personEnd = sortedIntervals(person).at(-1)?.end || '';
+    if (!person || !validDateString(personEnd) || !validDateString(a.end) || a.end <= personEnd) return '';
+    const plannedStart = a.start > personEnd ? a.start : addDays(personEnd, 1);
     const plannedLeft = Math.max(barLeft, dateToX(plannedStart, min));
     const left = Math.max(0, plannedLeft - barLeft);
     const width = Math.max(1, barRight - plannedLeft);
@@ -1733,6 +1742,26 @@
 
   const SNAP_THRESHOLD = 8; // pixels
 
+  // Get valid, sorted salary intervals for a person
+  function sortedIntervals(person) {
+    return (person?.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => a.start.localeCompare(b.start));
+  }
+
+  // Find the salary interval containing dateStr, or the nearest one
+  function findIntervalForDate(person, dateStr) {
+    const si = sortedIntervals(person);
+    if (!si.length) return null;
+    for (const s of si) if (dateStr >= s.start && dateStr <= s.end) return s;
+    if (dateStr < si[0].start) return si[0];
+    if (dateStr > si[si.length - 1].end) return si[si.length - 1];
+    for (let i = 0; i < si.length - 1; i++) {
+      if (dateStr > si[i].end && dateStr < si[i + 1].start) {
+        return (parseDate(dateStr) - parseDate(si[i].end) <= parseDate(si[i + 1].start) - parseDate(dateStr)) ? si[i] : si[i + 1];
+      }
+    }
+    return si[si.length - 1];
+  }
+
   // Collect mid-month dates (contract/project boundaries) that are candidates for snapping
   function getSnapPoints(assignment, min, edge) {
     const points = [];
@@ -1745,7 +1774,7 @@
       const x = edge === 'left' ? dateToX(dateStr, min) : dateToX(addDays(dateStr, 1), min);
       points.push({ x, date: dateStr });
     };
-    if (person) { add(person.contractStart); add(person.contractEnd); }
+    if (person) { (person.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end)).forEach(si => { add(si.start); add(si.end); }); }
     if (project) { add(project.start); add(project.end); }
     return points;
   }
@@ -1957,9 +1986,11 @@
       let changed = false;
       let deleteDragActivated = false;
 
-      // Earliest allowed start is the later of the person's contract start and project start
+      // Earliest allowed start is the later of the person's first period start and project start
       const sourceStart = project.start || '';
-      const validStart = [person.contractStart, sourceStart]
+      const personSi = sortedIntervals(person);
+      const personFirstStart = personSi.length ? personSi[0].start : '';
+      const validStart = [personFirstStart, sourceStart]
         .filter(validDateString)
         .sort()
         .at(-1) || '';
@@ -1977,18 +2008,21 @@
         currentRow?.querySelectorAll('.contract-preview, .valid-drop-preview').forEach(el => el.remove());
       };
 
-      // Show contract duration highlight strip during resize
+      // Show per-interval contract period highlight strips during resize
       const showContractPreview = () => {
         const p = getPerson(assignment.personId);
-        if (!p || !validDateString(p.contractStart) || !validDateString(p.contractEnd)) return;
-        if (!currentRow) return;
-        const contractLeft = dateToX(p.contractStart, min);
-        const contractRight = dateToX(addDays(p.contractEnd, 1), min);
-        const contract = document.createElement('div');
-        contract.className = 'contract-preview';
-        contract.style.left = `${contractLeft}px`;
-        contract.style.width = `${Math.max(1, contractRight - contractLeft)}px`;
-        currentRow.appendChild(contract);
+        const intervals = sortedIntervals(p);
+        if (!intervals.length || !currentRow) return;
+        intervals.forEach((si, idx) => {
+          const left = dateToX(si.start, min);
+          const right = dateToX(addDays(si.end, 1), min);
+          const strip = document.createElement('div');
+          strip.className = 'contract-preview';
+          strip.style.left = `${left}px`;
+          strip.style.width = `${Math.max(1, right - left)}px`;
+          strip.style.setProperty('--cp-hue', 220 + idx * 22);
+          currentRow.appendChild(strip);
+        });
       };
 
       snapshot();
@@ -2048,6 +2082,9 @@
             if (snapped) nextStart = snapped;
           }
           if (validStart && nextStart < validStart) nextStart = validStart;
+          const si = findIntervalForDate(person, nextStart);
+          if (si && nextStart < si.start) nextStart = si.start;
+          if (si && nextStart > si.end) nextStart = si.end;
           if (nextStart > assignment.end) nextStart = assignment.end;
           assignment.start = nextStart;
         } else {
@@ -2057,7 +2094,9 @@
             const snapped = findSnapDate(oldEndX + dx, snapPoints);
             if (snapped) nextEnd = snapped;
           }
-
+          const si = findIntervalForDate(person, nextEnd);
+          if (si && nextEnd > si.end) nextEnd = si.end;
+          if (si && nextEnd < si.start) nextEnd = si.start;
           if (nextEnd < assignment.start) nextEnd = assignment.start;
           assignment.end = nextEnd;
         }
@@ -2161,22 +2200,26 @@
       return dragPreviewTip;
     };
 
-    // Show contract and valid-drop preview strips on every project row
+    // Show contract period and valid-drop preview strips on every project row
     const addPreviewToRows = personId => {
       const person = getPerson(personId);
-      if (!person || !validDateString(person.contractStart) || !validDateString(person.contractEnd)) return;
+      const intervals = sortedIntervals(person);
+      if (!intervals.length) return;
 
       $$('[data-drop-project]').forEach(row => {
         const project = getProjectOrAccount(row.dataset.dropProject);
         if (!project) return;
 
-        const contractLeft = dateToX(person.contractStart, min);
-        const contractRight = dateToX(addDays(person.contractEnd, 1), min);
-        const contract = document.createElement('div');
-        contract.className = 'contract-preview';
-        contract.style.left = `${contractLeft}px`;
-        contract.style.width = `${Math.max(1, contractRight - contractLeft)}px`;
-        row.appendChild(contract);
+        intervals.forEach((si, idx) => {
+          const left = dateToX(si.start, min);
+          const right = dateToX(addDays(si.end, 1), min);
+          const strip = document.createElement('div');
+          strip.className = 'contract-preview';
+          strip.style.left = `${left}px`;
+          strip.style.width = `${Math.max(1, right - left)}px`;
+          strip.style.setProperty('--cp-hue', 220 + idx * 22);
+          row.appendChild(strip);
+        });
 
         const sourceStart = project.start || '';
         const sourceEnd = project.end || '';
@@ -2216,10 +2259,16 @@
         if (!person || !project) return;
 
         const tip = ensureTip();
+        const rect = row.getBoundingClientRect();
+        const dropDate = xToDate(e.clientX - rect.left, min, false);
+        const dropParsed = parseDate(dropDate);
+        const hoveredSi = findIntervalForDate(person, dropDate);
+        const monthLabel = dropParsed ? `${MONTH_NAMES[dropParsed.getUTCMonth()]} ${dropParsed.getUTCFullYear()}` : '';
+        const periodLine = hoveredSi ? `Period: ${hoveredSi.start} – ${hoveredSi.end}` : '';
         tip.innerHTML = `<strong>${esc(personName(person))}</strong><br>` +
-          `Contract: ${esc(person.contractStart)} – ${esc(person.contractEnd)}<br>` +
-          `Project: ${esc(project.start)} – ${esc(project.end)}<br>` +
-          `After project/contract end: planned extension`;
+          `${monthLabel}<br>` +
+          `${periodLine}<br>` +
+          `Project: ${esc(project.start)} – ${esc(project.end)}`;
         tip.style.left = `${e.clientX + 14}px`;
         tip.style.top = `${e.clientY + 14}px`;
       });
@@ -2229,7 +2278,7 @@
       });
 
       // On drop: compute start/end from the drop X position, clamp to
-      // contract and project bounds, then create the assignment
+      // contract period and project bounds, then create the assignment
       row.addEventListener('drop', e => {
         e.preventDefault();
         row.classList.remove('drop-hover');
@@ -2241,7 +2290,7 @@
         if (!e.altKey) {
           const dropPerson = getPerson(personId), dropProject = getProjectOrAccount(projectId);
           const dropSnaps = [];
-          if (dropPerson) { dropSnaps.push(dropPerson.contractStart, dropPerson.contractEnd); }
+          if (dropPerson) { sortedIntervals(dropPerson).forEach(si => { dropSnaps.push(si.start, si.end); }); }
           if (dropProject) { dropSnaps.push(dropProject.start, dropProject.end); }
           for (const ds of dropSnaps) {
             if (!validDateString(ds)) continue;
@@ -2252,7 +2301,11 @@
         }
         let end = e.altKey ? start : formatDate(monthEndFor(parseDate(start)));
         const person = getPerson(personId), project = getProjectOrAccount(projectId);
-        if (person?.contractStart && start < person.contractStart) start = person.contractStart;
+        const dropSi = findIntervalForDate(person, start);
+        if (dropSi) {
+          if (start < dropSi.start) start = dropSi.start;
+          if (end > dropSi.end) end = dropSi.end;
+        }
         if (project?.start && start < project.start) start = project.start;
         if (start > end) {
           clearContractPreview();
@@ -2267,7 +2320,7 @@
         scrollMemory.project = $('#projectTimeline')?.scrollLeft || 0;
         scrollMemory.person = $('#personTimeline')?.scrollLeft || 0;
         clearContractPreview();
-        const latestSI = (person?.salaryIntervals || []).filter(si => validDateString(si.start) && validDateString(si.end)).sort((a, b) => b.start.localeCompare(a.start))[0];
+        const latestSI = sortedIntervals(person).at(-1);
         const defaultFte = latestSI?.role === 'Student assistant' ? (numberValue(latestSI.employmentPercent) || 9) : 100;
         addAssignment({ personId, projectId, start, end, ftePercent: defaultFte });
         markDirty();
@@ -2461,6 +2514,24 @@
   }
 
   const LABEL_WIDTH_STORAGE_KEY = 'research-group-planner-timeline-label-width-v1';
+
+  function bindGridMonthTooltips() {
+    let tip = null;
+    $$('.timeline-row-grid > div[data-month-label]').forEach(cell => {
+      cell.addEventListener('mouseenter', e => {
+        if (e.target.closest('.assignment-bar')) return;
+        if (!tip) { tip = document.createElement('div'); tip.className = 'contract-drag-tooltip'; document.body.appendChild(tip); }
+        tip.textContent = cell.dataset.monthLabel;
+        tip.hidden = false;
+      });
+      cell.addEventListener('mousemove', e => {
+        if (!tip || tip.hidden) return;
+        tip.style.left = `${e.clientX + 14}px`;
+        tip.style.top = `${e.clientY + 14}px`;
+      });
+      cell.addEventListener('mouseleave', () => { if (tip) tip.hidden = true; });
+    });
+  }
 
   function bindTimelineLabelResize(root = document) {
     // restore saved width once on :root so both timelines stay aligned
