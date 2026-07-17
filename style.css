@@ -671,6 +671,16 @@ td textarea {
   border: 1px solid rgba(255, 255, 255, .25);
 }
 
+.assignment-bar.planned {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, .12) 0,
+    rgba(255, 255, 255, .12) 4px,
+    rgba(255, 255, 255, .40) 4px,
+    rgba(255, 255, 255, .40) 8px
+  ) !important;
+}
+
 .assignment-bar.dragging {
   opacity: .72;
   cursor: grabbing;

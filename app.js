@@ -497,10 +497,10 @@
           if (parseDate(a.start) < parseDate(pStart)) {
             out.push({ level: 'error', text: `${who} / ${what}: assignment starts before the contract.` });
           }
-          if (parseDate(a.end) > parseDate(pEnd)) {
-            out.push({ level: 'warning', text: `${who}: assignment extends beyond the current contract and is treated as planned employment.` });
-          }
         }
+      }
+      if (a.planned) {
+        out.push({ level: 'warning', text: `${who}: assignment outside contract period (${a.start} – ${a.end}), treated as planned employment.` });
       }
       if (project && validDateString(a.start) && validDateString(a.end) && validDateString(project.start) && validDateString(project.end)) {
         if (parseDate(a.start) < parseDate(project.start) || parseDate(a.end) > parseDate(project.end)) out.push({ level: 'warning', text: `${what}: assignment falls outside the project duration and is treated as planned project extension.` });
@@ -1159,7 +1159,11 @@
     const person = getPerson(personId); if (!person) return;
     snapshot();
     person.salaryIntervals = (person.salaryIntervals || []).filter(si => si.id !== salaryId);
-    renderPersons(); renderDerived();
+    // Re-split assignments so parts that no longer fall within any contract
+    // period are marked as planned
+    const toSplit = state.assignments.filter(a => a.personId === personId && validDateString(a.start) && validDateString(a.end));
+    for (const a of toSplit) splitAssignmentAtPeriods(a);
+    renderPersons(); renderTimeline(); renderDerived();
   }
 
   function addProject() {
@@ -1174,31 +1178,98 @@
     renderDerived(); return a;
   }
 
-  // Split an assignment into pieces at salary period boundaries
+  // Split an assignment at gaps between contract periods, marking gap pieces as planned
   function splitAssignmentAtPeriods(a) {
     const person = getPerson(a.personId);
     if (!person || !validDateString(a.start) || !validDateString(a.end)) return;
-    const intervals = (person.salaryIntervals || [])
-      .filter(si => validDateString(si.start) && validDateString(si.end))
-      .sort((x, y) => x.start.localeCompare(y.start));
+    const intervals = sortedIntervals(person);
     if (!intervals.length) return;
-    const boundaries = intervals
-      .map(si => si.start)
-      .filter(d => d > a.start && d <= a.end);
-    if (!boundaries.length) return;
-    boundaries.sort();
-    const parts = [];
-    let cur = a.start;
-    for (const b of boundaries) {
-      const segEnd = addDays(b, -1);
-      if (segEnd >= cur) parts.push({ start: cur, end: segEnd });
-      cur = b;
+
+    // Clip each interval to the assignment range, then merge consecutive/overlapping
+    const clipped = intervals
+      .map(si => ({ start: si.start > a.start ? si.start : a.start, end: si.end < a.end ? si.end : a.end }))
+      .filter(r => r.start <= r.end)
+      .sort((x, y) => x.start.localeCompare(y.start));
+    if (!clipped.length) { a.planned = true; return; }
+
+    const merged = [clipped[0]];
+    for (let i = 1; i < clipped.length; i++) {
+      const last = merged[merged.length - 1];
+      if (clipped[i].start <= addDays(last.end, 1)) {
+        if (clipped[i].end > last.end) last.end = clipped[i].end;
+      } else {
+        merged.push(clipped[i]);
+      }
     }
-    if (cur <= a.end) parts.push({ start: cur, end: a.end });
-    if (parts.length < 2) return;
+
+    // Walk from assignment start, emitting contract and gap segments
+    const segments = [];
+    let cur = a.start;
+    for (const c of merged) {
+      if (cur < c.start) segments.push({ start: cur, end: addDays(c.start, -1), planned: true });
+      segments.push({ start: c.start, end: c.end, planned: false });
+      cur = addDays(c.end, 1);
+    }
+    if (cur <= a.end) segments.push({ start: cur, end: a.end, planned: true });
+
+    if (segments.length < 2) { a.planned = false; return; }
+
     state.assignments = state.assignments.filter(x => x.id !== a.id);
-    for (const p of parts) {
-      state.assignments.push({ id: uid('assignment'), personId: a.personId, projectId: a.projectId, start: p.start, end: p.end, ftePercent: a.ftePercent, notes: a.notes });
+    for (const seg of segments) {
+      state.assignments.push({ id: uid('assignment'), personId: a.personId, projectId: a.projectId, start: seg.start, end: seg.end, ftePercent: a.ftePercent, notes: a.notes, planned: seg.planned });
+    }
+  }
+
+  // Merge consecutive assignments for the same person+project that share the
+  // same planned flag (both in-contract or both planned), collapsing gaps of
+  // exactly one day that arise from period-boundary splits.
+  function mergeConsecutiveAssignments(personId, projectId) {
+    const same = state.assignments
+      .filter(a => a.personId === personId && a.projectId === projectId && validDateString(a.start) && validDateString(a.end))
+      .sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end));
+    if (same.length < 2) return;
+
+    for (const planned of [false, true]) {
+      const group = same.filter(a => a.planned === planned);
+      for (let i = group.length - 2; i >= 0; i--) {
+        const curr = group[i];
+        const next = group[i + 1];
+        if (addDays(curr.end, 1) === next.start) {
+          curr.end = next.end;
+          state.assignments = state.assignments.filter(a => a.id !== next.id);
+          group.splice(i + 1, 1);
+        }
+      }
+    }
+  }
+
+  // Merge overlapping or consecutive assignments for the same person+project
+  // that share the same planned flag. Unlike mergeConsecutiveAssignments, this
+  // also absorbs assignments whose date ranges overlap (not just touch).
+  function mergeOverlappingAssignments(personId, projectId) {
+    const same = state.assignments
+      .filter(a => a.personId === personId && a.projectId === projectId && validDateString(a.start) && validDateString(a.end))
+      .sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end));
+    if (same.length < 2) return;
+
+    for (const planned of [false, true]) {
+      const group = same.filter(a => a.planned === planned);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (let i = 0; i < group.length - 1; i++) {
+          const curr = group[i];
+          const next = group[i + 1];
+          // Overlap or exactly consecutive
+          if (curr.end >= addDays(next.start, -1)) {
+            if (next.end > curr.end) curr.end = next.end;
+            state.assignments = state.assignments.filter(a => a.id !== next.id);
+            group.splice(i + 1, 1);
+            changed = true;
+            break;
+          }
+        }
+      }
     }
   }
 
@@ -1317,10 +1388,6 @@
 
           <div class="assignment-modal-body">
             <div id="assignmentEditorPlanning" class="assignment-editor-planning" hidden></div>
-            <label class="assignment-field assignment-field-checkbox">
-              <input id="assignmentEditorPlanned" type="checkbox">
-              <span>Planned</span>
-            </label>
 
             <label class="assignment-field">
               <span id="assignmentEditorLabel">FTE percentage <abbr class="info-abbr" title="FTE = Full-Time Equivalent. 100% means full-time, 50% means half-time, etc. All percentages in this tool are expressed as a fraction of full-time equivalent." onclick="alert(this.title)">?</abbr></span>
@@ -1665,6 +1732,9 @@
     const planningBadge = planning.badge
       ? `<span class="assignment-planning-badge" title="${planning.badge === 'CP' ? 'Contract and project extension required' : planning.badge === 'C' ? 'Contract extension required' : 'Project extension required'}">${planning.badge}</span>`
       : '';
+    const plannedBadge = a.planned
+      ? `<span class="assignment-planning-badge planned-badge" title="Outside contract period — planned employment">C</span>`
+      : '';
     const person = getPerson(a.personId);
     const project = getProjectOrAccount(a.projectId);
     const sourceName = project
@@ -1694,24 +1764,25 @@
     const barColor = colorFor(key);
     const labelBg = `style="background:${barColor}"`;
     const studentClass = isSA ? ' assignment-bar-student' : '';
+    const plannedClass = a.planned ? ' planned' : '';
 
     // Person-mode bars are read-only (no resize handles)
     if (mode === 'person') {
-      return `<div class="assignment-bar assignment-bar-readonly${studentClass}"
+      return `<div class="assignment-bar assignment-bar-readonly${studentClass}${plannedClass}"
         style="left:${left}px;width:${width}px;top:${top}px;background:${barColor}"
         title="${esc(tooltip)}">
-        <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${planningBadge}${plannedOverlay}${plannedProject}
+        <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${plannedBadge}${planningBadge}${plannedOverlay}${plannedProject}
       </div>`;
     }
 
     // Project-mode bars have left/right resize handles
-    return `<div class="assignment-bar assignment-bar-resize-only${studentClass}"
+    return `<div class="assignment-bar assignment-bar-resize-only${studentClass}${plannedClass}"
       data-assignment-bar="${a.id}"
       data-mode="${mode}"
       style="left:${left}px;width:${width}px;top:${top}px;background:${barColor}"
       title="${esc(tooltip)}">
       <span class="assignment-handle left" data-edge="left"></span>
-      <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${planningBadge}${plannedOverlay}${plannedProject}
+      <span class="assignment-label-text" ${labelBg}>${esc(label)}${String(a.notes || '').trim() ? '<span class="assignment-note-icon assignment-comment-icon" aria-label="Has notes">💬</span>' : ''}</span>${plannedBadge}${planningBadge}${plannedOverlay}${plannedProject}
       <span class="assignment-handle right" data-edge="right"></span>
     </div>`;
   }
@@ -1845,11 +1916,10 @@
     const modal = $('#assignmentEditorModal');
     const fteInput = $('#assignmentEditorFte');
     const notesInput = $('#assignmentEditorNotes');
-    const plannedInput = $('#assignmentEditorPlanned');
     const context = $('#assignmentEditorContext');
     const planningBox = $('#assignmentEditorPlanning');
     const saveButton = $('#assignmentEditorSave');
-    if (!modal || !fteInput || !notesInput || !plannedInput || !context || !planningBox || !saveButton) return;
+    if (!modal || !fteInput || !notesInput || !context || !planningBox || !saveButton) return;
 
     const closeModal = () => {
       modal.hidden = true;
@@ -1886,7 +1956,6 @@
         `;
         fteInput.value = formatNumber(assignment.ftePercent, 1);
         notesInput.value = assignment.notes || '';
-        plannedInput.checked = Boolean(assignment.planned);
         const isSA = role === 'Student assistant';
         const labelEl = document.getElementById('assignmentEditorLabel');
         const unitEl = document.getElementById('assignmentEditorUnit');
@@ -1923,7 +1992,6 @@
 
       const nextFte = numberValue(fteInput.value);
       const nextNotes = notesInput.value;
-      const nextPlanned = plannedInput.checked;
       const person = getPerson(assignment.personId);
       const activeRoleVal = activeRole(person, assignment);
       const isSA = activeRoleVal === 'Student assistant';
@@ -1935,11 +2003,10 @@
         return;
       }
 
-      if (nextFte !== numberValue(assignment.ftePercent) || nextNotes !== String(assignment.notes || '') || nextPlanned !== Boolean(assignment.planned)) {
+      if (nextFte !== numberValue(assignment.ftePercent) || nextNotes !== String(assignment.notes || '')) {
         snapshot();
         assignment.ftePercent = nextFte;
         assignment.notes = nextNotes;
-        assignment.planned = nextPlanned;
         markDirty();
       }
 
@@ -2008,19 +2075,18 @@
         currentRow?.querySelectorAll('.contract-preview, .valid-drop-preview').forEach(el => el.remove());
       };
 
-      // Show per-interval contract period highlight strips during resize
+      // Show contract period highlight strips during resize
       const showContractPreview = () => {
         const p = getPerson(assignment.personId);
         const intervals = sortedIntervals(p);
         if (!intervals.length || !currentRow) return;
-        intervals.forEach((si, idx) => {
+        intervals.forEach((si) => {
           const left = dateToX(si.start, min);
           const right = dateToX(addDays(si.end, 1), min);
           const strip = document.createElement('div');
           strip.className = 'contract-preview';
           strip.style.left = `${left}px`;
           strip.style.width = `${Math.max(1, right - left)}px`;
-          strip.style.setProperty('--cp-hue', 220 + idx * 22);
           currentRow.appendChild(strip);
         });
       };
@@ -2082,9 +2148,6 @@
             if (snapped) nextStart = snapped;
           }
           if (validStart && nextStart < validStart) nextStart = validStart;
-          const si = findIntervalForDate(person, nextStart);
-          if (si && nextStart < si.start) nextStart = si.start;
-          if (si && nextStart > si.end) nextStart = si.end;
           if (nextStart > assignment.end) nextStart = assignment.end;
           assignment.start = nextStart;
         } else {
@@ -2094,9 +2157,6 @@
             const snapped = findSnapDate(oldEndX + dx, snapPoints);
             if (snapped) nextEnd = snapped;
           }
-          const si = findIntervalForDate(person, nextEnd);
-          if (si && nextEnd > si.end) nextEnd = si.end;
-          if (si && nextEnd < si.start) nextEnd = si.start;
           if (nextEnd < assignment.start) nextEnd = assignment.start;
           assignment.end = nextEnd;
         }
@@ -2148,14 +2208,9 @@
         if (!changed) {
           history.pop();
           updateUndoButtons();
-        } else if (hasOverlappingAssignment(assignment.personId, assignment.projectId, assignment.start, assignment.end, assignment.id)) {
-          alert(`${personName(getPerson(assignment.personId))} already has an assignment on this project during this period. Reverting.`);
-          assignment.start = oldStart;
-          assignment.end = oldEnd;
-          history.pop();
-          updateUndoButtons();
         } else {
           splitAssignmentAtPeriods(assignment);
+          mergeOverlappingAssignments(assignment.personId, assignment.projectId);
           markDirty();
         }
         renderAll();
@@ -2210,14 +2265,13 @@
         const project = getProjectOrAccount(row.dataset.dropProject);
         if (!project) return;
 
-        intervals.forEach((si, idx) => {
+        intervals.forEach((si) => {
           const left = dateToX(si.start, min);
           const right = dateToX(addDays(si.end, 1), min);
           const strip = document.createElement('div');
           strip.className = 'contract-preview';
           strip.style.left = `${left}px`;
           strip.style.width = `${Math.max(1, right - left)}px`;
-          strip.style.setProperty('--cp-hue', 220 + idx * 22);
           row.appendChild(strip);
         });
 
@@ -2265,10 +2319,14 @@
         const hoveredSi = findIntervalForDate(person, dropDate);
         const monthLabel = dropParsed ? `${MONTH_NAMES[dropParsed.getUTCMonth()]} ${dropParsed.getUTCFullYear()}` : '';
         const periodLine = hoveredSi ? `Period: ${hoveredSi.start} – ${hoveredSi.end}` : '';
+        const endOfMonth = formatDate(monthEndFor(parseDate(dropDate)));
+        const outsideContract = !sortedIntervals(person).some(si => dropDate >= si.start && endOfMonth <= si.end);
+        const plannedHint = outsideContract ? '<br><em>Will be created as planned</em>' : '';
         tip.innerHTML = `<strong>${esc(personName(person))}</strong><br>` +
           `${monthLabel}<br>` +
           `${periodLine}<br>` +
-          `Project: ${esc(project.start)} – ${esc(project.end)}`;
+          `Project: ${esc(project.start)} – ${esc(project.end)}` +
+          `${plannedHint}`;
         tip.style.left = `${e.clientX + 14}px`;
         tip.style.top = `${e.clientY + 14}px`;
       });
@@ -2301,28 +2359,32 @@
         }
         let end = e.altKey ? start : formatDate(monthEndFor(parseDate(start)));
         const person = getPerson(personId), project = getProjectOrAccount(projectId);
-        const dropSi = findIntervalForDate(person, start);
-        if (dropSi) {
-          if (start < dropSi.start) start = dropSi.start;
-          if (end > dropSi.end) end = dropSi.end;
-        }
         if (project?.start && start < project.start) start = project.start;
         if (start > end) {
           clearContractPreview();
           alert('The drop date is before the project or contract starts.');
           return;
         }
-        if (hasOverlappingAssignment(personId, projectId, start, end)) {
-          clearContractPreview();
-          alert(`${personName(getPerson(personId))} is already assigned to ${project?.name || 'this project'} during this period.`);
-          return;
-        }
+        // Check for overlapping assignments — if overlap, extend existing and merge
+        const personIntervals = sortedIntervals(person);
+        const overlapping = state.assignments.find(a =>
+          a.personId === personId && a.projectId === projectId &&
+          validDateString(a.start) && validDateString(a.end) &&
+          a.start <= end && a.end >= start
+        );
         scrollMemory.project = $('#projectTimeline')?.scrollLeft || 0;
         scrollMemory.person = $('#personTimeline')?.scrollLeft || 0;
         clearContractPreview();
-        const latestSI = sortedIntervals(person).at(-1);
-        const defaultFte = latestSI?.role === 'Student assistant' ? (numberValue(latestSI.employmentPercent) || 9) : 100;
-        addAssignment({ personId, projectId, start, end, ftePercent: defaultFte });
+        if (overlapping) {
+          if (start < overlapping.start) overlapping.start = start;
+          if (end > overlapping.end) overlapping.end = end;
+          mergeOverlappingAssignments(personId, projectId);
+        } else {
+          const latestSI = personIntervals.at(-1);
+          const defaultFte = latestSI?.role === 'Student assistant' ? (numberValue(latestSI.employmentPercent) || 9) : 100;
+          addAssignment({ personId, projectId, start, end, ftePercent: defaultFte });
+          mergeConsecutiveAssignments(personId, projectId);
+        }
         markDirty();
         renderDerived();
       });
