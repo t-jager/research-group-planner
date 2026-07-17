@@ -43,6 +43,7 @@
   let syncingScroll = false;   // Guard to prevent infinite scroll-sync loop
   let scrollMemory = { project: 0, person: 0 };
   let isDirty = false;         // Unsaved-changes flag
+  let lastOverlapFixes = [];   // Names of persons whose contract periods were auto-clipped by the last normalizeState() call
 
   // ─── DOM Helpers ───
 
@@ -73,13 +74,48 @@
   }
 
   // Normalize raw imported/loaded data into a well-formed state object
+  // Detect and clip overlapping contract periods within a single person's list.
+  // Existence of ANY overlap in a set of date ranges is fully detectable by sorting
+  // by start and checking each element against the running-max end seen so far
+  // (if a later interval's start falls inside that, some overlap exists) — this is
+  // the same check `validateContractPeriods` uses to block overlaps in the
+  // interactive editor. That editor is the only place overlaps are normally
+  // prevented, though, so a hand-edited or malformed JSON import can still bring
+  // overlapping periods into the app. Several functions (assignmentCost's
+  // "latest interval", ensurePlannedContractExtension, splitAssignmentAtPeriods)
+  // assume periods sorted by start are also non-overlapping, and silently
+  // misbehave otherwise — so we normalize this away at load time instead of
+  // just warning about it afterward. Policy: the earlier-starting period wins
+  // the overlapped days (later one is clipped forward, or dropped if fully
+  // covered). Mutates the given periods (in start order) and returns true if
+  // anything changed.
+  function resolveContractPeriodOverlaps(periods) {
+    const valid = periods
+      .filter(si => validDateString(si.start) && validDateString(si.end))
+      .sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end));
+    let changed = false;
+    let maxEnd = null;
+    const removeIds = new Set();
+    for (const si of valid) {
+      if (maxEnd !== null && si.start <= maxEnd) {
+        const newStart = addDays(maxEnd, 1);
+        if (newStart > si.end) { removeIds.add(si.id); changed = true; continue; }
+        si.start = newStart;
+        changed = true;
+      }
+      if (maxEnd === null || si.end > maxEnd) maxEnd = si.end;
+    }
+    if (removeIds.size) {
+      for (let i = periods.length - 1; i >= 0; i--) if (removeIds.has(periods[i].id)) periods.splice(i, 1);
+    }
+    return changed;
+  }
+
   function normalizeState(raw) {
     const s = emptyState();
-    s.persons = Array.isArray(raw?.persons) ? raw.persons.map(p => ({
-      id: safeId(p.id) || uid('person'),
-      firstName: String(p.firstName ?? ''),
-      lastName: String(p.lastName ?? ''),
-      contractPeriods: (Array.isArray(p.contractPeriods) ? p.contractPeriods : Array.isArray(p.salaryIntervals) ? p.salaryIntervals : null)
+    const overlapFixes = [];
+    s.persons = Array.isArray(raw?.persons) ? raw.persons.map(p => {
+      const contractPeriods = (Array.isArray(p.contractPeriods) ? p.contractPeriods : Array.isArray(p.salaryIntervals) ? p.salaryIntervals : null)
         ? (p.contractPeriods || p.salaryIntervals).map(si => ({
           id: safeId(si.id) || uid('contract-period'),
           role: String(si.role ?? p.role ?? ''),
@@ -101,10 +137,19 @@
           end: validDateString(p.contractEnd) ? p.contractEnd : '',
           monthlyCost: numberValue(p.monthlyCost),
           employmentPercent: 100
-        }].filter(si => si.start || si.end || si.monthlyCost),
-      notes: String(p.notes ?? ''),
-      hidden: Boolean(p.hidden)
-    })) : [];
+        }].filter(si => si.start || si.end || si.monthlyCost);
+      if (resolveContractPeriodOverlaps(contractPeriods)) {
+        overlapFixes.push(`${String(p.firstName ?? '')} ${String(p.lastName ?? '')}`.trim() || 'Unnamed person');
+      }
+      return {
+        id: safeId(p.id) || uid('person'),
+        firstName: String(p.firstName ?? ''),
+        lastName: String(p.lastName ?? ''),
+        contractPeriods,
+        notes: String(p.notes ?? ''),
+        hidden: Boolean(p.hidden)
+      };
+    }) : [];
     s.projects = Array.isArray(raw?.projects) ? raw.projects.map(p => ({
       id: safeId(p.id) || uid('project'),
       name: String(p.name ?? ''),
@@ -144,6 +189,7 @@
       amount: numberValue(e.amount),
       notes: String(e.notes ?? '')
     })) : [];
+    lastOverlapFixes = overlapFixes;
     return s;
   }
 
@@ -211,6 +257,17 @@
     if (!d) return s;
     d.setUTCDate(d.getUTCDate() + n);
     return formatDate(d);
+  }
+
+  // Return the interval with the latest `end` date from a list. Contract periods are
+  // normally non-overlapping, in which case this coincides with the last element of a
+  // start-sorted array — but that shortcut (`intervals.at(-1)` on a start-sorted list)
+  // silently picks the wrong period whenever two contract periods overlap (e.g. after
+  // importing a hand-edited or malformed JSON file, which isn't validated on load).
+  // Use this helper anywhere "the most recent / currently active contract period" is needed.
+  function latestEndingInterval(intervals) {
+    if (!intervals || !intervals.length) return null;
+    return intervals.reduce((best, si) => (!best || si.end > best.end || (si.end === best.end && si.start > best.start)) ? si : best, null);
   }
 
   // ─── Number Utilities ───
@@ -341,7 +398,7 @@
     const intervals = (Array.isArray(person.contractPeriods) ? person.contractPeriods : [])
       .filter(interval => validDateString(interval.start) && validDateString(interval.end))
       .sort((x, y) => x.start.localeCompare(y.start));
-    const lastInterval = intervals.length ? intervals[intervals.length - 1] : null;
+    const lastInterval = latestEndingInterval(intervals);
     const plannedStart = lastInterval ? addDays(lastInterval.end, 1) : '';
 
     while (cursor <= finish) {
@@ -409,7 +466,7 @@
     const intervals = (Array.isArray(person.contractPeriods) ? person.contractPeriods : [])
       .filter(interval => validDateString(interval.start) && validDateString(interval.end))
       .sort((x, y) => x.start.localeCompare(y.start));
-    const lastInterval = intervals.length ? intervals[intervals.length - 1] : null;
+    const lastInterval = latestEndingInterval(intervals);
     const plannedStart = lastInterval ? addDays(lastInterval.end, 1) : '';
 
     while (cursor <= finish) {
@@ -1077,18 +1134,22 @@
   }
 
   // On the first input event for a given element, push the pre-edit snapshot
-  // onto the undo stack so the entire field change is one undo step
+  // onto the undo stack so the entire field change is one undo step.
+  // pendingEditElement stays set to `el` for the rest of the focus session so
+  // later keystrokes on the same element are recognized as "already recorded"
+  // and don't re-push (which would otherwise fragment one edit into several
+  // undo steps). It's cleared on blur by endFieldEdit / focus-change below.
   function recordFieldEdit(el) {
-    if (pendingEditElement !== el || !pendingEditSnapshot) {
+    if (pendingEditElement !== el) {
       pendingEditSnapshot = JSON.stringify(serializableState());
       pendingEditElement = el;
       return;
     }
+    if (!pendingEditSnapshot) return; // already recorded for this focus session
     history.push(pendingEditSnapshot);
     if (history.length > 100) history.shift();
     future = [];
     pendingEditSnapshot = null;
-    pendingEditElement = null;
     updateUndoButtons();
   }
 
@@ -1254,7 +1315,7 @@
           if (si.planned) {
             si.start = cur;
           } else {
-            const prev = [...intervals].reverse().find(x => x.end < cur);
+            const prev = latestEndingInterval(intervals.filter(x => x.end < cur));
             const tmpl = prev || si;
             person.contractPeriods.push({
               id: uid('contract-period'),
@@ -1273,7 +1334,7 @@
       if (cur > endDate) break;
     }
     if (cur <= endDate) {
-      const last = intervals.at(-1);
+      const last = latestEndingInterval(intervals);
       if (last.planned) {
         last.end = endDate;
       } else {
@@ -1320,15 +1381,23 @@
       .sort((x, y) => x.start.localeCompare(y.start));
     if (!clipped.length) { a.planned = true; return; }
 
-    // Merge consecutive/overlapping intervals only when they share the same FTE
+    // Merge consecutive/overlapping intervals only when they share the same FTE.
+    // `merged` must end up strictly ascending and non-overlapping, since the
+    // segment walk below assumes that; if two source contract periods genuinely
+    // overlap in time with different FTEs (only possible via a malformed/hand-
+    // edited JSON import, since overlaps are rejected in the interactive editor),
+    // clip the later one so it starts right after the earlier one ends instead of
+    // letting it re-cover already-claimed days.
     const merged = [clipped[0]];
     for (let i = 1; i < clipped.length; i++) {
       const last = merged[merged.length - 1];
       if (clipped[i].start <= addDays(last.end, 1) && clipped[i].ftePercent === last.ftePercent) {
         if (clipped[i].end > last.end) last.end = clipped[i].end;
-      } else {
-        merged.push(clipped[i]);
+        continue;
       }
+      const start = clipped[i].start <= last.end ? addDays(last.end, 1) : clipped[i].start;
+      if (start > clipped[i].end) continue; // fully covered by the earlier-starting period
+      merged.push({ start, end: clipped[i].end, ftePercent: clipped[i].ftePercent });
     }
 
     // Walk from assignment start, emitting contract and gap segments
@@ -2533,6 +2602,7 @@
         clearContractPreview();
         let periodAdded = false;
         if (overlapping) {
+          snapshot();
           if (start < overlapping.start) overlapping.start = start;
           if (end > overlapping.end) overlapping.end = end;
           mergeOverlappingAssignments(personId, projectId);
@@ -2648,7 +2718,17 @@
         const raw = await pickJsonFallback(); state = normalizeState(raw.data); currentFileName = raw.name; fileHandle = null;
       }
       history = []; future = []; pendingEditSnapshot = null; pendingEditElement = null; renderAll(); markSaved();
+      warnAboutOverlapFixes();
     } catch (err) { if (err?.name !== 'AbortError') alert(`Could not open file: ${err.message}`); }
+  }
+
+  // If normalizeState() had to auto-clip overlapping contract periods on the
+  // most recent load, tell the user so they can review the result — the app
+  // silently keeps working either way, but the affected data was changed.
+  function warnAboutOverlapFixes() {
+    if (!lastOverlapFixes.length) return;
+    const names = lastOverlapFixes.join(', ');
+    alertAsync(`This file had overlapping contract periods for: ${names}. They were automatically adjusted so periods no longer overlap — please review them in the Personnel tab.`);
   }
 
   // Fallback file picker for browsers without File System Access API
@@ -2694,7 +2774,6 @@
       const response = await fetch('example-data.json', { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const raw = await response.json();
-      snapshot();
       state = normalizeState(raw);
       fileHandle = null;
       currentFileName = 'example-data.json';
@@ -2704,6 +2783,7 @@
       pendingEditElement = null;
       renderAll();
       markSaved();
+      warnAboutOverlapFixes();
     } catch {
       state = emptyState(); fileHandle = null; currentFileName = ''; history = []; future = []; pendingEditSnapshot = null; pendingEditElement = null; renderAll(); markUnsaved();
       alertAsync('Could not load example-data.json. When running locally via file://, use File → Open to manually open example-data.json.');
