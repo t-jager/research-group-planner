@@ -1181,17 +1181,32 @@
           updateModelFromElement(el, false);
           endFieldEdit(el);
         });
+      } else if (el.type === 'date') {
+        // Native date inputs can emit input/change events for each edited date
+        // component. Commit only after the complete value has been entered.
+        el.addEventListener('blur', () => {
+          updateModelFromElement(el, true);
+          endFieldEdit(el);
+        });
+        el.addEventListener('keydown', event => {
+          if (event.key !== 'Enter') return;
+          event.preventDefault();
+          el.blur();
+        });
       } else {
         el.addEventListener('blur', () => endFieldEdit(el));
       }
       el.addEventListener('input', () => {
         recordFieldEdit(el);
         // Don't update the model during typing for numeric fields — only on blur/change
-        if (!el.classList.contains('money-input') && !el.classList.contains('percent-input')) {
-          updateModelFromElement(el, el.type === 'date');
+        if (!el.classList.contains('money-input') && !el.classList.contains('percent-input') && el.type !== 'date') {
+          updateModelFromElement(el, false);
         }
       });
-      el.addEventListener('change', () => { recordFieldEdit(el); updateModelFromElement(el, true); });
+      el.addEventListener('change', () => {
+        recordFieldEdit(el);
+        if (el.type !== 'date') updateModelFromElement(el, true);
+      });
     });
   }
 
