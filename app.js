@@ -844,7 +844,7 @@
   // Render the expandable contract period sub-table for a person
   function contractPeriodsEditor(person) {
     const intervals = [...(person.contractPeriods || [])].sort((a, b) => String(a.start).localeCompare(String(b.start)));
-    if (!intervals.length) return '<div class="contract-period-empty">No contract periods defined.</div>';
+    if (!intervals.length) return `<div class="contract-period-empty">No contract periods defined.</div><button class="add-contract-period" data-id="${person.id}">Add contract period</button>`;
     const roleOptions = ['Professor','Postdoc','PhD student','Student assistant','Other'];
     const isSA = intervals.some(si => si.role === 'Student assistant');
     const costHeader = isSA ? 'Monthly employer cost' : 'Monthly employer cost 100%';
@@ -1282,7 +1282,7 @@
     const lastRole = (person.contractPeriods || []).length ? (person.contractPeriods[person.contractPeriods.length - 1].role || '') : '';
     const isSA = lastRole === 'Student assistant';
     const personSi = (person.contractPeriods || []).filter(si => validDateString(si.start)).sort((a, b) => a.start.localeCompare(b.start));
-    const interval = { id: uid('contract-period'), role: lastRole, start: previous ? addDays(previous.end, 1) : (personSi.length ? personSi[0].start : ''), end: personSi.length ? personSi[personSi.length - 1].end : '', monthlyCost: 0, employmentPercent: isSA ? 9 : 100, planned: false };
+    const interval = { id: uid('contract-period'), role: lastRole, start: previous ? addDays(previous.end, 1) : (personSi.length ? personSi[0].start : ''), end: '', monthlyCost: 0, employmentPercent: isSA ? 9 : 100, planned: false };
     person.contractPeriods.push(interval);
     renderPersons(); renderDerived();
     requestAnimationFrame(() => $(`[data-contract-period-id="${interval.id}"] input`)?.focus());
