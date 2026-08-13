@@ -534,6 +534,10 @@ td textarea {
   grid-template-columns: var(--label-width) minmax(0, 1fr);
 }
 
+.timeline-content {
+  min-width: 0;
+}
+
 .timeline-labels {
   background: var(--panel);
   border-right: 1px solid var(--line);
@@ -595,6 +599,16 @@ td textarea {
   height: 84px;
   border-bottom: 2px solid var(--line);
   background: var(--panel);
+  will-change: transform;
+}
+
+.timeline-header-viewport {
+  position: sticky;
+  top: var(--timeline-sticky-top, 0px);
+  z-index: 12;
+  height: 84px;
+  overflow: hidden;
+  background: var(--panel);
 }
 
 .timeline-year-row {
@@ -647,6 +661,9 @@ td textarea {
 }
 
 .timeline-label-spacer {
+  position: sticky;
+  top: var(--timeline-sticky-top, 0px);
+  z-index: 12;
   height: 84px;
   border-bottom: 2px solid var(--line);
   background: var(--panel);
@@ -708,7 +725,7 @@ td textarea {
 
 .current-month-band {
   position: absolute;
-  top: 84px;
+  top: 0;
   bottom: 0;
   background: var(--current-month-overlay);
   pointer-events: none;
@@ -717,7 +734,7 @@ td textarea {
 
 .today-line {
   position: absolute;
-  top: 84px;
+  top: 0;
   bottom: 0;
   width: 2px;
   background: var(--today-line);

@@ -1638,7 +1638,10 @@
     const marker = currentMonthMarker(min, max);
     return `<div class="timeline-shell"><div class="timeline-title">${title}${note ? `<span class="timeline-note">${note}</span>` : ''}</div><div class="timeline-body">
       <div class="timeline-labels"><div class="timeline-label-spacer"></div>${labels}</div>
-      <div class="timeline-scroll" id="${id}"><div class="timeline-canvas" style="width:${width}px"><div class="timeline-header">${header}</div>${marker}${yearLines}${rows}</div></div>
+      <div class="timeline-content">
+        <div class="timeline-header-viewport"><div class="timeline-header" style="width:${width}px">${header}</div></div>
+        <div class="timeline-scroll" id="${id}"><div class="timeline-canvas" style="width:${width}px">${marker}${yearLines}${rows}</div></div>
+      </div>
     </div></div>`;
   }
 
@@ -2086,6 +2089,14 @@
   function bindTimelineScroll() {
     const timelines = [$('#projectTimeline'), $('#personTimeline')].filter(Boolean);
     if (!timelines.length) return;
+    syncTimelineStickyOffset();
+
+    const syncHeaders = () => {
+      for (const timeline of timelines) {
+        const header = timeline.closest('.timeline-content')?.querySelector('.timeline-header');
+        if (header) header.style.transform = `translateX(${-timeline.scrollLeft}px)`;
+      }
+    };
 
     const sync = source => {
       if (syncingScroll) return;
@@ -2093,6 +2104,7 @@
       for (const target of timelines) if (target !== source) target.scrollLeft = source.scrollLeft;
       scrollMemory.project = source.scrollLeft;
       scrollMemory.person = source.scrollLeft;
+      syncHeaders();
       syncingScroll = false;
     };
 
@@ -2124,6 +2136,12 @@
       });
     };
     timelines.forEach(enablePan);
+    syncHeaders();
+  }
+
+  function syncTimelineStickyOffset() {
+    const topbar = $('.topbar');
+    document.documentElement.style.setProperty('--timeline-sticky-top', `${topbar?.getBoundingClientRect().height || 0}px`);
   }
 
   function restoreScroll() { requestAnimationFrame(() => { const p = $('#projectTimeline'), q = $('#personTimeline'); if (p) p.scrollLeft = scrollMemory.project; if (q) q.scrollLeft = scrollMemory.person; }); }
@@ -2978,6 +2996,7 @@
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
       if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); }
     });
+    window.addEventListener('resize', syncTimelineStickyOffset);
   }
 
   // Warn before the browser unloads the page if there are unsaved changes
