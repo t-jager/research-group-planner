@@ -1614,6 +1614,14 @@
               </div>
             </label>
 
+            <div class="assignment-field">
+              <span>Assignment period</span>
+              <div class="assignment-date-fields">
+                <label>Start date<input id="assignmentEditorStart" type="date" required></label>
+                <label>End date<input id="assignmentEditorEnd" type="date" required></label>
+              </div>
+            </div>
+
             <label class="assignment-field">
               <span>Notes</span>
               <textarea id="assignmentEditorNotes" rows="6" placeholder="Add a note about this assignment"></textarea>
@@ -2152,11 +2160,13 @@
   function bindAssignmentEditor() {
     const modal = $('#assignmentEditorModal');
     const fteInput = $('#assignmentEditorFte');
+    const startInput = $('#assignmentEditorStart');
+    const endInput = $('#assignmentEditorEnd');
     const notesInput = $('#assignmentEditorNotes');
     const context = $('#assignmentEditorContext');
     const planningBox = $('#assignmentEditorPlanning');
     const saveButton = $('#assignmentEditorSave');
-    if (!modal || !fteInput || !notesInput || !context || !planningBox || !saveButton) return;
+    if (!modal || !fteInput || !startInput || !endInput || !notesInput || !context || !planningBox || !saveButton) return;
 
     const closeModal = () => {
       modal.hidden = true;
@@ -2192,6 +2202,27 @@
           <span>${assignment.start} to ${assignment.end}</span>
         `;
         fteInput.value = formatNumber(assignment.ftePercent, 1);
+        startInput.value = assignment.start;
+        endInput.value = assignment.end;
+        const hasProjectDuration = project && !project._isAccount && validDateString(project.start) && validDateString(project.end);
+        const personIntervals = sortedIntervals(person);
+        const personFirstStart = personIntervals.length ? personIntervals[0].start : '';
+        const minimumAssignmentStart = [personFirstStart, hasProjectDuration ? project.start : '']
+          .filter(validDateString)
+          .sort()
+          .at(-1) || '';
+        for (const input of [startInput, endInput]) {
+          if (minimumAssignmentStart) {
+            input.min = minimumAssignmentStart;
+          } else {
+            input.removeAttribute('min');
+          }
+          if (hasProjectDuration) {
+            input.max = project.end;
+          } else {
+            input.removeAttribute('max');
+          }
+        }
         notesInput.value = assignment.notes || '';
         const isSA = role === 'Student assistant';
         const labelEl = document.getElementById('assignmentEditorLabel');
@@ -2228,9 +2259,39 @@
       }
 
       const nextFte = numberValue(fteInput.value);
+      const nextStart = startInput.value;
+      const nextEnd = endInput.value;
       const nextNotes = notesInput.value;
       const person = getPerson(assignment.personId);
-      const activeRoleVal = activeRole(person, assignment);
+      if (!validDateString(nextStart) || !validDateString(nextEnd)) {
+        alert('Please enter valid start and end dates.');
+        (!validDateString(nextStart) ? startInput : endInput).focus();
+        return;
+      }
+      if (nextStart > nextEnd) {
+        alert('The start date must not be after the end date.');
+        startInput.focus();
+        return;
+      }
+
+      const personIntervals = sortedIntervals(person);
+      const personFirstStart = personIntervals.length ? personIntervals[0].start : '';
+      if (validDateString(personFirstStart) && nextStart < personFirstStart) {
+        alert(`The assignment must not start before the contract begins (${personFirstStart}).`);
+        startInput.focus();
+        return;
+      }
+
+      const assignmentProject = getProjectOrAccount(assignment.projectId);
+      const hasProjectDuration = assignmentProject && !assignmentProject._isAccount && validDateString(assignmentProject.start) && validDateString(assignmentProject.end);
+      if (hasProjectDuration && (nextStart < assignmentProject.start || nextEnd > assignmentProject.end)) {
+        alert(`The assignment must be within the project duration (${assignmentProject.start} to ${assignmentProject.end}).`);
+        (nextStart < assignmentProject.start ? startInput : endInput).focus();
+        return;
+      }
+
+      const nextAssignment = { ...assignment, start: nextStart, end: nextEnd };
+      const activeRoleVal = activeRole(person, nextAssignment);
       const isSA = activeRoleVal === 'Student assistant';
       const maxVal = isSA ? 168 : 1000;
 
@@ -2240,9 +2301,11 @@
         return;
       }
 
-      if (nextFte !== numberValue(assignment.ftePercent) || nextNotes !== String(assignment.notes || '')) {
+      if (nextFte !== numberValue(assignment.ftePercent) || nextStart !== assignment.start || nextEnd !== assignment.end || nextNotes !== String(assignment.notes || '')) {
         snapshot();
         assignment.ftePercent = nextFte;
+        assignment.start = nextStart;
+        assignment.end = nextEnd;
         assignment.notes = nextNotes;
         markDirty();
       }

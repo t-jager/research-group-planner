@@ -1338,6 +1338,26 @@ body.modal-open {
   border-color: var(--accent);
 }
 
+.assignment-date-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.assignment-date-fields label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+@media (max-width: 480px) {
+  .assignment-date-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
 .assignment-field-checkbox {
   display: flex !important;
   align-items: center;
