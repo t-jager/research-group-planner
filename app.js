@@ -386,11 +386,11 @@
   // contract period that overlaps the current month by the FTE percentage.
   // Beyond the last defined contract period, the latest known monthly rate
   // is used as a "planned employment" projection.
-  function assignmentCost(a) {
+  function assignmentCost(a, raw) {
     const person = getPerson(a.personId);
     if (!person || !validDateString(a.start) || !validDateString(a.end) || parseDate(a.start) > parseDate(a.end)) return 0;
     const account = getAccount(a.projectId);
-    const effectiveStart = account && validDateString(account.balanceDate) && account.balanceDate > a.start ? account.balanceDate : a.start;
+    const effectiveStart = !raw && account && validDateString(account.balanceDate) && account.balanceDate > a.start ? account.balanceDate : a.start;
     if (parseDate(effectiveStart) > parseDate(a.end)) return 0;
     let cursor = monthStartFor(parseDate(effectiveStart));
     const finish = parseDate(a.end);
@@ -1985,7 +1985,7 @@
       planning.contractExtension ? '⚠ Contract extension required' : '',
       planning.projectExtension ? '⚠ Project extension required' : ''
     ].filter(Boolean).join('\n');
-    const tooltip = `${label}\n${role ? role + '\n' : ''}${a.start} – ${a.end}\nCost: ${formatMoney(assignmentCost(a))}` +
+    const tooltip = `${label}\n${role ? role + '\n' : ''}${a.start} – ${a.end}\nCost: ${formatMoney(assignmentCost(a, true))}` +
       `${planningLines ? `\n\n${planningLines}` : ''}` +
       `${noteText ? `\n\nNote: ${noteText}` : ''}`;
 
