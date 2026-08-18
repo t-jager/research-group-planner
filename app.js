@@ -1985,7 +1985,7 @@
       planning.contractExtension ? '⚠ Contract extension required' : '',
       planning.projectExtension ? '⚠ Project extension required' : ''
     ].filter(Boolean).join('\n');
-    const isAccountAssignment = !!(project && project._isAccount && validDateString(project.balanceDate));
+    const isAccountAssignment = !!(getAccount(a.projectId) && validDateString(project?.balanceDate));
     const costLine = isAccountAssignment
       ? `Total cost: ${formatMoney(assignmentCost(a, true))}\nSince balance (${project.balanceDate}): ${formatMoney(assignmentCost(a))}`
       : `Cost: ${formatMoney(assignmentCost(a, true))}`;
