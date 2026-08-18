@@ -1794,7 +1794,7 @@
       .map(p => {
         const assignments = visibleAssignments().filter(a => a.personId === p.id);
         const height = timelineRowHeight(assignments, PERSON_TIMELINE_MIN_HEIGHT, true);
-        const totalCost = assignments.reduce((sum, a) => sum + assignmentCost(a), 0);
+        const totalCost = assignments.reduce((sum, a) => sum + assignmentCost(a, true), 0);
         return `<div class="timeline-label-row" style="height:${height}px">
           <strong>${esc(personName(p))}</strong>
           <div class="meta">
@@ -1985,7 +1985,11 @@
       planning.contractExtension ? '⚠ Contract extension required' : '',
       planning.projectExtension ? '⚠ Project extension required' : ''
     ].filter(Boolean).join('\n');
-    const tooltip = `${label}\n${role ? role + '\n' : ''}${a.start} – ${a.end}\nCost: ${formatMoney(assignmentCost(a, true))}` +
+    const isAccountAssignment = !!(project && project._isAccount && validDateString(project.balanceDate));
+    const costLine = isAccountAssignment
+      ? `Total cost: ${formatMoney(assignmentCost(a, true))}\nSince balance (${project.balanceDate}): ${formatMoney(assignmentCost(a))}`
+      : `Cost: ${formatMoney(assignmentCost(a, true))}`;
+    const tooltip = `${label}\n${role ? role + '\n' : ''}${a.start} – ${a.end}\n${costLine}` +
       `${planningLines ? `\n\n${planningLines}` : ''}` +
       `${noteText ? `\n\nNote: ${noteText}` : ''}`;
 
