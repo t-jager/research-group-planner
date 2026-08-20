@@ -691,50 +691,50 @@
     const accounts = [...visibleAccounts()].sort((a, b) =>
       String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
     );
-    const totalFreePersonnel = projects.reduce((sum, project) => sum + projectFreePersonnel(project), 0);
 
-    const cat = (cat) => accounts.filter(a => a.category === cat).reduce((sum, a) => sum + accountFreeBalance(a), 0);
-    const freePersonnel = totalFreePersonnel + cat('personnel');
-    const freeMaterial = cat('material');
-    const freePersonnelOrMaterial = cat('personnel_or_material');
-    const freeMaterialConvertible = cat('material_convertible');
-    const freeOther = accounts.filter(a => !a.category).reduce((sum, a) => sum + accountFreeBalance(a), 0);
+    const totalFreePersonnel = projects.reduce((sum, project) => sum + projectFreePersonnel(project), 0);
+    const accByCat = (cat) => accounts.filter(a => (cat === '' ? !a.category : a.category === cat));
+    const sumCat = (cat) => accByCat(cat).reduce((sum, a) => sum + accountFreeBalance(a), 0);
+    const accountLine = (a) => `<div class="budget-line compact-budget-line">
+        <span><strong>Account:</strong> ${esc(a.name || '(unnamed account)')}</span>
+        <strong class="${accountFreeBalance(a) < 0 ? 'negative-funding' : ''}">${formatMoney(accountFreeBalance(a))}</strong>
+      </div>`;
+    const sectionLines = (items) => items.map(accountLine).join('');
+
+    const freePersonnel = totalFreePersonnel + sumCat('personnel');
+    const freeMaterial = sumCat('material');
+    const freePersonnelOrMaterial = sumCat('personnel_or_material');
+    const freeMaterialConvertible = sumCat('material_convertible');
+    const freeOther = sumCat('');
     const totalFree = freePersonnel + freeMaterial + freePersonnelOrMaterial + freeMaterialConvertible + freeOther;
+
+    const categorySections = [
+      { accounts: accByCat('material'), label: 'Free materials', sum: freeMaterial },
+      { accounts: accByCat('personnel_or_material'), label: 'Personnel or Materials', sum: freePersonnelOrMaterial },
+      { accounts: accByCat('material_convertible'), label: 'Materials (Personnel possible through reallocation)', sum: freeMaterialConvertible },
+      { accounts: accByCat(''), label: 'Other', sum: freeOther },
+    ];
 
     return `
       <div class="compact-budget-list">
         ${projects.map(project => `
           <div class="budget-line compact-budget-line">
             <span><strong>${esc(project.type || 'Other')}:</strong> ${esc(project.name || '(unnamed project)')}</span>
-            <strong class="${projectFreeStudentAssistant(project) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreeStudentAssistant(project))}</strong>
+            <strong class="${projectFreePersonnel(project) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(project))}</strong>
           </div>
         `).join('')}
-        ${accounts.map(account => `
-          <div class="budget-line compact-budget-line">
-            <span><strong>Account:</strong> ${esc(account.name || '(unnamed account)')}${account.category ? ` <span class="muted">(${esc(account.category)})</span>` : ''}</span>
-            <strong class="${accountFreeBalance(account) < 0 ? 'negative-funding' : ''}">${formatMoney(accountFreeBalance(account))}</strong>
-          </div>
-        `).join('')}
+        ${sectionLines(accByCat('personnel'))}
         <div class="budget-line compact-budget-total">
           <span>Free personnel</span>
           <strong class="${freePersonnel < 0 ? 'negative-funding' : ''}">${formatMoney(freePersonnel)}</strong>
         </div>
-        <div class="budget-line compact-budget-total">
-          <span>Free materials</span>
-          <strong class="${freeMaterial < 0 ? 'negative-funding' : ''}">${formatMoney(freeMaterial)}</strong>
-        </div>
-        <div class="budget-line compact-budget-total">
-          <span>Personnel or Materials</span>
-          <strong class="${freePersonnelOrMaterial < 0 ? 'negative-funding' : ''}">${formatMoney(freePersonnelOrMaterial)}</strong>
-        </div>
-        <div class="budget-line compact-budget-total">
-          <span>Materials (Personnel possible through reallocation)</span>
-          <strong class="${freeMaterialConvertible < 0 ? 'negative-funding' : ''}">${formatMoney(freeMaterialConvertible)}</strong>
-        </div>
-        <div class="budget-line compact-budget-total">
-          <span>Other</span>
-          <strong class="${freeOther < 0 ? 'negative-funding' : ''}">${formatMoney(freeOther)}</strong>
-        </div>
+        ${categorySections.filter(s => s.accounts.length).map(s => `
+          ${sectionLines(s.accounts)}
+          <div class="budget-line compact-budget-total">
+            <span>${s.label}</span>
+            <strong class="${s.sum < 0 ? 'negative-funding' : ''}">${formatMoney(s.sum)}</strong>
+          </div>
+        `).join('')}
         <div class="budget-line compact-budget-total">
           <span>Total free funds</span>
           <strong class="${totalFree < 0 ? 'negative-funding' : ''}">${formatMoney(totalFree)}</strong>
