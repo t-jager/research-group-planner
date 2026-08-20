@@ -693,16 +693,13 @@
     );
     const totalFreeStudentAssistants = projects.reduce((sum, project) => sum + projectFreeStudentAssistant(project), 0);
 
-    const freePersonnel = totalFreeStudentAssistants + accounts
-      .filter(a => a.category === 'personnel' || a.category === 'personnel_or_material')
-      .reduce((sum, a) => sum + accountFreeBalance(a), 0);
-    const freeMaterials = accounts
-      .filter(a => a.category === 'material' || a.category === 'personnel_or_material' || a.category === 'material_convertible')
-      .reduce((sum, a) => sum + accountFreeBalance(a), 0);
-    const freeOther = accounts
-      .filter(a => !a.category)
-      .reduce((sum, a) => sum + accountFreeBalance(a), 0);
-    const totalFree = freePersonnel + freeMaterials + freeOther;
+    const cat = (cat) => accounts.filter(a => a.category === cat).reduce((sum, a) => sum + accountFreeBalance(a), 0);
+    const freePersonnel = totalFreeStudentAssistants + cat('personnel');
+    const freeMaterial = cat('material');
+    const freePersonnelOrMaterial = cat('personnel_or_material');
+    const freeMaterialConvertible = cat('material_convertible');
+    const freeOther = accounts.filter(a => !a.category).reduce((sum, a) => sum + accountFreeBalance(a), 0);
+    const totalFree = freePersonnel + freeMaterial + freePersonnelOrMaterial + freeMaterialConvertible + freeOther;
 
     return `
       <div class="compact-budget-list">
@@ -724,12 +721,20 @@
         </div>
         <div class="budget-line compact-budget-total">
           <span>Free materials</span>
-          <strong class="${freeMaterials < 0 ? 'negative-funding' : ''}">${formatMoney(freeMaterials)}</strong>
+          <strong class="${freeMaterial < 0 ? 'negative-funding' : ''}">${formatMoney(freeMaterial)}</strong>
         </div>
-        ${freeOther ? `<div class="budget-line compact-budget-total">
-          <span>Free other</span>
+        <div class="budget-line compact-budget-total">
+          <span>Personnel or Materials</span>
+          <strong class="${freePersonnelOrMaterial < 0 ? 'negative-funding' : ''}">${formatMoney(freePersonnelOrMaterial)}</strong>
+        </div>
+        <div class="budget-line compact-budget-total">
+          <span>Materials (Personnel possible through reallocation)</span>
+          <strong class="${freeMaterialConvertible < 0 ? 'negative-funding' : ''}">${formatMoney(freeMaterialConvertible)}</strong>
+        </div>
+        <div class="budget-line compact-budget-total">
+          <span>Other</span>
           <strong class="${freeOther < 0 ? 'negative-funding' : ''}">${formatMoney(freeOther)}</strong>
-        </div>` : ''}
+        </div>
         <div class="budget-line compact-budget-total">
           <span>Total free funds</span>
           <strong class="${totalFree < 0 ? 'negative-funding' : ''}">${formatMoney(totalFree)}</strong>
