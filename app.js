@@ -168,6 +168,7 @@
       name: String(a.name ?? ''),
       balance: numberValue(a.balance),
       balanceDate: validDateString(a.balanceDate) ? a.balanceDate : '',
+      category: String(a.category ?? ''),
       notes: String(a.notes ?? ''),
       hidden: Boolean(a.hidden)
     })) : [];
@@ -1535,7 +1536,7 @@
   }
 
   function addAccount() {
-    snapshot(); const a = { id: uid('account'), name: '', balance: 0, balanceDate: '', notes: '', hidden: false };
+    snapshot(); const a = { id: uid('account'), name: '', balance: 0, balanceDate: '', category: '', notes: '', hidden: false };
     state.accounts.push(a); renderAccounts(); renderDerived(); focusFirst(`[data-account-id="${a.id}"]`);
   }
 
