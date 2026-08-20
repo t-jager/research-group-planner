@@ -61,7 +61,7 @@
       "lastName": "Nguyen",
       "contractPeriods": [
         {
-          "id": "cp4",
+          "id": "cp4a",
           "role": "PhD student",
           "start": "2025-10-01",
           "end": "2029-09-30",
@@ -191,7 +191,7 @@
       "name": "Post-Quantum Key Exchange Protocols",
       "type": "DFG",
       "start": "2027-01-01",
-      "end": "2029-12-31",
+      "end": "2030-12-31",
       "personnelBudget": 195000,
       "travelBudget": 8000,
       "materialBudget": 3500,
@@ -243,7 +243,7 @@
       "balance": 35000,
       "balanceDate": "2026-09-01",
       "category": "material_convertible",
-      "notes": "Funds from industry collaboration, primarily for materials but convertible to personnel with justification",
+      "notes": "Funds from industry collaboration",
       "hidden": false
     }
   ],
@@ -252,14 +252,44 @@
       "id": "as1",
       "personId": "p1",
       "projectId": "a1",
-      "start": "2026-01-01",
-      "end": "2026-06-30",
-      "ftePercent": 40,
-      "notes": "Faculty allocation covers 40% during this period",
+      "start": "2025-01-01",
+      "end": "2025-09-30",
+      "ftePercent": 100,
+      "notes": "Faculty allocation covers full time before ERC project starts",
       "planned": false
     },
     {
       "id": "as2",
+      "personId": "p1",
+      "projectId": "a1",
+      "start": "2025-10-01",
+      "end": "2030-09-30",
+      "ftePercent": 60,
+      "notes": "60% faculty, 40% ERC",
+      "planned": false
+    },
+    {
+      "id": "as3",
+      "personId": "p1",
+      "projectId": "pr2",
+      "start": "2025-10-01",
+      "end": "2030-09-30",
+      "ftePercent": 40,
+      "notes": "Supervision",
+      "planned": false
+    },
+    {
+      "id": "as4",
+      "personId": "p1",
+      "projectId": "a1",
+      "start": "2030-10-01",
+      "end": "2030-12-31",
+      "ftePercent": 100,
+      "notes": "Full time after ERC project ends",
+      "planned": false
+    },
+    {
+      "id": "as5",
       "personId": "p2",
       "projectId": "pr1",
       "start": "2025-04-01",
@@ -269,7 +299,27 @@
       "planned": false
     },
     {
-      "id": "as3",
+      "id": "as6",
+      "personId": "p3",
+      "projectId": "pr3",
+      "start": "2026-07-01",
+      "end": "2028-06-30",
+      "ftePercent": 100,
+      "notes": "",
+      "planned": false
+    },
+    {
+      "id": "as7",
+      "personId": "p3",
+      "projectId": "a5",
+      "start": "2028-07-01",
+      "end": "2028-12-31",
+      "ftePercent": 100,
+      "notes": "Funded from industry partner after BMBF project ends",
+      "planned": false
+    },
+    {
+      "id": "as8",
       "personId": "p4",
       "projectId": "pr2",
       "start": "2025-10-01",
@@ -279,7 +329,17 @@
       "planned": false
     },
     {
-      "id": "as4",
+      "id": "as9",
+      "personId": "p4",
+      "projectId": "pr4",
+      "start": "2029-10-01",
+      "end": "2029-12-31",
+      "ftePercent": 100,
+      "notes": "Continues on new project after lattice signatures ends",
+      "planned": false
+    },
+    {
+      "id": "as10",
       "personId": "p5",
       "projectId": "pr3",
       "start": "2026-01-01",
@@ -289,7 +349,7 @@
       "planned": false
     },
     {
-      "id": "as5",
+      "id": "as11",
       "personId": "p5",
       "projectId": "pr3",
       "start": "2027-01-01",
@@ -299,7 +359,17 @@
       "planned": false
     },
     {
-      "id": "as6",
+      "id": "as12",
+      "personId": "p5",
+      "projectId": "pr4",
+      "start": "2029-01-01",
+      "end": "2030-12-31",
+      "ftePercent": 100,
+      "notes": "PhD continues on new project",
+      "planned": false
+    },
+    {
+      "id": "as13",
       "personId": "p6",
       "projectId": "a4",
       "start": "2026-04-01",
@@ -309,53 +379,23 @@
       "planned": false
     },
     {
-      "id": "as7",
+      "id": "as14",
       "personId": "p7",
       "projectId": "pr1",
       "start": "2026-04-01",
       "end": "2027-03-31",
-      "ftePercent": 50,
+      "ftePercent": 100,
       "notes": "",
       "planned": false
     },
     {
-      "id": "as8",
+      "id": "as15",
       "personId": "p7",
       "projectId": "pr4",
       "start": "2027-04-01",
       "end": "2029-03-31",
       "ftePercent": 100,
       "notes": "",
-      "planned": false
-    },
-    {
-      "id": "as9",
-      "personId": "p1",
-      "projectId": "pr2",
-      "start": "2025-10-01",
-      "end": "2030-09-30",
-      "ftePercent": 30,
-      "notes": "Supervision",
-      "planned": false
-    },
-    {
-      "id": "as10",
-      "personId": "p3",
-      "projectId": "pr3",
-      "start": "2026-07-01",
-      "end": "2028-06-30",
-      "ftePercent": 80,
-      "notes": "",
-      "planned": false
-    },
-    {
-      "id": "as11",
-      "personId": "p3",
-      "projectId": "a5",
-      "start": "2028-07-01",
-      "end": "2028-12-31",
-      "ftePercent": 100,
-      "notes": "Funded from industry partner after BMBF project ends",
       "planned": false
     }
   ],
