@@ -154,9 +154,9 @@
       "start": "2025-04-01",
       "end": "2029-03-31",
       "personnelBudget": 280000,
-      "travelBudget": 12000,
-      "materialBudget": 8000,
-      "studentAssistantBudget": 24000,
+      "travelBudget": 2500,
+      "materialBudget": 5000,
+      "studentAssistantBudget": 0,
       "notes": "",
       "hidden": false
     },
@@ -166,9 +166,9 @@
       "type": "ERC",
       "start": "2025-10-01",
       "end": "2030-09-30",
-      "personnelBudget": 185000,
-      "travelBudget": 18000,
-      "materialBudget": 5000,
+      "personnelBudget": 535000,
+      "travelBudget": 2500,
+      "materialBudget": 0,
       "studentAssistantBudget": 0,
       "notes": "",
       "hidden": false
@@ -179,10 +179,10 @@
       "type": "BMBF",
       "start": "2026-01-01",
       "end": "2028-12-31",
-      "personnelBudget": 320000,
-      "travelBudget": 15000,
-      "materialBudget": 22000,
-      "studentAssistantBudget": 18000,
+      "personnelBudget": 310000,
+      "travelBudget": 2000,
+      "materialBudget": 13000,
+      "studentAssistantBudget": 6000,
       "notes": "",
       "hidden": false
     },
@@ -192,10 +192,10 @@
       "type": "DFG",
       "start": "2027-01-01",
       "end": "2030-12-31",
-      "personnelBudget": 195000,
-      "travelBudget": 8000,
-      "materialBudget": 3500,
-      "studentAssistantBudget": 12000,
+      "personnelBudget": 265000,
+      "travelBudget": 0,
+      "materialBudget": 0,
+      "studentAssistantBudget": 0,
       "notes": "",
       "hidden": false
     }
@@ -203,8 +203,8 @@
   "accounts": [
     {
       "id": "a1",
-      "name": "Faculty Allocation 2026",
-      "balance": 42000,
+      "name": "Faculty Allocation",
+      "balance": 420000,
       "balanceDate": "2026-01-01",
       "category": "personnel",
       "notes": "Annual faculty funding for personnel",
@@ -213,7 +213,7 @@
     {
       "id": "a2",
       "name": "Equipment Fund",
-      "balance": 28500,
+      "balance": 5000,
       "balanceDate": "2026-03-01",
       "category": "material",
       "notes": "Hardware and lab equipment",
@@ -222,7 +222,7 @@
     {
       "id": "a3",
       "name": "Flexible Operating Fund",
-      "balance": 15200,
+      "balance": 3000,
       "balanceDate": "2026-06-01",
       "category": "personnel_or_material",
       "notes": "Can be used for personnel or materials",
@@ -231,7 +231,7 @@
     {
       "id": "a4",
       "name": "Conference Budget",
-      "balance": 6800,
+      "balance": 14000,
       "balanceDate": "2026-01-01",
       "category": "",
       "notes": "Travel and conference attendance",
@@ -240,7 +240,7 @@
     {
       "id": "a5",
       "name": "Industry Partner Funds",
-      "balance": 35000,
+      "balance": 45000,
       "balanceDate": "2026-09-01",
       "category": "material_convertible",
       "notes": "Funds from industry collaboration",
