@@ -691,16 +691,16 @@
     const accounts = [...visibleAccounts()].sort((a, b) =>
       String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
     );
-    const totalFreeProjects = projects.reduce((sum, project) => sum + projectFreePersonnel(project), 0);
+    const totalFreeStudentAssistants = projects.reduce((sum, project) => sum + projectFreeStudentAssistant(project), 0);
     const totalFreeAccounts = accounts.reduce((sum, account) => sum + accountFreeBalance(account), 0);
-    const totalFree = totalFreeProjects + totalFreeAccounts;
+    const totalFree = totalFreeStudentAssistants + totalFreeAccounts;
 
     return `
       <div class="compact-budget-list">
         ${projects.map(project => `
           <div class="budget-line compact-budget-line">
             <span><strong>${esc(project.type || 'Other')}:</strong> ${esc(project.name || '(unnamed project)')}</span>
-            <strong class="${projectFreePersonnel(project) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(project))}</strong>
+            <strong class="${projectFreeStudentAssistant(project) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreeStudentAssistant(project))}</strong>
           </div>
         `).join('')}
         ${accounts.map(account => `
