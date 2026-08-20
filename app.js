@@ -700,7 +700,7 @@
       .filter(a => a.category === 'material' || a.category === 'personnel_or_material' || a.category === 'material_convertible')
       .reduce((sum, a) => sum + accountFreeBalance(a), 0);
     const freeOther = accounts
-      .filter(a => !a.category || a.category === 'other')
+      .filter(a => !a.category)
       .reduce((sum, a) => sum + accountFreeBalance(a), 0);
     const totalFree = freePersonnel + freeMaterials + freeOther;
 
@@ -968,7 +968,7 @@
         <td class="sticky-col">${input('text', a.name, fieldAttrs('account', a.id, 'name'))}</td>
         <td>${input('money', a.balance, fieldAttrs('account', a.id, 'balance'))}</td>
         <td>${input('date', a.balanceDate, fieldAttrs('account', a.id, 'balanceDate'))}</td>
-        <td><select ${fieldAttrs('account', a.id, 'category')}><option value="" ${!a.category ? 'selected' : ''}></option><option value="other" ${a.category === 'other' ? 'selected' : ''}>Other</option><option value="personnel" ${a.category === 'personnel' ? 'selected' : ''}>Personnel only</option><option value="material" ${a.category === 'material' ? 'selected' : ''}>Materials only</option><option value="personnel_or_material" ${a.category === 'personnel_or_material' ? 'selected' : ''}>Personnel or Materials</option><option value="material_convertible" ${a.category === 'material_convertible' ? 'selected' : ''}>Materials (Personnel possible through reallocation)</option></select></td>
+        <td><select ${fieldAttrs('account', a.id, 'category')}><option value="" ${!a.category ? 'selected' : ''}></option><option value="personnel" ${a.category === 'personnel' ? 'selected' : ''}>Personnel only</option><option value="material" ${a.category === 'material' ? 'selected' : ''}>Materials only</option><option value="personnel_or_material" ${a.category === 'personnel_or_material' ? 'selected' : ''}>Personnel or Materials</option><option value="material_convertible" ${a.category === 'material_convertible' ? 'selected' : ''}>Materials (Personnel possible through reallocation)</option></select></td>
         <td class="computed money" data-account-assigned="${a.id}">${formatMoney(accountAssigned(a.id))}</td>
         <td class="computed money" data-account-free="${a.id}">${formatMoney(accountFreeBalance(a))}</td>
         <td><textarea ${fieldAttrs('account', a.id, 'notes')}>${esc(a.notes)}</textarea></td>
@@ -1530,7 +1530,7 @@
   }
 
   function addAccount() {
-    snapshot(); const a = { id: uid('account'), name: '', balance: 0, balanceDate: '', category: 'other', notes: '', hidden: false };
+    snapshot(); const a = { id: uid('account'), name: '', balance: 0, balanceDate: '', notes: '', hidden: false };
     state.accounts.push(a); renderAccounts(); renderDerived(); focusFirst(`[data-account-id="${a.id}"]`);
   }
 
