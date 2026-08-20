@@ -691,10 +691,10 @@
     const accounts = [...visibleAccounts()].sort((a, b) =>
       String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
     );
-    const totalFreeStudentAssistants = projects.reduce((sum, project) => sum + projectFreeStudentAssistant(project), 0);
+    const totalFreePersonnel = projects.reduce((sum, project) => sum + projectFreePersonnel(project), 0);
 
     const cat = (cat) => accounts.filter(a => a.category === cat).reduce((sum, a) => sum + accountFreeBalance(a), 0);
-    const freePersonnel = totalFreeStudentAssistants + cat('personnel');
+    const freePersonnel = totalFreePersonnel + cat('personnel');
     const freeMaterial = cat('material');
     const freePersonnelOrMaterial = cat('personnel_or_material');
     const freeMaterialConvertible = cat('material_convertible');
