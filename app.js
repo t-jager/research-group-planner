@@ -655,7 +655,7 @@
     $('#dashboard').innerHTML = `
       <div class="dashboard-grid">
         <div class="dashboard-card">
-          <h2>Free personnel funding</h2>
+          <h2>Free funding</h2>
           ${(visibleProjects().length || visibleAccounts().length) ? groupedFreePersonnelHtml() : '<div class="muted">No visible projects or accounts</div>'}
         </div>
         <div class="dashboard-card">
@@ -710,33 +710,49 @@
     const totalFree = freePersonnel + freeMaterial + freePersonnelOrMaterial + freeMaterialConvertible + freeOther;
 
     const categorySections = [
-      { accounts: accByCat('material'), label: 'Free materials', sum: freeMaterial },
+      { accounts: accByCat('material'), label: 'Materials only', sum: freeMaterial },
       { accounts: accByCat('personnel_or_material'), label: 'Personnel or Materials', sum: freePersonnelOrMaterial },
       { accounts: accByCat('material_convertible'), label: 'Materials (Personnel possible through reallocation)', sum: freeMaterialConvertible },
       { accounts: accByCat(''), label: 'Other', sum: freeOther },
     ];
 
+    const personnelAccounts = accByCat('personnel');
+    const hasProjects = projects.length > 0;
+
     return `
       <div class="compact-budget-list">
-        ${projects.map(project => `
-          <div class="budget-line compact-budget-line">
-            <span><strong>${esc(project.type || 'Other')}:</strong> ${esc(project.name || '(unnamed project)')}</span>
-            <strong class="${projectFreePersonnel(project) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(project))}</strong>
+        ${hasProjects ? `<div class="funding-section">
+          <div class="funding-section-header">Projects</div>
+          ${projects.map(project => `
+            <div class="budget-line compact-budget-line">
+              <span><strong>${esc(project.type || 'Other')}:</strong> ${esc(project.name || '(unnamed project)')}</span>
+              <strong class="${projectFreePersonnel(project) < 0 ? 'negative-funding' : ''}">${formatMoney(projectFreePersonnel(project))}</strong>
+            </div>
+          `).join('')}
+          <div class="budget-line compact-budget-total">
+            <span>Subtotal</span>
+            <strong class="${totalFreePersonnel < 0 ? 'negative-funding' : ''}">${formatMoney(totalFreePersonnel)}</strong>
           </div>
-        `).join('')}
-        ${sectionLines(accByCat('personnel'))}
-        <div class="budget-line compact-budget-total">
-          <span>Free personnel</span>
-          <strong class="${freePersonnel < 0 ? 'negative-funding' : ''}">${formatMoney(freePersonnel)}</strong>
+        </div>` : ''}
+        <div class="funding-section">
+          <div class="funding-section-header">Personnel only</div>
+          ${sectionLines(personnelAccounts)}
+          <div class="budget-line compact-budget-total">
+            <span>Subtotal</span>
+            <strong class="${sumCat('personnel') < 0 ? 'negative-funding' : ''}">${formatMoney(sumCat('personnel'))}</strong>
+          </div>
         </div>
         ${categorySections.filter(s => s.accounts.length).map(s => `
-          ${sectionLines(s.accounts)}
-          <div class="budget-line compact-budget-total">
-            <span>${s.label}</span>
-            <strong class="${s.sum < 0 ? 'negative-funding' : ''}">${formatMoney(s.sum)}</strong>
+          <div class="funding-section">
+            <div class="funding-section-header">${s.label}</div>
+            ${sectionLines(s.accounts)}
+            <div class="budget-line compact-budget-total">
+              <span>Subtotal</span>
+              <strong class="${s.sum < 0 ? 'negative-funding' : ''}">${formatMoney(s.sum)}</strong>
+            </div>
           </div>
         `).join('')}
-        <div class="budget-line compact-budget-total">
+        <div class="budget-line compact-budget-total funding-total">
           <span>Total free funds</span>
           <strong class="${totalFree < 0 ? 'negative-funding' : ''}">${formatMoney(totalFree)}</strong>
         </div>

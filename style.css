@@ -1142,6 +1142,27 @@ td textarea {
   font-weight: 700;
 }
 
+.funding-section {
+  background: var(--shade-2);
+  border-radius: 6px;
+  padding: 8px 10px 4px;
+  margin-bottom: 8px;
+}
+
+.funding-section-header {
+  font-weight: 700;
+  font-size: .82em;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.funding-total {
+  background: none;
+  margin-top: 4px;
+}
+
 
 .iso-date-input {
   min-width: 132px;
