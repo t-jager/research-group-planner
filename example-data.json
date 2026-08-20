@@ -5,254 +5,358 @@
       "id": "p1",
       "firstName": "Anna",
       "lastName": "Keller",
-      "salaryIntervals": [
+      "contractPeriods": [
         {
-          "id": "s1",
+          "id": "cp1",
           "role": "Professor",
-          "start": "2024-01-01",
+          "start": "2025-01-01",
           "end": "2030-12-31",
-          "monthlyCost": 11247.83,
+          "monthlyCost": 11250,
+          "planned": false,
           "employmentPercent": 100
         }
       ],
-      "notes": "Group leader, cryptographic protocols",
+      "notes": "Group leader",
       "hidden": false
     },
     {
       "id": "p2",
       "firstName": "Jonas",
       "lastName": "Weber",
-      "salaryIntervals": [
+      "contractPeriods": [
         {
-          "id": "s2",
+          "id": "cp2",
           "role": "Postdoc",
-          "start": "2024-01-01",
-          "end": "2026-12-31",
-          "monthlyCost": 7123.11,
+          "start": "2025-04-01",
+          "end": "2027-09-30",
+          "monthlyCost": 7150,
+          "planned": false,
           "employmentPercent": 100
         }
       ],
-      "notes": "Lattice-based cryptography",
+      "notes": "",
       "hidden": false
     },
     {
       "id": "p3",
       "firstName": "Mira",
       "lastName": "Scholz",
-      "salaryIntervals": [
+      "contractPeriods": [
         {
-          "id": "s3",
+          "id": "cp3",
           "role": "Postdoc",
-          "start": "2026-06-01",
-          "end": "2028-12-17",
-          "monthlyCost": 7234.56,
+          "start": "2026-07-01",
+          "end": "2028-12-31",
+          "monthlyCost": 7300,
+          "planned": false,
           "employmentPercent": 100
         }
       ],
-      "notes": "Zero-knowledge proofs",
+      "notes": "",
       "hidden": false
     },
     {
       "id": "p4",
       "firstName": "David",
       "lastName": "Nguyen",
-      "salaryIntervals": [
+      "contractPeriods": [
         {
-          "id": "s4",
+          "id": "cp4",
           "role": "PhD student",
-          "start": "2025-05-01",
-          "end": "2028-02-29",
-          "monthlyCost": 5812.73,
+          "start": "2025-10-01",
+          "end": "2029-09-30",
+          "monthlyCost": 5400,
+          "planned": false,
+          "employmentPercent": 100
+        },
+        {
+          "id": "cp4b",
+          "role": "PhD student",
+          "start": "2029-10-01",
+          "end": "2029-12-31",
+          "monthlyCost": 5600,
+          "planned": false,
           "employmentPercent": 100
         }
       ],
-      "notes": "Post-quantum key exchange",
+      "notes": "",
       "hidden": false
     },
     {
       "id": "p5",
       "firstName": "Lena",
       "lastName": "Braunwald",
-      "salaryIntervals": [
+      "contractPeriods": [
         {
-          "id": "s5",
+          "id": "cp5a",
           "role": "Student assistant",
           "start": "2026-01-01",
           "end": "2026-12-31",
-          "monthlyCost": 987.22,
-          "employmentPercent": 9
+          "monthlyCost": 480,
+          "planned": false,
+          "employmentPercent": 8
         },
         {
-          "id": "salary_mrjm89mb_021ydt",
+          "id": "cp5b",
           "role": "PhD student",
           "start": "2027-01-01",
-          "end": "2028-12-31",
-          "monthlyCost": 6845.11,
+          "end": "2030-12-31",
+          "monthlyCost": 5500,
+          "planned": false,
           "employmentPercent": 100
         }
       ],
-      "notes": "Hash function cryptanalysis",
+      "notes": "Transitions from student assistant to PhD student",
       "hidden": false
     },
     {
       "id": "p6",
       "firstName": "Tom",
       "lastName": "Hoffmann",
-      "salaryIntervals": [
+      "contractPeriods": [
         {
-          "id": "s6",
+          "id": "cp6",
           "role": "Student assistant",
-          "start": "2026-02-01",
-          "end": "2028-07-31",
-          "monthlyCost": 2123.22,
-          "employmentPercent": 50
+          "start": "2026-04-01",
+          "end": "2028-03-31",
+          "monthlyCost": 560,
+          "planned": false,
+          "employmentPercent": 9
         }
       ],
-      "notes": "Implementation and benchmarks",
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "p7",
+      "firstName": "Sara",
+      "lastName": "Yilmaz",
+      "contractPeriods": [
+        {
+          "id": "cp7",
+          "role": "PhD student",
+          "start": "2026-04-01",
+          "end": "2029-03-31",
+          "monthlyCost": 5400,
+          "planned": false,
+          "employmentPercent": 100
+        }
+      ],
+      "notes": "",
       "hidden": false
     }
   ],
   "projects": [
     {
       "id": "pr1",
-      "name": "Zero-Knowledge Proofs of Better Pizza",
-      "type": "DFG Project",
-      "start": "2024-01-01",
-      "end": "2027-12-31",
-      "personnelBudget": 347325.5,
-      "travelBudget": 15432.75,
-      "materialBudget": 21387.25,
-      "studentAssistantBudget": 4321.09,
-      "notes": "Proving pizza quality without revealing the recipe",
+      "name": "Secure Multi-Party Computation for Healthcare",
+      "type": "DFG",
+      "start": "2025-04-01",
+      "end": "2029-03-31",
+      "personnelBudget": 280000,
+      "travelBudget": 12000,
+      "materialBudget": 8000,
+      "studentAssistantBudget": 24000,
+      "notes": "",
       "hidden": false
     },
     {
       "id": "pr2",
-      "name": "Post-Quantum Cryptography for Time Travelers",
-      "type": "ERC Project",
-      "start": "2024-06-01",
-      "end": "2029-05-31",
-      "personnelBudget": 1487650.75,
-      "travelBudget": 27843.5,
-      "materialBudget": 12456.8,
-      "studentAssistantBudget": 10000,
-      "notes": "Because even flux capacitors need encryption",
+      "name": "Efficient Lattice-Based Signatures",
+      "type": "ERC",
+      "start": "2025-10-01",
+      "end": "2030-09-30",
+      "personnelBudget": 185000,
+      "travelBudget": 18000,
+      "materialBudget": 5000,
+      "studentAssistantBudget": 0,
+      "notes": "",
       "hidden": false
     },
     {
       "id": "pr3",
-      "name": "Symmetric Keys, Asymmetric Humor",
-      "type": "BMBF Project",
-      "start": "2025-01-01",
-      "end": "2028-06-30",
-      "personnelBudget": 471438.25,
-      "travelBudget": 18765.4,
-      "materialBudget": 9876.3,
-      "studentAssistantBudget": 16234.22,
-      "notes": "Exploring the comedy potential of public-key infrastructure",
+      "name": "Privacy-Preserving Machine Learning",
+      "type": "BMBF",
+      "start": "2026-01-01",
+      "end": "2028-12-31",
+      "personnelBudget": 320000,
+      "travelBudget": 15000,
+      "materialBudget": 22000,
+      "studentAssistantBudget": 18000,
+      "notes": "",
+      "hidden": false
+    },
+    {
+      "id": "pr4",
+      "name": "Post-Quantum Key Exchange Protocols",
+      "type": "DFG",
+      "start": "2027-01-01",
+      "end": "2029-12-31",
+      "personnelBudget": 195000,
+      "travelBudget": 8000,
+      "materialBudget": 3500,
+      "studentAssistantBudget": 12000,
+      "notes": "",
       "hidden": false
     }
   ],
   "accounts": [
     {
       "id": "a1",
-      "name": "Permanent positions 2024-2030",
-      "balance": 627832.46,
-      "balanceDate": "2024-01-01",
-      "notes": "University funding",
+      "name": "Faculty Allocation 2026",
+      "balance": 42000,
+      "balanceDate": "2026-01-01",
+      "category": "personnel",
+      "notes": "Annual faculty funding for personnel",
+      "hidden": false
+    },
+    {
+      "id": "a2",
+      "name": "Equipment Fund",
+      "balance": 28500,
+      "balanceDate": "2026-03-01",
+      "category": "material",
+      "notes": "Hardware and lab equipment",
+      "hidden": false
+    },
+    {
+      "id": "a3",
+      "name": "Flexible Operating Fund",
+      "balance": 15200,
+      "balanceDate": "2026-06-01",
+      "category": "personnel_or_material",
+      "notes": "Can be used for personnel or materials",
+      "hidden": false
+    },
+    {
+      "id": "a4",
+      "name": "Conference Budget",
+      "balance": 6800,
+      "balanceDate": "2026-01-01",
+      "category": "",
+      "notes": "Travel and conference attendance",
+      "hidden": false
+    },
+    {
+      "id": "a5",
+      "name": "Industry Partner Funds",
+      "balance": 35000,
+      "balanceDate": "2026-09-01",
+      "category": "material_convertible",
+      "notes": "Funds from industry collaboration, primarily for materials but convertible to personnel with justification",
       "hidden": false
     }
   ],
   "assignments": [
     {
-      "id": "assignment_mrjl6gwf_1ia4qs",
+      "id": "as1",
       "personId": "p1",
       "projectId": "a1",
-      "start": "2024-01-01",
-      "end": "2024-05-31",
-      "ftePercent": 100,
-      "notes": ""
+      "start": "2026-01-01",
+      "end": "2026-06-30",
+      "ftePercent": 40,
+      "notes": "Faculty allocation covers 40% during this period",
+      "planned": false
     },
     {
-      "id": "assignment_mrjlufpk_4gv0qg",
-      "personId": "p4",
-      "projectId": "pr3",
-      "start": "2025-05-01",
-      "end": "2028-06-30",
-      "ftePercent": 100,
-      "notes": ""
-    },
-    {
-      "id": "assignment_mrjluvcz_lqkpxd",
+      "id": "as2",
       "personId": "p2",
       "projectId": "pr1",
-      "start": "2024-01-01",
-      "end": "2026-12-31",
+      "start": "2025-04-01",
+      "end": "2027-09-30",
       "ftePercent": 100,
-      "notes": ""
+      "notes": "",
+      "planned": false
     },
     {
-      "id": "assignment_mrjlvnnp_grvup0",
-      "personId": "p6",
+      "id": "as3",
+      "personId": "p4",
       "projectId": "pr2",
-      "start": "2026-02-01",
-      "end": "2028-07-31",
-      "ftePercent": 50,
-      "notes": ""
-    },
-    {
-      "id": "assignment_mrjlyozl_q7sd1b",
-      "personId": "p3",
-      "projectId": "pr2",
-      "start": "2026-06-01",
-      "end": "2028-08-31",
+      "start": "2025-10-01",
+      "end": "2029-09-30",
       "ftePercent": 100,
-      "notes": ""
+      "notes": "",
+      "planned": false
     },
     {
-      "id": "assignment_mrkhebxx_8a0gms",
-      "personId": "p1",
-      "projectId": "pr2",
-      "start": "2024-06-01",
-      "end": "2029-05-31",
-      "ftePercent": 40,
-      "notes": ""
-    },
-    {
-      "id": "assignment_mrkhf4kx_vjfwcl",
-      "personId": "p1",
-      "projectId": "a1",
-      "start": "2024-06-01",
-      "end": "2029-05-31",
-      "ftePercent": 60,
-      "notes": ""
-    },
-    {
-      "id": "assignment_mrkhfonu_szqdb4",
-      "personId": "p1",
-      "projectId": "a1",
-      "start": "2029-06-01",
-      "end": "2030-12-31",
-      "ftePercent": 100,
-      "notes": ""
-    },
-    {
-      "id": "assignment_mrkuzy8q_263gv5",
+      "id": "as4",
       "personId": "p5",
       "projectId": "pr3",
       "start": "2026-01-01",
-      "end": "2027-12-31",
-      "ftePercent": 9,
-      "notes": ""
+      "end": "2026-12-31",
+      "ftePercent": 8,
+      "notes": "Student assistant, 8 hrs/week",
+      "planned": false
     },
     {
-      "id": "assignment_mrkuzy8q_bz9pyo",
+      "id": "as5",
       "personId": "p5",
       "projectId": "pr3",
-      "start": "2028-01-01",
+      "start": "2027-01-01",
       "end": "2028-12-31",
       "ftePercent": 100,
-      "notes": ""
+      "notes": "PhD position on the project",
+      "planned": false
+    },
+    {
+      "id": "as6",
+      "personId": "p6",
+      "projectId": "a4",
+      "start": "2026-04-01",
+      "end": "2028-03-31",
+      "ftePercent": 9,
+      "notes": "Student assistant, 9 hrs/week",
+      "planned": false
+    },
+    {
+      "id": "as7",
+      "personId": "p7",
+      "projectId": "pr1",
+      "start": "2026-04-01",
+      "end": "2027-03-31",
+      "ftePercent": 50,
+      "notes": "",
+      "planned": false
+    },
+    {
+      "id": "as8",
+      "personId": "p7",
+      "projectId": "pr4",
+      "start": "2027-04-01",
+      "end": "2029-03-31",
+      "ftePercent": 100,
+      "notes": "",
+      "planned": false
+    },
+    {
+      "id": "as9",
+      "personId": "p1",
+      "projectId": "pr2",
+      "start": "2025-10-01",
+      "end": "2030-09-30",
+      "ftePercent": 30,
+      "notes": "Supervision",
+      "planned": false
+    },
+    {
+      "id": "as10",
+      "personId": "p3",
+      "projectId": "pr3",
+      "start": "2026-07-01",
+      "end": "2028-06-30",
+      "ftePercent": 80,
+      "notes": "",
+      "planned": false
+    },
+    {
+      "id": "as11",
+      "personId": "p3",
+      "projectId": "a5",
+      "start": "2028-07-01",
+      "end": "2028-12-31",
+      "ftePercent": 100,
+      "notes": "Funded from industry partner after BMBF project ends",
+      "planned": false
     }
   ],
   "expenses": [
@@ -260,33 +364,41 @@
       "id": "e1",
       "projectId": "pr1",
       "category": "travel",
-      "date": "2025-03-15",
-      "amount": 1847.5,
-      "notes": "Pizza research conference in Naples"
+      "date": "2026-05-12",
+      "amount": 1850,
+      "notes": "Conference on secure computation, Zurich"
     },
     {
       "id": "e2",
-      "projectId": "pr1",
-      "category": "travel",
-      "date": "2026-09-20",
-      "amount": 2234.75,
-      "notes": "Crypto pizza collaboration meeting"
+      "projectId": "pr3",
+      "category": "material",
+      "date": "2026-03-20",
+      "amount": 12400,
+      "notes": "GPU server for ML experiments"
     },
     {
       "id": "e3",
       "projectId": "pr2",
-      "category": "material",
-      "date": "2026-05-10",
-      "amount": 8567.25,
-      "notes": "Quantum-resistant hardware tokens"
+      "category": "travel",
+      "date": "2026-11-05",
+      "amount": 2100,
+      "notes": "PQCrypto workshop, Tokyo"
     },
     {
       "id": "e4",
       "projectId": "pr3",
       "category": "travel",
-      "date": "2027-06-01",
-      "amount": 1523.8,
-      "notes": "Comedy cryptography workshop"
+      "date": "2027-06-15",
+      "amount": 1350,
+      "notes": "Privacy engineering symposium, Amsterdam"
+    },
+    {
+      "id": "e5",
+      "projectId": "pr1",
+      "category": "material",
+      "date": "2027-02-10",
+      "amount": 4200,
+      "notes": "Trusted execution environment dev kits"
     }
   ]
 }
