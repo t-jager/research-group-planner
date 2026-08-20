@@ -692,8 +692,17 @@
       String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
     );
     const totalFreeStudentAssistants = projects.reduce((sum, project) => sum + projectFreeStudentAssistant(project), 0);
-    const totalFreeAccounts = accounts.reduce((sum, account) => sum + accountFreeBalance(account), 0);
-    const totalFree = totalFreeStudentAssistants + totalFreeAccounts;
+
+    const freePersonnel = totalFreeStudentAssistants + accounts
+      .filter(a => a.category === 'personnel' || a.category === 'personnel_or_material')
+      .reduce((sum, a) => sum + accountFreeBalance(a), 0);
+    const freeMaterials = accounts
+      .filter(a => a.category === 'material' || a.category === 'personnel_or_material' || a.category === 'material_convertible')
+      .reduce((sum, a) => sum + accountFreeBalance(a), 0);
+    const freeOther = accounts
+      .filter(a => !a.category || a.category === 'other')
+      .reduce((sum, a) => sum + accountFreeBalance(a), 0);
+    const totalFree = freePersonnel + freeMaterials + freeOther;
 
     return `
       <div class="compact-budget-list">
@@ -705,10 +714,22 @@
         `).join('')}
         ${accounts.map(account => `
           <div class="budget-line compact-budget-line">
-            <span><strong>Account:</strong> ${esc(account.name || '(unnamed account)')}</span>
+            <span><strong>Account:</strong> ${esc(account.name || '(unnamed account)')}${account.category ? ` <span class="muted">(${esc(account.category)})</span>` : ''}</span>
             <strong class="${accountFreeBalance(account) < 0 ? 'negative-funding' : ''}">${formatMoney(accountFreeBalance(account))}</strong>
           </div>
         `).join('')}
+        <div class="budget-line compact-budget-total">
+          <span>Free personnel</span>
+          <strong class="${freePersonnel < 0 ? 'negative-funding' : ''}">${formatMoney(freePersonnel)}</strong>
+        </div>
+        <div class="budget-line compact-budget-total">
+          <span>Free materials</span>
+          <strong class="${freeMaterials < 0 ? 'negative-funding' : ''}">${formatMoney(freeMaterials)}</strong>
+        </div>
+        ${freeOther ? `<div class="budget-line compact-budget-total">
+          <span>Free other</span>
+          <strong class="${freeOther < 0 ? 'negative-funding' : ''}">${formatMoney(freeOther)}</strong>
+        </div>` : ''}
         <div class="budget-line compact-budget-total">
           <span>Total free funds</span>
           <strong class="${totalFree < 0 ? 'negative-funding' : ''}">${formatMoney(totalFree)}</strong>
