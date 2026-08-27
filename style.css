@@ -202,6 +202,37 @@ h1 {
   font-size: 20px;
 }
 
+.toolbar-group {
+  display: flex;
+  gap: 6px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--line);
+  margin: 0 4px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-state-cell {
+  padding: 0 !important;
+}
+
+.empty-state-icon {
+  font-size: 22px;
+  opacity: 0.7;
+}
+
 .toolbar {
   justify-self: end;
   grid-column: 2;
@@ -1848,4 +1879,169 @@ body.resizing-column * {
 
 .confirm-no:hover {
   background: var(--hover-bg);
+}
+
+/* ─── Mobile layer ─── */
+
+.mobile-menu-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  line-height: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .topbar {
+    grid-template-columns: 1fr auto;
+    padding: 10px 14px;
+    position: relative;
+  }
+
+  .header-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* File-action toolbar becomes a dropdown menu under the ⋯ button */
+  .toolbar {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 14px;
+    z-index: 40;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+    padding: 6px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px var(--modal-shadow);
+    justify-content: flex-start;
+  }
+
+  .toolbar.open {
+    display: flex;
+  }
+
+  .toolbar-group {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .toolbar-divider {
+    display: none;
+  }
+
+  .toolbar button {
+    width: 100%;
+    text-align: left;
+  }
+
+  /* Tab bar becomes a fixed bottom nav */
+  .header-tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    justify-content: space-around;
+    gap: 0;
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+    border-radius: 0;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+    box-shadow: 0 -2px 10px var(--modal-shadow);
+  }
+
+  .header-tabs button {
+    flex: 1;
+    min-height: 48px;
+    padding: 6px 2px;
+    font-size: 11px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .header-tabs button.active {
+    box-shadow: none;
+  }
+
+  main {
+    padding: 12px 12px calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .dashboard-card {
+    padding: 12px;
+  }
+
+  /* Assignment / expense modals become bottom sheets */
+  .assignment-modal,
+  .expense-timeline-modal {
+    place-items: end center !important;
+    padding: 0 !important;
+  }
+
+  .assignment-modal-card,
+  .expense-timeline-card {
+    width: 100% !important;
+    max-width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .assignment-modal-card::before,
+  .expense-timeline-card::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+
+  .assignment-modal-header,
+  .expense-timeline-header {
+    padding-top: 22px;
+  }
+
+  .assignment-date-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .assignment-bar {
+    min-height: 30px;
+    height: 30px;
+  }
+
+  :root {
+    --label-width: 220px;
+    --month-width: 34px;
+  }
+
+  .timeline-title {
+    flex-wrap: wrap;
+  }
 }

@@ -1,6 +1,6 @@
 /**
  * Research Group Planner – client-side single-page application.
- * Version: 0.3
+ * Version: 0.7
  *
  * Manages personnel, projects, accounts, assignments, expenses for a research group.
  * Features: undo/redo, cost calculations, validation warnings, inline-editable
@@ -1039,7 +1039,7 @@
         <div class="table-wrap"><table class="expense-summary-table"><thead><tr>
           <th rowspan="2">Project</th><th colspan="3">Travel</th><th colspan="3">Material</th>
         </tr><tr><th>Budget</th><th>Spent</th><th>Left</th><th>Budget</th><th>Spent</th><th>Left</th></tr></thead><tbody>
-          ${overviewRows || '<tr><td colspan="7" class="muted">No projects to show.</td></tr>'}
+          ${overviewRows || '<tr><td colspan="7" class="empty-state-cell"><div class="empty-state"><span class="empty-state-icon">📁</span>No projects to show.</div></td></tr>'}
         </tbody></table></div>
       </div>
       <div class="table-wrap"><table id="expensesTable" class="resizable-table"><thead><tr><th class="sticky-col">Project</th><th>Category</th><th>Date</th><th>Amount</th><th>Notes</th><th></th></tr></thead><tbody>
@@ -1144,7 +1144,7 @@
                 ${e.notes ? `<span class="expense-list-notes muted">${esc(e.notes)}</span>` : ''}
               </div>`;
             }).join('')}
-          </div>` : '<div class="muted" style="padding:12px">No expenses recorded for this project.</div>'}
+          </div>` : '<div class="empty-state"><span class="empty-state-icon">🧾</span>No expenses recorded for this project.</div>'}
         </div>
       </div>`;
 
@@ -1781,7 +1781,7 @@
         </div>`;
       }
     }
-    return html || '<div class="timeline-label-row muted">No projects</div>';
+    return html || '<div class="timeline-label-row empty-state"><span class="empty-state-icon">📅</span>No projects</div>';
   }
 
   function projectTimelineRows(min, months, width) {
@@ -3099,6 +3099,12 @@
   // ─── Global Event Binding ───
 
   function bindGlobal() {
+    const mobileMenuBtn = $('#mobileMenuBtn'), toolbar = $('#fileToolbar');
+    if (mobileMenuBtn && toolbar) {
+      mobileMenuBtn.onclick = (e) => { e.stopPropagation(); toolbar.classList.toggle('open'); };
+      toolbar.addEventListener('click', (e) => { if (e.target.closest('button')) toolbar.classList.remove('open'); });
+      document.addEventListener('click', (e) => { if (toolbar.classList.contains('open') && !toolbar.contains(e.target) && e.target !== mobileMenuBtn) toolbar.classList.remove('open'); });
+    }
     $('#newBtn').onclick = newProject; $('#openBtn').onclick = openFile; $('#saveBtn').onclick = () => saveFile(false); $('#saveAsBtn').onclick = () => saveFile(true); $('#undoBtn').onclick = undo; $('#redoBtn').onclick = redo;
     $$('.header-tabs button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
     // Keyboard shortcuts: Ctrl/Cmd+S to save, Ctrl/Cmd+Z to undo, Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y to redo

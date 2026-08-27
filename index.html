@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Research Group Planner</title>
-  <link rel="stylesheet" href="style.css?v=0.5">
+  <link rel="stylesheet" href="style.css?v=0.7">
 </head>
 <body>
   <header class="topbar">
     <div class="header-brand">
-      <h1>Research Group Planner <span class="version">v0.6</span></h1>
+      <h1>Research Group Planner <span class="version">v0.7</span></h1>
       <div id="fileStatus" class="muted">Unsaved project</div>
     </div>
 
@@ -21,13 +21,22 @@
       <button data-tab="expenses">Expenses</button>
       </nav>
 
-    <nav class="toolbar" aria-label="File actions">
-      <button id="newBtn">New</button>
-      <button id="openBtn">Open…</button>
-      <button id="saveBtn">Save</button>
-      <button id="saveAsBtn">Save As…</button>
-      <button id="undoBtn">Undo</button>
-      <button id="redoBtn">Redo</button>
+    <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="File menu" aria-haspopup="true">⋯</button>
+    <nav class="toolbar" aria-label="File actions" id="fileToolbar">
+      <div class="toolbar-group">
+        <button id="newBtn">🗎 New</button>
+        <button id="openBtn">📂 Open…</button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <button id="saveBtn">💾 Save</button>
+        <button id="saveAsBtn">💾 Save As…</button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <button id="undoBtn">↶ Undo</button>
+        <button id="redoBtn">↷ Redo</button>
+      </div>
     </nav>
 
     <div id="person-palette" class="person-palette" hidden></div>
@@ -43,7 +52,7 @@
     <section id="tab-timeline" class="tab panel active"></section>
 </main>
 
-  <script src="app.js?v=0.5"></script>
+  <script src="app.js?v=0.7"></script>
   <footer class="site-footer">
     <a href="GETTING_STARTED.html" target="_blank" rel="noopener">Getting Started</a>
   </footer>
